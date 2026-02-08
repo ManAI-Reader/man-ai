@@ -48,3 +48,25 @@ PDF import → pages rendered as bitmaps → AI pipeline detects balloons → OC
 - Coroutines + Flow for async (no RxJava)
 - Room for local persistence
 - Repository pattern: interface in domain/, implementation in data/
+
+## MCP Servers
+
+The project includes `.mcp.json` with shared MCP servers (context7, memory, fetch, exa, mobile) that work out of the box for all contributors.
+
+### Optional per-user MCP setup
+
+These require personal credentials or machine-specific paths — set them up at user level:
+
+```bash
+# GitHub MCP (requires a Personal Access Token with repo scope)
+claude mcp add-json github --scope user '{"type":"http","url":"https://api.githubcopilot.com/mcp","headers":{"Authorization":"Bearer YOUR_GITHUB_PAT"}}'
+
+# Filesystem MCP (adjust paths to your machine)
+claude mcp add filesystem --scope user -- npx -y @modelcontextprotocol/server-filesystem /path/to/code /path/to/.gradle
+```
+
+### Prerequisites
+
+- Node.js 18+ and npx (for context7, memory, mobile)
+- Python 3.10+ and uvx (for fetch)
+- ADB in PATH (for mobile — requires a running emulator or connected device)
