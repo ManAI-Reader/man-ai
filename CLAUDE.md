@@ -40,6 +40,7 @@ PDF import → pages rendered as bitmaps → AI pipeline detects balloons → OC
 - Coroutines + Flow for async (no RxJava)
 - Room for local persistence
 - Repository pattern: interface in domain/, implementation in data/
+- **Strict TDD**: every feature MUST have tests. Write tests BEFORE the implementation (Red-Green-Refactor). No feature is considered complete without adequate test coverage. This is non-negotiable.
 
 ## MCP Servers
 
