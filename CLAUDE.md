@@ -34,7 +34,7 @@ PDF import → pages rendered as bitmaps → AI pipeline detects balloons → OC
 
 ## Versioning
 
-Semantic versioning (MAJOR.MINOR.PATCH). Update `versionName` in `android/app/build.gradle.kts` and bump `versionCode` with each release. Keep the README Features section in sync with implemented features.
+Semantic versioning (MAJOR.MINOR.PATCH). Each release: bump `versionName` + `versionCode` in `android/app/build.gradle.kts`, update `CHANGELOG.md`, and create annotated git tag (`git tag -a vX.Y.Z`). Use the `/version` skill to automate this.
 
 ## Conventions
 
