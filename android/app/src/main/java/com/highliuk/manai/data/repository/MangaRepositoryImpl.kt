@@ -18,6 +18,9 @@ class MangaRepositoryImpl @Inject constructor(
     override suspend fun getMangaById(id: Long): Manga? =
         mangaDao.getById(id)?.toDomain()
 
+    override suspend fun getMangaByFilePath(filePath: String): Manga? =
+        mangaDao.getByFilePath(filePath)?.toDomain()
+
     override suspend fun insertManga(manga: Manga): Long =
         mangaDao.insert(manga.toEntity())
 

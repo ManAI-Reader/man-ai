@@ -14,6 +14,9 @@ interface MangaDao {
     @Query("SELECT * FROM manga WHERE id = :id")
     suspend fun getById(id: Long): MangaEntity?
 
+    @Query("SELECT * FROM manga WHERE filePath = :filePath LIMIT 1")
+    suspend fun getByFilePath(filePath: String): MangaEntity?
+
     @Insert
     suspend fun insert(manga: MangaEntity): Long
 

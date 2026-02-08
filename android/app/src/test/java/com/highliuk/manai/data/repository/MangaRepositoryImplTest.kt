@@ -81,4 +81,30 @@ class MangaRepositoryImplTest {
 
         coVerify { mangaDao.delete(1) }
     }
+
+    @Test
+    fun `getMangaByFilePath returns domain model when found`() = runTest {
+        val entity = MangaEntity(
+            id = 3,
+            title = "Found",
+            filePath = "content://test/doc.pdf",
+            pageCount = 20,
+            addedAt = 2000L,
+        )
+        coEvery { mangaDao.getByFilePath("content://test/doc.pdf") } returns entity
+
+        val result = repository.getMangaByFilePath("content://test/doc.pdf")
+
+        assertEquals(3L, result?.id)
+        assertEquals("Found", result?.title)
+    }
+
+    @Test
+    fun `getMangaByFilePath returns null when not found`() = runTest {
+        coEvery { mangaDao.getByFilePath("content://unknown") } returns null
+
+        val result = repository.getMangaByFilePath("content://unknown")
+
+        assertNull(result)
+    }
 }
