@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">慢愛</string>
+    <string name="import_manga">Import manga</string>
+    <string name="empty_library">Your library is empty.\nTap + to import a manga.</string>
+</resources>

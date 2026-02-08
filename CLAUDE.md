@@ -6,22 +6,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 慢愛 (Man AI) — Android manga reader with on-device AI for text detection, OCR, furigana, and translation. Native Android app (Kotlin + Jetpack Compose).
 
-## Build & Run
+## Repo Structure
 
-```bash
-./gradlew assembleDebug          # Build debug APK
-./gradlew assembleRelease        # Build release APK
-./gradlew test                   # Run unit tests
-./gradlew connectedAndroidTest   # Run instrumented tests
-./gradlew test --tests "com.highliuk.manai.SomeTest.someMethod"  # Single test
-./gradlew lint                   # Run Android lint
-./gradlew ktlintCheck            # Check Kotlin style
-./gradlew ktlintFormat           # Auto-fix Kotlin style
-```
+- Root — repo-level config (CLAUDE.md, README, LICENSE, .github, .gitignore)
+- `android/` — Android project (Gradle root)
 
 ## Architecture
 
-MVVM + Clean Architecture with three layers:
+MVVM + Clean Architecture with three layers (inside `android/app/src/main/java/com/highliuk/manai/`):
 
 - **data/** — Room entities, DAOs, repositories impl, API services, ML model wrappers
 - **domain/** — Use cases, repository interfaces, domain models
