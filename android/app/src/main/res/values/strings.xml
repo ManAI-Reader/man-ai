@@ -1,20 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">慢愛</string>
-    <string name="import_manga">Import manga</string>
-    <string name="empty_library">Your library is empty.\nTap + to import a manga.</string>
-    <string name="page_count">Pages: %d</string>
-    <string name="back">Back</string>
-    <string name="settings">Settings</string>
-    <string name="page_indicator">Page %1$d / %2$d</string>
-    <string name="reader_error">Could not load manga.</string>
-    <string name="reading_mode">Reading mode</string>
-    <string name="single_page">Single page</string>
-    <string name="double_page">Double page</string>
-    <string name="long_strip">Long strip</string>
-    <string name="reading_direction">Reading direction</string>
-    <string name="right_to_left">Right to left (RTL)</string>
-    <string name="left_to_right">Left to right (LTR)</string>
-    <string name="tap_navigation">Tap navigation</string>
-    <string name="cover_alone">Show cover alone (double page)</string>
 </resources>

@@ -4,8 +4,7 @@ An Android manga reader with on-device AI-powered text detection, OCR, and trans
 
 ## Features
 
-- **PDF import** — import manga PDFs from device storage via system file picker (no file copy)
-- **Library homepage** — displays imported manga with cover thumbnail, title, and page count
+No features yet — the app is being rebuilt from scratch following strict TDD practices.
 
 ## License
 

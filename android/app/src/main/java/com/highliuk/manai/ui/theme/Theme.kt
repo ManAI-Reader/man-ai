@@ -10,25 +10,14 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Sakura,
-    secondary = Ai,
-    tertiary = Vermillion,
-    background = Sumi,
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = SakuraDark,
-    secondary = Ai,
-    tertiary = Vermillion,
-    background = Washi,
-)
+private val DarkColorScheme = darkColorScheme()
+private val LightColorScheme = lightColorScheme()
 
 @Composable
 fun ManAiTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
-    content: @Composable () -> Unit,
+    content: @Composable () -> Unit
 ) {
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
@@ -41,7 +30,6 @@ fun ManAiTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
-        content = content,
+        content = content
     )
 }
