@@ -19,7 +19,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.highliuk.manai.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,12 +33,12 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text(stringResource(R.string.settings)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 }
@@ -50,7 +52,7 @@ fun SettingsScreen(
                 .padding(16.dp)
         ) {
             Text(
-                text = "Grid Columns",
+                text = stringResource(R.string.grid_columns),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
@@ -67,7 +69,7 @@ fun SettingsScreen(
                         onClick = { onGridColumnsChange(columns) }
                     )
                     Text(
-                        text = "$columns columns",
+                        text = stringResource(R.string.n_columns, columns),
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }

@@ -17,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.highliuk.manai.R
 
 @Composable
 fun PdfThumbnail(uri: String, modifier: Modifier = Modifier) {
@@ -43,7 +45,7 @@ fun PdfThumbnail(uri: String, modifier: Modifier = Modifier) {
     if (bitmap.value != null) {
         Image(
             bitmap = bitmap.value!!.asImageBitmap(),
-            contentDescription = "PDF thumbnail",
+            contentDescription = stringResource(R.string.pdf_thumbnail),
             modifier = modifier,
             contentScale = ContentScale.Crop
         )
@@ -54,7 +56,7 @@ fun PdfThumbnail(uri: String, modifier: Modifier = Modifier) {
         ) {
             Icon(
                 imageVector = Icons.Default.PictureAsPdf,
-                contentDescription = "PDF placeholder",
+                contentDescription = stringResource(R.string.pdf_placeholder),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

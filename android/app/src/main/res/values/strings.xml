@@ -1,4 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Man AI</string>
+
+    <!-- Home screen -->
+    <string name="settings">Settings</string>
+    <string name="import_pdf">Import PDF</string>
+
+    <!-- Settings screen -->
+    <string name="back">Back</string>
+    <string name="grid_columns">Grid Columns</string>
+    <string name="n_columns">%d columns</string>
+
+    <!-- PDF thumbnail -->
+    <string name="pdf_thumbnail">PDF thumbnail</string>
+    <string name="pdf_placeholder">PDF placeholder</string>
 </resources>

@@ -31,7 +31,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
+import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.Manga
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,12 +47,12 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Man AI") },
+                title = { Text(stringResource(R.string.app_name)) },
                 actions = {
                     IconButton(onClick = onSettingsClick) {
                         Icon(
                             imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings"
+                            contentDescription = stringResource(R.string.settings)
                         )
                     }
                 }
@@ -60,7 +62,7 @@ fun HomeScreen(
             FloatingActionButton(onClick = onImportClick) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "Import PDF"
+                    contentDescription = stringResource(R.string.import_pdf)
                 )
             }
         }
