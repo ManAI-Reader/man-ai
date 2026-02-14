@@ -1,0 +1,23 @@
+package com.highliuk.manai.data.repository
+
+import com.highliuk.manai.data.local.dao.MangaDao
+import com.highliuk.manai.data.local.entity.MangaEntity
+import com.highliuk.manai.domain.model.Manga
+import com.highliuk.manai.domain.repository.MangaRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+
+class MangaRepositoryImpl @Inject constructor(
+    private val mangaDao: MangaDao
+) : MangaRepository {
+
+    override fun getAllManga(): Flow<List<Manga>> =
+        mangaDao.getAll().map { entities ->
+            entities.map { it.toManga() }
+        }
+
+    override suspend fun insertManga(manga: Manga) {
+        mangaDao.insert(MangaEntity.fromManga(manga))
+    }
+}
