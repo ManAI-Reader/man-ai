@@ -17,6 +17,9 @@ class MangaRepositoryImpl @Inject constructor(
             entities.map { it.toManga() }
         }
 
+    override fun getMangaById(id: Long): Flow<Manga?> =
+        mangaDao.getById(id).map { it?.toManga() }
+
     override suspend fun insertManga(manga: Manga) {
         mangaDao.insert(MangaEntity.fromManga(manga))
     }

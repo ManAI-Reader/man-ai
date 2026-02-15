@@ -5,5 +5,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface MangaRepository {
     fun getAllManga(): Flow<List<Manga>>
+    fun getMangaById(id: Long): Flow<Manga?>
     suspend fun insertManga(manga: Manga)
 }

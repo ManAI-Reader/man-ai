@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 
@@ -51,6 +52,23 @@ class MangaDaoTest {
         val result = dao.getAll().first()
         assertEquals(1, result.size)
         assertEquals("First", result[0].title)
+    }
+
+    @Test
+    fun getById_returnsMatchingManga() = runTest {
+        val entity = MangaEntity(uri = "content://test", title = "Test", pageCount = 10)
+        dao.insert(entity)
+        val all = dao.getAll().first()
+        val id = all[0].id
+
+        val result = dao.getById(id).first()
+        assertEquals("Test", result?.title)
+    }
+
+    @Test
+    fun getById_returnsNullForNonexistentId() = runTest {
+        val result = dao.getById(999).first()
+        assertNull(result)
     }
 
     @Test

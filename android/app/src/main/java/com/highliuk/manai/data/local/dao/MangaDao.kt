@@ -12,6 +12,9 @@ interface MangaDao {
     @Query("SELECT * FROM manga")
     fun getAll(): Flow<List<MangaEntity>>
 
+    @Query("SELECT * FROM manga WHERE id = :id")
+    fun getById(id: Long): Flow<MangaEntity?>
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(entity: MangaEntity)
 }

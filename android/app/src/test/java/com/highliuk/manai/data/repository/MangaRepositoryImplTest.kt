@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class MangaRepositoryImplTest {
@@ -31,6 +32,26 @@ class MangaRepositoryImplTest {
         assertEquals("Manga 1", result[0].title)
         assertEquals(10, result[0].pageCount)
         assertEquals("Manga 2", result[1].title)
+    }
+
+    @Test
+    fun `getMangaById maps entity to domain model`() = runTest {
+        val entity = MangaEntity(id = 1, uri = "uri1", title = "Test", pageCount = 10)
+        coEvery { dao.getById(1) } returns flowOf(entity)
+
+        val result = repository.getMangaById(1).first()
+
+        assertEquals("Test", result?.title)
+        assertEquals(10, result?.pageCount)
+    }
+
+    @Test
+    fun `getMangaById returns null when not found`() = runTest {
+        coEvery { dao.getById(999) } returns flowOf(null)
+
+        val result = repository.getMangaById(999).first()
+
+        assertNull(result)
     }
 
     @Test
