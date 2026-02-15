@@ -50,6 +50,7 @@ obj/
 
 # Kotlin
 *.kotlin_module
+.kotlin/
 
 # ML models (large files)
 *.tflite
