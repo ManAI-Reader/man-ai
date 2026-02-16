@@ -59,4 +59,17 @@ class ReaderBottomBarTest {
         }
         composeTestRule.onNodeWithTag("page_slider").assertDoesNotExist()
     }
+
+    @Test
+    fun slider_hasRtlLayout_whenIsRtlTrue() {
+        composeTestRule.setContent {
+            ReaderBottomBar(
+                currentPage = 0,
+                pageCount = 15,
+                isRtl = true,
+                onPageSelected = {}
+            )
+        }
+        composeTestRule.onNodeWithTag("page_slider_rtl").assertIsDisplayed()
+    }
 }

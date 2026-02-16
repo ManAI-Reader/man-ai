@@ -3,12 +3,16 @@ package com.highliuk.manai.ui.reader
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.highliuk.manai.domain.model.Manga
+import com.highliuk.manai.domain.model.ReadingMode
 import com.highliuk.manai.domain.repository.MangaRepository
+import com.highliuk.manai.domain.repository.UserPreferencesRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
@@ -25,10 +29,13 @@ class ReaderViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private val repository = mockk<MangaRepository>(relaxed = true)
+    private val userPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
+    private val readingModeFlow = MutableStateFlow(ReadingMode.LTR)
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
+        every { userPreferencesRepository.readingMode } returns readingModeFlow
     }
 
     @After
@@ -38,7 +45,7 @@ class ReaderViewModelTest {
 
     private fun createViewModel(mangaId: Long = 1L): ReaderViewModel {
         val savedStateHandle = SavedStateHandle(mapOf("mangaId" to mangaId))
-        return ReaderViewModel(savedStateHandle, repository)
+        return ReaderViewModel(savedStateHandle, repository, userPreferencesRepository)
     }
 
     @Test
@@ -132,5 +139,27 @@ class ReaderViewModelTest {
         coVerify(exactly = 1) { repository.updateLastReadPage(1L, 3) }
         coVerify(exactly = 0) { repository.updateLastReadPage(1L, 1) }
         coVerify(exactly = 0) { repository.updateLastReadPage(1L, 2) }
+    }
+
+    @Test
+    fun `readingMode emits default LTR`() = runTest(testDispatcher) {
+        coEvery { repository.getMangaById(1L) } returns flowOf(null)
+        val viewModel = createViewModel(1L)
+
+        viewModel.readingMode.test {
+            assertEquals(ReadingMode.LTR, awaitItem())
+        }
+    }
+
+    @Test
+    fun `readingMode emits value from repository`() = runTest(testDispatcher) {
+        coEvery { repository.getMangaById(1L) } returns flowOf(null)
+        val viewModel = createViewModel(1L)
+
+        viewModel.readingMode.test {
+            assertEquals(ReadingMode.LTR, awaitItem())
+            readingModeFlow.value = ReadingMode.RTL
+            assertEquals(ReadingMode.RTL, awaitItem())
+        }
     }
 }

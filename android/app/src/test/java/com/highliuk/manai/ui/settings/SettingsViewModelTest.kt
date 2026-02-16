@@ -1,6 +1,7 @@
 package com.highliuk.manai.ui.settings
 
 import app.cash.turbine.test
+import com.highliuk.manai.domain.model.ReadingMode
 import com.highliuk.manai.domain.repository.UserPreferencesRepository
 import io.mockk.coVerify
 import io.mockk.every
@@ -23,11 +24,13 @@ class SettingsViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private val userPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
     private val gridColumnsFlow = MutableStateFlow(2)
+    private val readingModeFlow = MutableStateFlow(ReadingMode.LTR)
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         every { userPreferencesRepository.gridColumns } returns gridColumnsFlow
+        every { userPreferencesRepository.readingMode } returns readingModeFlow
     }
 
     @After
@@ -56,5 +59,26 @@ class SettingsViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         coVerify { userPreferencesRepository.setGridColumns(3) }
+    }
+
+    @Test
+    fun `readingMode emits current preference value`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.readingMode.test {
+            assertEquals(ReadingMode.LTR, awaitItem())
+            readingModeFlow.value = ReadingMode.RTL
+            assertEquals(ReadingMode.RTL, awaitItem())
+        }
+    }
+
+    @Test
+    fun `setReadingMode updates preference`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.setReadingMode(ReadingMode.RTL)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify { userPreferencesRepository.setReadingMode(ReadingMode.RTL) }
     }
 }

@@ -8,6 +8,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -16,8 +17,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.highliuk.manai.R
 import kotlin.math.roundToInt
@@ -26,7 +29,8 @@ import kotlin.math.roundToInt
 fun ReaderBottomBar(
     currentPage: Int,
     pageCount: Int,
-    onPageSelected: (Int) -> Unit
+    isRtl: Boolean = false,
+    onPageSelected: (Int) -> Unit,
 ) {
     var isDragging by remember { mutableStateOf(false) }
     var dragValue by remember { mutableFloatStateOf(currentPage.toFloat()) }
@@ -46,26 +50,30 @@ fun ReaderBottomBar(
         )
 
         if (pageCount > 1) {
-            Slider(
-                value = if (isDragging) dragValue else currentPage.toFloat(),
-                onValueChange = { value ->
-                    isDragging = true
-                    dragValue = value.roundToInt().toFloat()
-                },
-                onValueChangeFinished = {
-                    isDragging = false
-                    onPageSelected(dragValue.roundToInt())
-                },
-                valueRange = 0f..(pageCount - 1).toFloat(),
-                colors = SliderDefaults.colors(
-                    thumbColor = Color.White,
-                    activeTrackColor = Color.White,
-                    inactiveTrackColor = Color.White.copy(alpha = 0.3f)
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("page_slider")
-            )
+            val layoutDirection = if (isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
+            val sliderTag = if (isRtl) "page_slider_rtl" else "page_slider"
+            CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+                Slider(
+                    value = if (isDragging) dragValue else currentPage.toFloat(),
+                    onValueChange = { value ->
+                        isDragging = true
+                        dragValue = value.roundToInt().toFloat()
+                    },
+                    onValueChangeFinished = {
+                        isDragging = false
+                        onPageSelected(dragValue.roundToInt())
+                    },
+                    valueRange = 0f..(pageCount - 1).toFloat(),
+                    colors = SliderDefaults.colors(
+                        thumbColor = Color.White,
+                        activeTrackColor = Color.White,
+                        inactiveTrackColor = Color.White.copy(alpha = 0.3f)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(sliderTag)
+                )
+            }
         }
     }
 }

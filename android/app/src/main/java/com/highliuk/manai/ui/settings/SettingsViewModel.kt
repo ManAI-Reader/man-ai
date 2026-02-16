@@ -2,6 +2,7 @@ package com.highliuk.manai.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.highliuk.manai.domain.model.ReadingMode
 import com.highliuk.manai.domain.repository.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,6 +22,15 @@ class SettingsViewModel @Inject constructor(
     fun setGridColumns(columns: Int) {
         viewModelScope.launch {
             userPreferencesRepository.setGridColumns(columns)
+        }
+    }
+
+    val readingMode: StateFlow<ReadingMode> = userPreferencesRepository.readingMode
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ReadingMode.LTR)
+
+    fun setReadingMode(mode: ReadingMode) {
+        viewModelScope.launch {
+            userPreferencesRepository.setReadingMode(mode)
         }
     }
 }

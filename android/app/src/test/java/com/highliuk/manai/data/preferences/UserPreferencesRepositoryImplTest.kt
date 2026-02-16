@@ -3,6 +3,9 @@ package com.highliuk.manai.data.preferences
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import com.highliuk.manai.domain.model.ReadingMode
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
@@ -73,5 +76,34 @@ class UserPreferencesRepositoryImplTest {
         repository.setGridColumns(5)
 
         assertEquals(3, repository.gridColumns.first())
+    }
+
+    @Test
+    fun `readingMode emits default value LTR`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        val result = repository.readingMode.first()
+
+        assertEquals(ReadingMode.LTR, result)
+    }
+
+    @Test
+    fun `setReadingMode persists RTL value`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        repository.setReadingMode(ReadingMode.RTL)
+
+        assertEquals(ReadingMode.RTL, repository.readingMode.first())
+    }
+
+    @Test
+    fun `readingMode with invalid stored value defaults to LTR`() = runTest(testDispatcher) {
+        val dataStore = createDataStore()
+        dataStore.edit { preferences ->
+            preferences[stringPreferencesKey("reading_mode")] = "INVALID"
+        }
+        val repository = UserPreferencesRepositoryImpl(dataStore)
+
+        assertEquals(ReadingMode.LTR, repository.readingMode.first())
     }
 }

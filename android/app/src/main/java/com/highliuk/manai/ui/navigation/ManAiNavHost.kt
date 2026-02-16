@@ -75,11 +75,13 @@ fun ManAiNavHost(
             val viewModel: ReaderViewModel = hiltViewModel()
             val manga by viewModel.manga.collectAsState()
             val currentPage by viewModel.currentPage.collectAsState()
+            val readingMode by viewModel.readingMode.collectAsState()
 
             manga?.let { m ->
                 ReaderScreen(
                     manga = m,
                     currentPage = currentPage,
+                    readingMode = readingMode,
                     onPageChanged = viewModel::onPageChanged,
                     onBack = { navController.popBackStack() },
                     onSettingsClick = { navController.navigate("settings") }
@@ -89,10 +91,13 @@ fun ManAiNavHost(
         composable("settings") {
             val viewModel: SettingsViewModel = hiltViewModel()
             val gridColumns by viewModel.gridColumns.collectAsState()
+            val readingMode by viewModel.readingMode.collectAsState()
 
             SettingsScreen(
                 gridColumns = gridColumns,
                 onGridColumnsChange = { viewModel.setGridColumns(it) },
+                readingMode = readingMode,
+                onReadingModeChange = { viewModel.setReadingMode(it) },
                 onBack = { navController.popBackStack() }
             )
         }

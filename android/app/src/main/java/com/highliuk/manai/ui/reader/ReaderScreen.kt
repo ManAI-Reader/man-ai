@@ -38,17 +38,21 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.Manga
+import com.highliuk.manai.domain.model.ReadingMode
 import kotlinx.coroutines.launch
 
+@Suppress("LongParameterList")
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun ReaderScreen(
     manga: Manga,
     currentPage: Int,
+    readingMode: ReadingMode = ReadingMode.LTR,
     onPageChanged: (Int) -> Unit,
     onBack: () -> Unit,
-    onSettingsClick: () -> Unit
+    onSettingsClick: () -> Unit,
 ) {
+    val isRtl = readingMode == ReadingMode.RTL
     val pagerState = rememberPagerState(initialPage = currentPage) { manga.pageCount }
     val gestureState = remember { ReaderGestureState() }
     val coroutineScope = rememberCoroutineScope()
@@ -63,6 +67,7 @@ fun ReaderScreen(
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
         HorizontalPager(
             state = pagerState,
+            reverseLayout = isRtl,
             userScrollEnabled = !gestureState.isZoomed,
             modifier = Modifier
                 .fillMaxSize()
@@ -152,6 +157,7 @@ fun ReaderScreen(
             ReaderBottomBar(
                 currentPage = pagerState.currentPage,
                 pageCount = manga.pageCount,
+                isRtl = isRtl,
                 onPageSelected = { page ->
                     coroutineScope.launch { pagerState.scrollToPage(page) }
                 }

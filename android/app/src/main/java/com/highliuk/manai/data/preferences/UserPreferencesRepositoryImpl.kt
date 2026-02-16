@@ -4,6 +4,8 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import com.highliuk.manai.domain.model.ReadingMode
 import com.highliuk.manai.domain.repository.UserPreferencesRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -18,6 +20,9 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         const val DEFAULT_GRID_COLUMNS = 2
         const val MIN_GRID_COLUMNS = 2
         const val MAX_GRID_COLUMNS = 3
+
+        val READING_MODE = stringPreferencesKey("reading_mode")
+        val DEFAULT_READING_MODE = ReadingMode.LTR
     }
 
     override val gridColumns: Flow<Int> = dataStore.data.map { preferences ->
@@ -28,6 +33,25 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         val clamped = columns.coerceIn(MIN_GRID_COLUMNS, MAX_GRID_COLUMNS)
         dataStore.edit { preferences ->
             preferences[GRID_COLUMNS] = clamped
+        }
+    }
+
+    override val readingMode: Flow<ReadingMode> = dataStore.data.map { preferences ->
+        val stored = preferences[READING_MODE]
+        if (stored != null) {
+            try {
+                ReadingMode.valueOf(stored)
+            } catch (_: IllegalArgumentException) {
+                DEFAULT_READING_MODE
+            }
+        } else {
+            DEFAULT_READING_MODE
+        }
+    }
+
+    override suspend fun setReadingMode(mode: ReadingMode) {
+        dataStore.edit { preferences ->
+            preferences[READING_MODE] = mode.name
         }
     }
 }

@@ -4,7 +4,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.highliuk.manai.domain.model.Manga
+import com.highliuk.manai.domain.model.ReadingMode
 import com.highliuk.manai.domain.repository.MangaRepository
+import com.highliuk.manai.domain.repository.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,10 +25,14 @@ import javax.inject.Inject
 @HiltViewModel
 class ReaderViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val repository: MangaRepository
+    private val repository: MangaRepository,
+    userPreferencesRepository: UserPreferencesRepository,
 ) : ViewModel() {
 
     private val mangaId: Long = savedStateHandle["mangaId"] ?: 0L
+
+    val readingMode: StateFlow<ReadingMode> = userPreferencesRepository.readingMode
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ReadingMode.LTR)
 
     val manga: StateFlow<Manga?> = repository.getMangaById(mangaId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)

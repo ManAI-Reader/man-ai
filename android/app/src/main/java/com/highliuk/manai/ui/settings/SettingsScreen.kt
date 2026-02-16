@@ -22,12 +22,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.highliuk.manai.R
+import com.highliuk.manai.domain.model.ReadingMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     gridColumns: Int,
     onGridColumnsChange: (Int) -> Unit,
+    readingMode: ReadingMode,
+    onReadingModeChange: (ReadingMode) -> Unit,
     onBack: () -> Unit
 ) {
     Scaffold(
@@ -70,6 +73,34 @@ fun SettingsScreen(
                     )
                     Text(
                         text = stringResource(R.string.n_columns, columns),
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+            }
+
+            Text(
+                text = stringResource(R.string.reading_mode),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
+            )
+            ReadingMode.entries.forEach { mode ->
+                val label = when (mode) {
+                    ReadingMode.LTR -> stringResource(R.string.reading_mode_ltr)
+                    ReadingMode.RTL -> stringResource(R.string.reading_mode_rtl)
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onReadingModeChange(mode) }
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = readingMode == mode,
+                        onClick = { onReadingModeChange(mode) }
+                    )
+                    Text(
+                        text = label,
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }

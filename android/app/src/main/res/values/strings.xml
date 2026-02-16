@@ -10,6 +10,9 @@
     <string name="back">Back</string>
     <string name="grid_columns">Grid Columns</string>
     <string name="n_columns">%d columns</string>
+    <string name="reading_mode">Reading Mode</string>
+    <string name="reading_mode_ltr">Left to Right (LTR)</string>
+    <string name="reading_mode_rtl">Right to Left (RTL)</string>
 
     <!-- Reader screen -->
     <string name="reader_settings">Reader settings</string>
