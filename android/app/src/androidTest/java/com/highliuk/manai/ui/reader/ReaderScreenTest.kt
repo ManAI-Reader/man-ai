@@ -6,7 +6,10 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
 import com.highliuk.manai.domain.model.Manga
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 
@@ -17,15 +20,19 @@ class ReaderScreenTest {
 
     private val testManga = Manga(id = 1, uri = "content://test", title = "One Piece", pageCount = 10)
 
+    private var lastPage = 0
+
     private fun setUpReaderScreen(
         onBack: () -> Unit = {},
-        onSettingsClick: () -> Unit = {}
+        onSettingsClick: () -> Unit = {},
+        onPageChanged: (Int) -> Unit = { lastPage = it }
     ) {
+        lastPage = 0
         composeTestRule.setContent {
             ReaderScreen(
                 manga = testManga,
                 currentPage = 0,
-                onPageChanged = {},
+                onPageChanged = onPageChanged,
                 onBack = onBack,
                 onSettingsClick = onSettingsClick
             )
@@ -65,6 +72,21 @@ class ReaderScreenTest {
         composeTestRule.onNodeWithTag("reader_pager").performClick()
         composeTestRule.onNodeWithContentDescription("Back").performClick()
         assert(backCalled)
+    }
+
+    @Test
+    fun swipeLeft_changesPage_whenNotZoomed() {
+        setUpReaderScreen()
+        composeTestRule.onNodeWithTag("reader_pager")
+            .performTouchInput { swipeLeft() }
+        composeTestRule.waitForIdle()
+        assertEquals(1, lastPage)
+    }
+
+    @Test
+    fun pdfPage_hasZoomContainer() {
+        setUpReaderScreen()
+        composeTestRule.onNodeWithTag("reader_zoom_container").assertIsDisplayed()
     }
 
     @Test
