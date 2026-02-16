@@ -5,10 +5,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
 class ReaderGestureState {
-    var isTopBarVisible by mutableStateOf(false)
+    var areBarsVisible by mutableStateOf(false)
         private set
 
-    fun toggleTopBar() {
-        isTopBarVisible = !isTopBarVisible
+    fun toggleBars() {
+        areBarsVisible = !areBarsVisible
     }
 }

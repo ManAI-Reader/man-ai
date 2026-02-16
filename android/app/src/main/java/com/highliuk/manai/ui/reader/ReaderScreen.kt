@@ -23,12 +23,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.Manga
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
@@ -41,6 +44,7 @@ fun ReaderScreen(
 ) {
     val pagerState = rememberPagerState(initialPage = currentPage) { manga.pageCount }
     val gestureState = remember { ReaderGestureState() }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
@@ -58,7 +62,7 @@ fun ReaderScreen(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null
                 ) {
-                    gestureState.toggleTopBar()
+                    gestureState.toggleBars()
                 }
         ) { pageIndex ->
             PdfPage(
@@ -69,7 +73,7 @@ fun ReaderScreen(
         }
 
         AnimatedVisibility(
-            visible = gestureState.isTopBarVisible,
+            visible = gestureState.areBarsVisible,
             enter = fadeIn(),
             exit = fadeOut()
         ) {
@@ -92,11 +96,26 @@ fun ReaderScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Black.copy(alpha = 0.4f),
+                    containerColor = Color.Black.copy(alpha = 0.7f),
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White,
                     actionIconContentColor = Color.White
                 )
+            )
+        }
+
+        AnimatedVisibility(
+            visible = gestureState.areBarsVisible,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(Alignment.BottomCenter)
+        ) {
+            ReaderBottomBar(
+                currentPage = pagerState.currentPage,
+                pageCount = manga.pageCount,
+                onPageSelected = { page ->
+                    coroutineScope.launch { pagerState.scrollToPage(page) }
+                }
             )
         }
     }

@@ -14,6 +14,8 @@
     <!-- Reader screen -->
     <string name="reader_settings">Reader settings</string>
     <string name="page_content">Page %d</string>
+    <string name="page_indicator">%1$d / %2$d</string>
+    <string name="page_slider_description">Page progress slider</string>
 
     <!-- PDF thumbnail -->
     <string name="pdf_thumbnail">PDF thumbnail</string>

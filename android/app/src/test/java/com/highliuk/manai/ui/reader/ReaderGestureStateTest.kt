@@ -7,23 +7,23 @@ import org.junit.Test
 class ReaderGestureStateTest {
 
     @Test
-    fun `top bar is hidden by default`() {
+    fun `bars are hidden by default`() {
         val state = ReaderGestureState()
-        assertFalse(state.isTopBarVisible)
+        assertFalse(state.areBarsVisible)
     }
 
     @Test
-    fun `toggleTopBar shows top bar when hidden`() {
+    fun `toggleBars shows bars when hidden`() {
         val state = ReaderGestureState()
-        state.toggleTopBar()
-        assertTrue(state.isTopBarVisible)
+        state.toggleBars()
+        assertTrue(state.areBarsVisible)
     }
 
     @Test
-    fun `toggleTopBar hides top bar when visible`() {
+    fun `toggleBars hides bars when visible`() {
         val state = ReaderGestureState()
-        state.toggleTopBar()
-        state.toggleTopBar()
-        assertFalse(state.isTopBarVisible)
+        state.toggleBars()
+        state.toggleBars()
+        assertFalse(state.areBarsVisible)
     }
 }

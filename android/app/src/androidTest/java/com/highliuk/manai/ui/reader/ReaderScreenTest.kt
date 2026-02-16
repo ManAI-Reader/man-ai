@@ -77,4 +77,33 @@ class ReaderScreenTest {
         composeTestRule.onNodeWithContentDescription("Reader settings").performClick()
         assert(settingsCalled)
     }
+
+    @Test
+    fun bottomBar_isHiddenByDefault() {
+        setUpReaderScreen()
+        composeTestRule.onNodeWithText("1 / 10").assertDoesNotExist()
+    }
+
+    @Test
+    fun tapOnPager_showsBottomBar() {
+        setUpReaderScreen()
+        composeTestRule.onNodeWithTag("reader_pager").performClick()
+        composeTestRule.onNodeWithText("1 / 10").assertIsDisplayed()
+    }
+
+    @Test
+    fun doubleTapOnPager_hidesBottomBarAgain() {
+        setUpReaderScreen()
+        composeTestRule.onNodeWithTag("reader_pager").performClick()
+        composeTestRule.onNodeWithText("1 / 10").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("reader_pager").performClick()
+        composeTestRule.onNodeWithText("1 / 10").assertDoesNotExist()
+    }
+
+    @Test
+    fun bottomBar_showsCorrectPageOnFirstPage() {
+        setUpReaderScreen()
+        composeTestRule.onNodeWithTag("reader_pager").performClick()
+        composeTestRule.onNodeWithText("1 / 10").assertIsDisplayed()
+    }
 }
