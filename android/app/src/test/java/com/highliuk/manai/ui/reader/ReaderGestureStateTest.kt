@@ -181,4 +181,62 @@ class ReaderGestureStateTest {
         assertEquals(0f, state.offsetX, 0.001f)
         assertEquals(0f, state.offsetY, 0.001f)
     }
+
+    @Test
+    fun `onDoubleTap at 1x returns target scale 2f`() {
+        val state = ReaderGestureState()
+        val target = state.onDoubleTap(500f, 1000f, 1000f, 2000f)
+        assertEquals(2f, target.scale, 0.001f)
+    }
+
+    @Test
+    fun `onDoubleTap when zoomed returns target scale 1f`() {
+        val state = ReaderGestureState()
+        state.onZoom(2f)
+        val target = state.onDoubleTap(500f, 1000f, 1000f, 2000f)
+        assertEquals(1f, target.scale, 0.001f)
+    }
+
+    @Test
+    fun `onDoubleTap when zoomed returns zero offsets`() {
+        val state = ReaderGestureState()
+        state.onZoom(2f)
+        val target = state.onDoubleTap(500f, 1000f, 1000f, 2000f)
+        assertEquals(0f, target.offsetX, 0.001f)
+        assertEquals(0f, target.offsetY, 0.001f)
+    }
+
+    @Test
+    fun `onDoubleTap at 1x centers offset on tap point`() {
+        val state = ReaderGestureState()
+        val target = state.onDoubleTap(250f, 500f, 1000f, 2000f)
+        assertEquals(250f, target.offsetX, 0.001f)
+        assertEquals(500f, target.offsetY, 0.001f)
+    }
+
+    @Test
+    fun `onDoubleTap at edge clamps offset to bounds`() {
+        val state = ReaderGestureState()
+        val target = state.onDoubleTap(0f, 0f, 1000f, 2000f)
+        assertEquals(500f, target.offsetX, 0.001f)
+        assertEquals(1000f, target.offsetY, 0.001f)
+    }
+
+    @Test
+    fun `onDoubleTap at 1_5x from pinch returns target 1f`() {
+        val state = ReaderGestureState()
+        state.onZoom(1.5f)
+        val target = state.onDoubleTap(500f, 1000f, 1000f, 2000f)
+        assertEquals(1f, target.scale, 0.001f)
+    }
+
+    @Test
+    fun `applyZoomTarget updates scale and offsets`() {
+        val state = ReaderGestureState()
+        val target = ZoomTarget(2f, 100f, 200f)
+        state.applyZoomTarget(target)
+        assertEquals(2f, state.scale, 0.001f)
+        assertEquals(100f, state.offsetX, 0.001f)
+        assertEquals(200f, state.offsetY, 0.001f)
+    }
 }

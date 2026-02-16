@@ -1,6 +1,7 @@
 package com.highliuk.manai.ui.reader
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -19,6 +20,14 @@ class ReaderScreenTest {
     val composeTestRule = createComposeRule()
 
     private val testManga = Manga(id = 1, uri = "content://test", title = "One Piece", pageCount = 10)
+
+    /**
+     * When onDoubleTap is registered, Compose delays onTap by doubleTapTimeoutMillis (~300ms).
+     * Advance the test clock past that timeout so onTap fires before assertions.
+     */
+    private fun advancePastDoubleTapTimeout() {
+        composeTestRule.mainClock.advanceTimeBy(500)
+    }
 
     private var lastPage = 0
 
@@ -49,6 +58,7 @@ class ReaderScreenTest {
     fun tapOnPager_showsTopBar() {
         setUpReaderScreen()
         composeTestRule.onNodeWithTag("reader_pager").performClick()
+        advancePastDoubleTapTimeout()
         composeTestRule.onNodeWithText("One Piece").assertIsDisplayed()
     }
 
@@ -57,9 +67,11 @@ class ReaderScreenTest {
         setUpReaderScreen()
         // First tap: show
         composeTestRule.onNodeWithTag("reader_pager").performClick()
+        advancePastDoubleTapTimeout()
         composeTestRule.onNodeWithText("One Piece").assertIsDisplayed()
         // Second tap: hide
         composeTestRule.onNodeWithTag("reader_pager").performClick()
+        advancePastDoubleTapTimeout()
         composeTestRule.onNodeWithText("One Piece").assertDoesNotExist()
     }
 
@@ -70,6 +82,7 @@ class ReaderScreenTest {
 
         // Show top bar first
         composeTestRule.onNodeWithTag("reader_pager").performClick()
+        advancePastDoubleTapTimeout()
         composeTestRule.onNodeWithContentDescription("Back").performClick()
         assert(backCalled)
     }
@@ -96,6 +109,7 @@ class ReaderScreenTest {
 
         // Show top bar first
         composeTestRule.onNodeWithTag("reader_pager").performClick()
+        advancePastDoubleTapTimeout()
         composeTestRule.onNodeWithContentDescription("Reader settings").performClick()
         assert(settingsCalled)
     }
@@ -110,6 +124,7 @@ class ReaderScreenTest {
     fun tapOnPager_showsBottomBar() {
         setUpReaderScreen()
         composeTestRule.onNodeWithTag("reader_pager").performClick()
+        advancePastDoubleTapTimeout()
         composeTestRule.onNodeWithText("1 / 10").assertIsDisplayed()
     }
 
@@ -117,8 +132,10 @@ class ReaderScreenTest {
     fun doubleTapOnPager_hidesBottomBarAgain() {
         setUpReaderScreen()
         composeTestRule.onNodeWithTag("reader_pager").performClick()
+        advancePastDoubleTapTimeout()
         composeTestRule.onNodeWithText("1 / 10").assertIsDisplayed()
         composeTestRule.onNodeWithTag("reader_pager").performClick()
+        advancePastDoubleTapTimeout()
         composeTestRule.onNodeWithText("1 / 10").assertDoesNotExist()
     }
 
@@ -126,6 +143,38 @@ class ReaderScreenTest {
     fun bottomBar_showsCorrectPageOnFirstPage() {
         setUpReaderScreen()
         composeTestRule.onNodeWithTag("reader_pager").performClick()
+        advancePastDoubleTapTimeout()
         composeTestRule.onNodeWithText("1 / 10").assertIsDisplayed()
+    }
+
+    @Test
+    fun doubleTap_blocksSwipe_becauseZoomed() {
+        setUpReaderScreen()
+        composeTestRule.onNodeWithTag("reader_zoom_container")
+            .performTouchInput { doubleClick() }
+        composeTestRule.waitForIdle()
+        // Now zoomed — swipe should be blocked
+        composeTestRule.onNodeWithTag("reader_pager")
+            .performTouchInput { swipeLeft() }
+        composeTestRule.waitForIdle()
+        assertEquals(0, lastPage)
+    }
+
+    @Test
+    fun doubleTapTwice_allowsSwipe_becauseBackTo1x() {
+        setUpReaderScreen()
+        // First double-tap: zoom in
+        composeTestRule.onNodeWithTag("reader_zoom_container")
+            .performTouchInput { doubleClick() }
+        composeTestRule.waitForIdle()
+        // Second double-tap: zoom out
+        composeTestRule.onNodeWithTag("reader_zoom_container")
+            .performTouchInput { doubleClick() }
+        composeTestRule.waitForIdle()
+        // Back to 1x — swipe should work
+        composeTestRule.onNodeWithTag("reader_pager")
+            .performTouchInput { swipeLeft() }
+        composeTestRule.waitForIdle()
+        assertEquals(1, lastPage)
     }
 }

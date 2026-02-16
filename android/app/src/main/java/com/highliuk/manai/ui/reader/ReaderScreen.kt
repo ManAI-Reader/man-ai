@@ -1,6 +1,8 @@
 package com.highliuk.manai.ui.reader
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -39,6 +41,8 @@ import androidx.compose.ui.res.stringResource
 import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.Manga
 import kotlinx.coroutines.launch
+
+private const val DOUBLE_TAP_ANIM_DURATION = 300
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
@@ -79,7 +83,31 @@ fun ReaderScreen(
                     .testTag("reader_zoom_container")
                     .pointerInput(Unit) {
                         detectTapGestures(
-                            onTap = { gestureState.toggleBars() }
+                            onTap = { gestureState.toggleBars() },
+                            onDoubleTap = { offset ->
+                                val target = gestureState.onDoubleTap(
+                                    tapX = offset.x,
+                                    tapY = offset.y,
+                                    containerWidth = size.width.toFloat(),
+                                    containerHeight = size.height.toFloat()
+                                )
+                                coroutineScope.launch {
+                                    val startScale = gestureState.scale
+                                    val startOffsetX = gestureState.offsetX
+                                    val startOffsetY = gestureState.offsetY
+                                    val anim = Animatable(0f)
+                                    anim.animateTo(1f, tween(DOUBLE_TAP_ANIM_DURATION)) {
+                                        val progress = value
+                                        gestureState.applyZoomTarget(
+                                            ZoomTarget(
+                                                scale = startScale + (target.scale - startScale) * progress,
+                                                offsetX = startOffsetX + (target.offsetX - startOffsetX) * progress,
+                                                offsetY = startOffsetY + (target.offsetY - startOffsetY) * progress
+                                            )
+                                        )
+                                    }
+                                }
+                            }
                         )
                     }
                     .pointerInput(Unit) {

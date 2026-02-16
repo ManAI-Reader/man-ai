@@ -62,8 +62,32 @@ class ReaderGestureState {
         offsetY = (offsetY + panY).coerceIn(-maxOffsetY, maxOffsetY)
     }
 
+    fun applyZoomTarget(target: ZoomTarget) {
+        scale = target.scale
+        offsetX = target.offsetX
+        offsetY = target.offsetY
+    }
+
+    fun onDoubleTap(tapX: Float, tapY: Float, containerWidth: Float, containerHeight: Float): ZoomTarget {
+        return if (!isZoomed) {
+            val targetScale = DOUBLE_TAP_SCALE
+            val maxOffsetX = containerWidth * (targetScale - 1f) / 2f
+            val maxOffsetY = containerHeight * (targetScale - 1f) / 2f
+            val centerX = containerWidth / 2f
+            val centerY = containerHeight / 2f
+            val targetOffsetX = (centerX - tapX).coerceIn(-maxOffsetX, maxOffsetX)
+            val targetOffsetY = (centerY - tapY).coerceIn(-maxOffsetY, maxOffsetY)
+            ZoomTarget(targetScale, targetOffsetX, targetOffsetY)
+        } else {
+            ZoomTarget(MIN_SCALE, 0f, 0f)
+        }
+    }
+
     companion object {
         const val MIN_SCALE = 1f
         const val MAX_SCALE = 3f
+        const val DOUBLE_TAP_SCALE = 2f
     }
 }
+
+data class ZoomTarget(val scale: Float, val offsetX: Float, val offsetY: Float)
