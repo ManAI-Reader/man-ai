@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2026-02-17
+
+### Added
+
+- RTL reading mode with settings toggle and reversed pager/slider
+- Double-tap to zoom gesture in manga reader
+- Pinch-to-zoom and pan gestures in manga reader
+- Bottom progress bar with page slider in manga reader
+- Single-tap top bar toggle in manga reader
+- Kover code coverage with 80% threshold gate
+
+### Fixed
+
+- Constrain pan to image bounds instead of container bounds
+
 ## [0.2.0] - 2026-02-15
 
 ### Added
