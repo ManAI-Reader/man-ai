@@ -45,7 +45,7 @@ jobs:
           api-level: 31
           arch: x86_64
           working-directory: android
-          script: ./gradlew connectedDebugAndroidTest
+          script: ./gradlew connectedStagingAndroidTest
 
       - name: Decode keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/keystore.jks

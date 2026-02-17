@@ -48,7 +48,7 @@ jobs:
           api-level: 31
           arch: x86_64
           working-directory: android
-          script: ./gradlew connectedDebugAndroidTest
+          script: ./gradlew connectedStagingAndroidTest
 
       - name: Generate coverage report
         run: ./gradlew koverHtmlReportDebug

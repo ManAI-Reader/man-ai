@@ -44,7 +44,13 @@ android {
                 "proguard-rules.pro"
             )
         }
+        create("staging") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".staging"
+        }
     }
+
+    testBuildType = "staging"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -183,6 +189,8 @@ dependencies {
     implementation(libs.compose.material.icons.extended)
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
+    "stagingImplementation"(libs.compose.ui.tooling)
+    "stagingImplementation"(libs.compose.ui.test.manifest)
 
     // Navigation
     implementation(libs.navigation.compose)

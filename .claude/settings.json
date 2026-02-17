@@ -18,7 +18,7 @@
       "hooks": [
         {
           "type": "prompt",
-          "prompt": "Review the full conversation. Verify ALL of these: 1) For each code change, a failing test was written BEFORE production code (RED-GREEN cycle). 2) After all tasks, an instrumented E2E test was written that simulates the real user flow on a device/emulator. 3) connectedDebugAndroidTest was run and shown GREEN. 4) A manual smoke test was performed on the emulator (app installed, launched, flow executed, screenshot taken). If ANY of these is missing, DO NOT stop. List what was skipped and complete it.",
+          "prompt": "Review the full conversation. Verify ALL of these: 1) For each code change, a failing test was written BEFORE production code (RED-GREEN cycle). 2) After all tasks, an instrumented E2E test was written that simulates the real user flow on a device/emulator. 3) connectedStagingAndroidTest was run and shown GREEN. 4) A manual smoke test was performed on the emulator (app installed, launched, flow executed, screenshot taken). If ANY of these is missing, DO NOT stop. List what was skipped and complete it.",
           "timeout": 120
         }
       ]

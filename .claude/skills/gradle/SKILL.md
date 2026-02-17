@@ -4,7 +4,7 @@
 
 - The Android project lives in `android/`. Always `cd` there before running Gradle.
 - **Builds** (`assembleDebug`, `assembleRelease`): use `run_in_background: true` — they are slow (minutes) and will timeout if run synchronously. Use `--no-daemon --console=plain` for predictable output.
-- **Tests** (`test`, `connectedDebugAndroidTest`): run in **foreground** — you need to see the output immediately to verify RED/GREEN in the TDD cycle.
+- **Tests** (`test`, `connectedStagingAndroidTest`): run in **foreground** — you need to see the output immediately to verify RED/GREEN in the TDD cycle.
 - Set `timeout: 120000` (2 minutes) for background tasks. Do NOT use longer timeouts.
 - **Never block** with `TaskOutput` on a background Gradle command. Instead, periodically check the output file with `Read` to monitor progress.
 - **Do other work** while background builds run. Don't poll the output file in a tight loop.

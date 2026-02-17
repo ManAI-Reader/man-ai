@@ -14,7 +14,7 @@ For EACH bug fix, follow this cycle internally. Do NOT combine steps.
 - Write a test that reproduces the bug
 - Choose the right test level:
   - Logic bug → unit test with `cd android && ./gradlew test`
-  - Device/permission/UI bug → instrumented test with `cd android && ./gradlew connectedDebugAndroidTest`
+  - Device/permission/UI bug → instrumented test with `cd android && ./gradlew connectedStagingAndroidTest`
 - **RUN the test and show the failure output.** A RED you didn't execute is not a RED.
 - Compilation failure counts as RED only for unit tests. For instrumented tests, you MUST run on emulator.
 - If the test passes, the test is wrong — rewrite it.
@@ -45,7 +45,7 @@ Before declaring the bug fixed, run the **full** test suite — both unit AND in
 
 ```bash
 cd android && ./gradlew testDebugUnitTest
-cd android && ./gradlew connectedDebugAndroidTest
+cd android && ./gradlew connectedStagingAndroidTest
 ```
 
 A fix is NOT complete until both suites are green. Unit tests alone miss Compose UI regressions.

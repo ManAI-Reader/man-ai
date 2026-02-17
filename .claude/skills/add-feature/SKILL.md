@@ -15,7 +15,7 @@ For each task in the plan, complete a RED-GREEN-REFACTOR cycle:
 
 **Critical rules:**
 - **Every task gets a test. No exceptions.** "Not easily testable" means "requires more setup" — do the setup.
-- **RED means you SAW the failure.** Compilation alone is not RED. For instrumented tests, run on emulator with `connectedDebugAndroidTest` and show the assertion error.
+- **RED means you SAW the failure.** Compilation alone is not RED. For instrumented tests, run on emulator with `connectedStagingAndroidTest` and show the assertion error.
 - **If the plan says "not testable", the plan is wrong.** Fix the plan, don't skip the test.
 - Navigation, Hilt wiring, DB queries — all testable. Use `@HiltAndroidTest`, `TestDatabaseModule`, `createAndroidComposeRule<MainActivity>()` as needed.
 
@@ -46,7 +46,7 @@ fun importPdf_showsInLibrary() {
 }
 ```
 
-Run: `cd android && ./gradlew connectedDebugAndroidTest`
+Run: `cd android && ./gradlew connectedStagingAndroidTest`
 If RED → fix production code and re-run until GREEN.
 
 ## Phase 2.5: Full regression check
@@ -55,7 +55,7 @@ After E2E tests pass, run the **complete** test suite to catch regressions:
 
 ```bash
 cd android && ./gradlew testDebugUnitTest
-cd android && ./gradlew connectedDebugAndroidTest
+cd android && ./gradlew connectedStagingAndroidTest
 ```
 
 Both must be green. Unit tests alone miss Compose UI regressions. Do NOT proceed to smoke test until both suites pass.
