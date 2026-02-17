@@ -148,6 +148,22 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun `importManga navigates to existing manga when duplicate URI`() = runTest(testDispatcher) {
+        coEvery { pdfExtractor.extractPageCount("content://duplicate.pdf") } returns 10
+        coEvery { repository.insertManga(any()) } returns -1L
+        coEvery { repository.getMangaByUri("content://duplicate.pdf") } returns Manga(
+            id = 42, uri = "content://duplicate.pdf", title = "Existing", pageCount = 10, lastReadPage = 3
+        )
+        val viewModel = createViewModel()
+
+        viewModel.navigateToReader.test {
+            viewModel.importManga("content://duplicate.pdf", "duplicate.pdf")
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(42L, awaitItem())
+        }
+    }
+
+    @Test
     fun `gridColumns emits value from preferences repository`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
 

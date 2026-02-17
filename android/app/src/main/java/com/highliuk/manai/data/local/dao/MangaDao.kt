@@ -18,6 +18,9 @@ interface MangaDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(entity: MangaEntity): Long
 
+    @Query("SELECT * FROM manga WHERE uri = :uri LIMIT 1")
+    suspend fun getByUri(uri: String): MangaEntity?
+
     @Query("UPDATE manga SET lastReadPage = :page WHERE id = :id")
     suspend fun updateLastReadPage(id: Long, page: Int)
 }

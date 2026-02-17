@@ -38,7 +38,13 @@ class HomeViewModel @Inject constructor(
                 val title = fileName.removeSuffix(".pdf")
                 val pageCount = pdfMetadataExtractor.extractPageCount(uri)
                 val id = repository.insertManga(Manga(uri = uri, title = title, pageCount = pageCount))
-                _navigateToReader.emit(id)
+                if (id != -1L) {
+                    _navigateToReader.emit(id)
+                } else {
+                    repository.getMangaByUri(uri)?.let { existing ->
+                        _navigateToReader.emit(existing.id)
+                    }
+                }
             } catch (_: Exception) {
                 // PDF could not be opened or read — silently ignore
             }
