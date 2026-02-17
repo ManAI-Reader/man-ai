@@ -37,7 +37,8 @@ class MainActivity : ComponentActivity() {
                 }
 
                 ManAiNavHost(
-                    onImportClick = { pdfPicker.launch(arrayOf("application/pdf")) }
+                    onImportClick = { pdfPicker.launch(arrayOf("application/pdf")) },
+                    navigateToReader = viewModel.navigateToReader
                 )
             }
         }

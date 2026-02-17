@@ -16,7 +16,7 @@ interface MangaDao {
     fun getById(id: Long): Flow<MangaEntity?>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insert(entity: MangaEntity)
+    suspend fun insert(entity: MangaEntity): Long
 
     @Query("UPDATE manga SET lastReadPage = :page WHERE id = :id")
     suspend fun updateLastReadPage(id: Long, page: Int)

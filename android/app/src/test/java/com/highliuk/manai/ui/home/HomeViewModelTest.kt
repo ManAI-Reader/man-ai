@@ -123,6 +123,31 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun `importManga emits navigation event with manga id`() = runTest(testDispatcher) {
+        coEvery { pdfExtractor.extractPageCount("content://test.pdf") } returns 42
+        coEvery { repository.insertManga(any()) } returns 7L
+        val viewModel = createViewModel()
+
+        viewModel.navigateToReader.test {
+            viewModel.importManga("content://test.pdf", "my-manga.pdf")
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(7L, awaitItem())
+        }
+    }
+
+    @Test
+    fun `importManga does not emit navigation event on failure`() = runTest(testDispatcher) {
+        coEvery { pdfExtractor.extractPageCount(any()) } throws RuntimeException("fail")
+        val viewModel = createViewModel()
+
+        viewModel.navigateToReader.test {
+            viewModel.importManga("content://bad.pdf", "bad.pdf")
+            testDispatcher.scheduler.advanceUntilIdle()
+            expectNoEvents()
+        }
+    }
+
+    @Test
     fun `gridColumns emits value from preferences repository`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
 
