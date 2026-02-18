@@ -25,10 +25,11 @@ class MangaRepositoryTest {
     }
 
     @Test
-    fun `insertManga accepts a manga`() = runTest {
+    fun `insertManga returns the inserted manga id`() = runTest {
         val manga = Manga(uri = "uri1", title = "Manga 1", pageCount = 10)
-        coEvery { repository.insertManga(manga) } returns Unit
+        coEvery { repository.insertManga(manga) } returns 1L
 
-        repository.insertManga(manga)
+        val id = repository.insertManga(manga)
+        assertEquals(1L, id)
     }
 }

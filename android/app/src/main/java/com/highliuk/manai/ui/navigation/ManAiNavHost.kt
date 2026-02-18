@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -20,12 +21,21 @@ import com.highliuk.manai.ui.reader.ReaderScreen
 import com.highliuk.manai.ui.reader.ReaderViewModel
 import com.highliuk.manai.ui.settings.SettingsScreen
 import com.highliuk.manai.ui.settings.SettingsViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 
 @Composable
 fun ManAiNavHost(
-    onImportClick: () -> Unit
+    onImportClick: () -> Unit,
+    navigateToReader: SharedFlow<Long> = MutableSharedFlow()
 ) {
     val navController = rememberNavController()
+
+    LaunchedEffect(navigateToReader) {
+        navigateToReader.collect { mangaId ->
+            navController.navigate("reader/$mangaId")
+        }
+    }
 
     NavHost(
         navController = navController,

@@ -6,9 +6,11 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.lifecycle.ViewModelProvider
 import com.highliuk.manai.MainActivity
 import com.highliuk.manai.data.local.dao.MangaDao
 import com.highliuk.manai.data.local.entity.MangaEntity
+import com.highliuk.manai.ui.home.HomeViewModel
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.test.runTest
@@ -48,6 +50,20 @@ class ManAiNavHostTest {
         composeTestRule.mainClock.advanceTimeBy(500)
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithContentDescription("Back").assertIsDisplayed()
+    }
+
+    @Test
+    fun importManga_navigatesDirectlyToReaderScreen() = runTest {
+        composeTestRule.waitForIdle()
+
+        val viewModel = ViewModelProvider(composeTestRule.activity)[HomeViewModel::class.java]
+        viewModel.importManga("content://auto-nav-test.pdf", "Auto Nav Manga.pdf")
+
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(1000)
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag("reader_pager").assertIsDisplayed()
     }
 
     @Test
