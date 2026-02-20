@@ -1,6 +1,7 @@
 package com.highliuk.manai.ui.home
 
 import app.cash.turbine.test
+import com.highliuk.manai.data.hash.FileHashProvider
 import com.highliuk.manai.data.pdf.PdfMetadataExtractor
 import com.highliuk.manai.domain.model.Manga
 import com.highliuk.manai.domain.repository.MangaRepository
@@ -27,6 +28,7 @@ class HomeViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private val repository = mockk<MangaRepository>(relaxed = true)
     private val pdfExtractor = mockk<PdfMetadataExtractor>(relaxed = true)
+    private val fileHashProvider = mockk<FileHashProvider>(relaxed = true)
     private val userPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
     private val mangaFlow = MutableStateFlow<List<Manga>>(emptyList())
     private val gridColumnsFlow = MutableStateFlow(2)
@@ -36,6 +38,7 @@ class HomeViewModelTest {
         Dispatchers.setMain(testDispatcher)
         coEvery { repository.getAllManga() } returns mangaFlow
         every { userPreferencesRepository.gridColumns } returns gridColumnsFlow
+        coEvery { fileHashProvider.computeHash(uri = any()) } returns "defaulthash"
     }
 
     @After
@@ -43,7 +46,9 @@ class HomeViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel() = HomeViewModel(repository, pdfExtractor, userPreferencesRepository)
+    private fun createViewModel() = HomeViewModel(
+        repository, pdfExtractor, fileHashProvider, userPreferencesRepository
+    )
 
     @Test
     fun `mangaList emits empty list initially`() = runTest(testDispatcher) {
@@ -69,18 +74,20 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `importManga extracts page count and inserts manga`() = runTest(testDispatcher) {
+    fun `importManga extracts page count and inserts manga with content hash`() = runTest(testDispatcher) {
         coEvery { pdfExtractor.extractPageCount("content://test.pdf") } returns 42
+        coEvery { fileHashProvider.computeHash(uri = "content://test.pdf") } returns "abc123"
         val viewModel = createViewModel()
 
         viewModel.importManga("content://test.pdf", "my-manga.pdf")
         testDispatcher.scheduler.advanceUntilIdle()
 
         coVerify {
-            repository.insertManga(match {
+            repository.upsertManga(match {
                 it.uri == "content://test.pdf" &&
                     it.title == "my-manga" &&
-                    it.pageCount == 42
+                    it.pageCount == 42 &&
+                    it.contentHash == "abc123"
             })
         }
     }
@@ -94,7 +101,7 @@ class HomeViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         coVerify {
-            repository.insertManga(match { it.title == "One Piece Vol.1" })
+            repository.upsertManga(match { it.title == "One Piece Vol.1" })
         }
     }
 
@@ -106,7 +113,7 @@ class HomeViewModelTest {
         viewModel.importManga("content://bad.pdf", "bad.pdf")
         testDispatcher.scheduler.advanceUntilIdle()
 
-        coVerify(exactly = 0) { repository.insertManga(any()) }
+        coVerify(exactly = 0) { repository.upsertManga(any()) }
     }
 
     @Test
@@ -118,14 +125,14 @@ class HomeViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         coVerify {
-            repository.insertManga(match { it.title == "my-manga" && it.pageCount == 5 })
+            repository.upsertManga(match { it.title == "my-manga" && it.pageCount == 5 })
         }
     }
 
     @Test
     fun `importManga emits navigation event with manga id`() = runTest(testDispatcher) {
         coEvery { pdfExtractor.extractPageCount("content://test.pdf") } returns 42
-        coEvery { repository.insertManga(any()) } returns 7L
+        coEvery { repository.upsertManga(any()) } returns 7L
         val viewModel = createViewModel()
 
         viewModel.navigateToReader.test {
@@ -148,12 +155,10 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `importManga navigates to existing manga when duplicate URI`() = runTest(testDispatcher) {
+    fun `importManga navigates to existing manga when duplicate content hash`() = runTest(testDispatcher) {
         coEvery { pdfExtractor.extractPageCount("content://duplicate.pdf") } returns 10
-        coEvery { repository.insertManga(any()) } returns -1L
-        coEvery { repository.getMangaByUri("content://duplicate.pdf") } returns Manga(
-            id = 42, uri = "content://duplicate.pdf", title = "Existing", pageCount = 10, lastReadPage = 3
-        )
+        coEvery { fileHashProvider.computeHash(uri = "content://duplicate.pdf") } returns "existinghash"
+        coEvery { repository.upsertManga(any()) } returns 42L
         val viewModel = createViewModel()
 
         viewModel.navigateToReader.test {

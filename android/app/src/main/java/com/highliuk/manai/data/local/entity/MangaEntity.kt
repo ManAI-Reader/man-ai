@@ -8,7 +8,10 @@ import com.highliuk.manai.domain.model.Manga
 
 @Entity(
     tableName = "manga",
-    indices = [Index(value = ["uri"], unique = true)]
+    indices = [
+        Index(value = ["contentHash"], unique = true),
+        Index(value = ["uri"])
+    ]
 )
 data class MangaEntity(
     @PrimaryKey(autoGenerate = true)
@@ -17,14 +20,17 @@ data class MangaEntity(
     val title: String,
     val pageCount: Int,
     @ColumnInfo(defaultValue = "0")
-    val lastReadPage: Int = 0
+    val lastReadPage: Int = 0,
+    @ColumnInfo(defaultValue = "")
+    val contentHash: String = ""
 ) {
     fun toManga(): Manga = Manga(
         id = id,
         uri = uri,
         title = title,
         pageCount = pageCount,
-        lastReadPage = lastReadPage
+        lastReadPage = lastReadPage,
+        contentHash = contentHash
     )
 
     companion object {
@@ -33,7 +39,8 @@ data class MangaEntity(
             uri = manga.uri,
             title = manga.title,
             pageCount = manga.pageCount,
-            lastReadPage = manga.lastReadPage
+            lastReadPage = manga.lastReadPage,
+            contentHash = manga.contentHash
         )
     }
 }

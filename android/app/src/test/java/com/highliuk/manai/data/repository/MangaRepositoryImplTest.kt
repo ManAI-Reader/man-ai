@@ -68,6 +68,43 @@ class MangaRepositoryImplTest {
     }
 
     @Test
+    fun `upsertManga delegates to dao upsertByContentHash`() = runTest {
+        val manga = Manga(uri = "uri1", title = "Test", pageCount = 5, contentHash = "hash123")
+        coEvery { dao.upsertByContentHash(any()) } returns 42L
+
+        val result = repository.upsertManga(manga)
+
+        assertEquals(42L, result)
+        coVerify {
+            dao.upsertByContentHash(match {
+                it.uri == "uri1" && it.contentHash == "hash123"
+            })
+        }
+    }
+
+    @Test
+    fun `getMangaByContentHash returns domain model`() = runTest {
+        val entity = MangaEntity(
+            id = 1, uri = "uri1", title = "Test", pageCount = 10, contentHash = "hash123"
+        )
+        coEvery { dao.getByContentHash("hash123") } returns entity
+
+        val result = repository.getMangaByContentHash("hash123")
+
+        assertEquals("Test", result?.title)
+        assertEquals("hash123", result?.contentHash)
+    }
+
+    @Test
+    fun `getMangaByContentHash returns null when not found`() = runTest {
+        coEvery { dao.getByContentHash("nonexistent") } returns null
+
+        val result = repository.getMangaByContentHash("nonexistent")
+
+        assertNull(result)
+    }
+
+    @Test
     fun `updateLastReadPage delegates to dao`() = runTest {
         repository.updateLastReadPage(1L, 42)
 

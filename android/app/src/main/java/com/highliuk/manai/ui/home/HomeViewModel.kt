@@ -2,6 +2,7 @@ package com.highliuk.manai.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.highliuk.manai.data.hash.FileHashProvider
 import com.highliuk.manai.data.pdf.PdfMetadataExtractor
 import com.highliuk.manai.domain.model.Manga
 import com.highliuk.manai.domain.repository.MangaRepository
@@ -20,6 +21,7 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val repository: MangaRepository,
     private val pdfMetadataExtractor: PdfMetadataExtractor,
+    private val fileHashProvider: FileHashProvider,
     private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
@@ -37,14 +39,11 @@ class HomeViewModel @Inject constructor(
             try {
                 val title = fileName.removeSuffix(".pdf")
                 val pageCount = pdfMetadataExtractor.extractPageCount(uri)
-                val id = repository.insertManga(Manga(uri = uri, title = title, pageCount = pageCount))
-                if (id != -1L) {
-                    _navigateToReader.emit(id)
-                } else {
-                    repository.getMangaByUri(uri)?.let { existing ->
-                        _navigateToReader.emit(existing.id)
-                    }
-                }
+                val contentHash = fileHashProvider.computeHash(uri)
+                val id = repository.upsertManga(
+                    Manga(uri = uri, title = title, pageCount = pageCount, contentHash = contentHash)
+                )
+                _navigateToReader.emit(id)
             } catch (_: Exception) {
                 // PDF could not be opened or read — silently ignore
             }

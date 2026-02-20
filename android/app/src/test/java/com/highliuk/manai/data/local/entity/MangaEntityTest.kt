@@ -140,4 +140,34 @@ class MangaEntityTest {
 
         assertEquals(0, entity.toManga().lastReadPage)
     }
+
+    @Test
+    fun `toManga maps contentHash`() {
+        val entity = MangaEntity(
+            id = 1L,
+            uri = "content://test.pdf",
+            title = "Test Manga",
+            pageCount = 42,
+            contentHash = "abc123hash"
+        )
+
+        val manga = entity.toManga()
+
+        assertEquals("abc123hash", manga.contentHash)
+    }
+
+    @Test
+    fun `fromManga maps contentHash`() {
+        val manga = Manga(
+            id = 1L,
+            uri = "content://test.pdf",
+            title = "Test Manga",
+            pageCount = 42,
+            contentHash = "def456hash"
+        )
+
+        val entity = MangaEntity.fromManga(manga)
+
+        assertEquals("def456hash", entity.contentHash)
+    }
 }

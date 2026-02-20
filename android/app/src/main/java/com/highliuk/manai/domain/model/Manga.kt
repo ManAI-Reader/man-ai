@@ -5,5 +5,6 @@ data class Manga(
     val uri: String,
     val title: String,
     val pageCount: Int,
-    val lastReadPage: Int = 0
+    val lastReadPage: Int = 0,
+    val contentHash: String = ""
 )
