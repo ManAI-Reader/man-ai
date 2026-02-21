@@ -1,6 +1,6 @@
 package com.highliuk.manai.di
 
-import com.highliuk.manai.data.pdf.PdfFileCopier
+import com.highliuk.manai.data.pdf.PdfFileManager
 import com.highliuk.manai.data.pdf.PdfMetadataExtractor
 import dagger.Module
 import dagger.Provides
@@ -23,8 +23,9 @@ object TestPdfModule {
 
     @Provides
     @Singleton
-    fun providePdfFileCopier(): PdfFileCopier =
-        object : PdfFileCopier {
+    fun providePdfFileManager(): PdfFileManager =
+        object : PdfFileManager {
             override suspend fun copyToLocalStorage(sourceUri: String): String = sourceUri
+            override suspend fun deleteLocalCopy(uri: String): Boolean = true
         }
 }

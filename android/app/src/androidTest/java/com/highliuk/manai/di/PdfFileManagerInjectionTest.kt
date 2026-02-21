@@ -1,6 +1,6 @@
 package com.highliuk.manai.di
 
-import com.highliuk.manai.data.pdf.PdfFileCopier
+import com.highliuk.manai.data.pdf.PdfFileManager
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Assert.assertNotNull
@@ -10,13 +10,13 @@ import org.junit.Test
 import javax.inject.Inject
 
 @HiltAndroidTest
-class PdfFileCopierInjectionTest {
+class PdfFileManagerInjectionTest {
 
     @get:Rule
     val hiltRule = HiltAndroidRule(this)
 
     @Inject
-    lateinit var pdfFileCopier: PdfFileCopier
+    lateinit var pdfFileManager: PdfFileManager
 
     @Before
     fun setUp() {
@@ -24,7 +24,7 @@ class PdfFileCopierInjectionTest {
     }
 
     @Test
-    fun pdfFileCopierIsInjectable() {
-        assertNotNull(pdfFileCopier)
+    fun pdfFileManagerIsInjectable() {
+        assertNotNull(pdfFileManager)
     }
 }

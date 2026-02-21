@@ -161,4 +161,19 @@ class MangaDaoTest {
         val result = dao.getByContentHash("nonexistent")
         assertNull(result)
     }
+
+    @Test
+    fun deleteByIds_removesMatchingManga() = runTest {
+        dao.insert(MangaEntity(uri = "uri1", title = "A", pageCount = 1, contentHash = "h1"))
+        dao.insert(MangaEntity(uri = "uri2", title = "B", pageCount = 2, contentHash = "h2"))
+        dao.insert(MangaEntity(uri = "uri3", title = "C", pageCount = 3, contentHash = "h3"))
+        val all = dao.getAll().first()
+        val idsToDelete = listOf(all[0].id, all[2].id)
+
+        dao.deleteByIds(idsToDelete)
+
+        val remaining = dao.getAll().first()
+        assertEquals(1, remaining.size)
+        assertEquals("B", remaining[0].title)
+    }
 }

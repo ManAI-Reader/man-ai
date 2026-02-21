@@ -99,4 +99,58 @@ class HomeScreenTest {
         composeTestRule.onNodeWithContentDescription("Settings").performClick()
         assertTrue(clicked)
     }
+
+    @Test
+    fun selectionMode_showsDeleteButton() {
+        val manga = Manga(id = 1, uri = "uri1", title = "One Piece", pageCount = 200)
+        composeTestRule.setContent {
+            HomeScreen(
+                mangaList = listOf(manga),
+                selectedMangaIds = setOf(1L),
+                isSelectionMode = true,
+                onImportClick = {},
+                onSettingsClick = {},
+                onMangaClick = {},
+                onToggleSelection = {},
+                onDeleteClick = {},
+                onClearSelection = {}
+            )
+        }
+        composeTestRule.onNodeWithContentDescription("Delete").assertIsDisplayed()
+    }
+
+    @Test
+    fun selectionMode_tapDeleteButton_callsCallback() {
+        var deleteClicked = false
+        composeTestRule.setContent {
+            HomeScreen(
+                mangaList = listOf(Manga(id = 1, uri = "u", title = "M", pageCount = 1)),
+                selectedMangaIds = setOf(1L),
+                isSelectionMode = true,
+                onImportClick = {},
+                onSettingsClick = {},
+                onMangaClick = {},
+                onToggleSelection = {},
+                onDeleteClick = { deleteClicked = true },
+                onClearSelection = {}
+            )
+        }
+        composeTestRule.onNodeWithContentDescription("Delete").performClick()
+        assertTrue(deleteClicked)
+    }
+
+    @Test
+    fun deleteDialog_showsConfirmationAndCallsDelete() {
+        var confirmed = false
+        composeTestRule.setContent {
+            DeleteMangaDialog(
+                mangaCount = 3,
+                onConfirm = { confirmed = true },
+                onDismiss = {}
+            )
+        }
+        composeTestRule.onNodeWithText("Delete 3 manga?").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Delete").performClick()
+        assertTrue(confirmed)
+    }
 }

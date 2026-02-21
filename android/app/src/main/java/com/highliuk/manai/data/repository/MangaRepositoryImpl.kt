@@ -35,4 +35,8 @@ class MangaRepositoryImpl @Inject constructor(
     override suspend fun updateLastReadPage(id: Long, page: Int) {
         mangaDao.updateLastReadPage(id, page)
     }
+
+    override suspend fun deleteMangaByIds(ids: List<Long>) {
+        mangaDao.deleteByIds(ids)
+    }
 }

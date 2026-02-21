@@ -1,5 +1,6 @@
 package com.highliuk.manai.data.pdf
 
-interface PdfFileCopier {
+interface PdfFileManager {
     suspend fun copyToLocalStorage(sourceUri: String): String
+    suspend fun deleteLocalCopy(uri: String): Boolean
 }

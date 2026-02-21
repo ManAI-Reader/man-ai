@@ -1,8 +1,8 @@
 package com.highliuk.manai.di
 
-import com.highliuk.manai.data.pdf.AndroidPdfFileCopier
+import com.highliuk.manai.data.pdf.AndroidPdfFileManager
 import com.highliuk.manai.data.pdf.AndroidPdfMetadataExtractor
-import com.highliuk.manai.data.pdf.PdfFileCopier
+import com.highliuk.manai.data.pdf.PdfFileManager
 import com.highliuk.manai.data.pdf.PdfMetadataExtractor
 import dagger.Binds
 import dagger.Module
@@ -19,5 +19,5 @@ abstract class PdfModule {
 
     @Binds
     @Singleton
-    abstract fun bindPdfFileCopier(impl: AndroidPdfFileCopier): PdfFileCopier
+    abstract fun bindPdfFileManager(impl: AndroidPdfFileManager): PdfFileManager
 }

@@ -9,9 +9,9 @@ import java.io.File
 import java.util.UUID
 import javax.inject.Inject
 
-class AndroidPdfFileCopier @Inject constructor(
+class AndroidPdfFileManager @Inject constructor(
     @ApplicationContext private val context: Context
-) : PdfFileCopier {
+) : PdfFileManager {
 
     override suspend fun copyToLocalStorage(sourceUri: String): String =
         withContext(Dispatchers.IO) {
@@ -28,5 +28,15 @@ class AndroidPdfFileCopier @Inject constructor(
             }
 
             "file://${localFile.absolutePath}"
+        }
+
+    override suspend fun deleteLocalCopy(uri: String): Boolean =
+        withContext(Dispatchers.IO) {
+            if (!uri.startsWith("file://")) return@withContext false
+            val path = uri.removePrefix("file://")
+            val file = File(path)
+            val mangaDir = context.getExternalFilesDir("manga") ?: return@withContext false
+            if (!file.absolutePath.startsWith(mangaDir.absolutePath)) return@withContext false
+            file.delete()
         }
 }

@@ -27,6 +27,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.highliuk.manai.ui.home.DeleteMangaDialog
 import com.highliuk.manai.ui.home.HomeScreen
 import com.highliuk.manai.ui.home.HomeViewModel
 import com.highliuk.manai.ui.reader.ReaderScreen
@@ -94,14 +95,30 @@ fun ManAiNavHost(
             val viewModel: HomeViewModel = hiltViewModel()
             val mangaList by viewModel.mangaList.collectAsState()
             val gridColumns by viewModel.gridColumns.collectAsState()
+            val selectedMangaIds by viewModel.selectedMangaIds.collectAsState()
+            val isSelectionMode by viewModel.isSelectionMode.collectAsState()
+            val showDeleteDialog by viewModel.showDeleteDialog.collectAsState()
 
             HomeScreen(
                 mangaList = mangaList,
                 gridColumns = gridColumns,
+                selectedMangaIds = selectedMangaIds,
+                isSelectionMode = isSelectionMode,
                 onImportClick = onImportClick,
                 onSettingsClick = { navController.navigate("settings") },
-                onMangaClick = { manga -> navController.navigate("reader/${manga.id}") }
+                onMangaClick = { manga -> navController.navigate("reader/${manga.id}") },
+                onToggleSelection = viewModel::toggleSelection,
+                onDeleteClick = viewModel::requestDelete,
+                onClearSelection = viewModel::clearSelection
             )
+
+            if (showDeleteDialog) {
+                DeleteMangaDialog(
+                    mangaCount = selectedMangaIds.size,
+                    onConfirm = viewModel::confirmDelete,
+                    onDismiss = viewModel::dismissDelete
+                )
+            }
         }
         composable(
             "reader/{mangaId}",

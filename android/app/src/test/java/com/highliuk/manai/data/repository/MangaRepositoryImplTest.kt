@@ -110,4 +110,11 @@ class MangaRepositoryImplTest {
 
         coVerify { dao.updateLastReadPage(1L, 42) }
     }
+
+    @Test
+    fun `deleteMangaByIds delegates to dao`() = runTest {
+        repository.deleteMangaByIds(listOf(1L, 2L))
+
+        coVerify { dao.deleteByIds(listOf(1L, 2L)) }
+    }
 }

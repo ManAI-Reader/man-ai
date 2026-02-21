@@ -2,7 +2,7 @@ package com.highliuk.manai.ui.home
 
 import app.cash.turbine.test
 import com.highliuk.manai.data.hash.FileHashProvider
-import com.highliuk.manai.data.pdf.PdfFileCopier
+import com.highliuk.manai.data.pdf.PdfFileManager
 import com.highliuk.manai.data.pdf.PdfMetadataExtractor
 import com.highliuk.manai.domain.model.Manga
 import com.highliuk.manai.domain.repository.MangaRepository
@@ -31,7 +31,7 @@ class HomeViewModelTest {
     private val pdfExtractor = mockk<PdfMetadataExtractor>(relaxed = true)
     private val fileHashProvider = mockk<FileHashProvider>(relaxed = true)
     private val userPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
-    private val pdfFileCopier = mockk<PdfFileCopier>(relaxed = true)
+    private val pdfFileCopier = mockk<PdfFileManager>(relaxed = true)
     private val mangaFlow = MutableStateFlow<List<Manga>>(emptyList())
     private val gridColumnsFlow = MutableStateFlow(2)
 
@@ -218,5 +218,91 @@ class HomeViewModelTest {
         }
 
         coVerify(exactly = 0) { repository.upsertManga(any()) }
+    }
+
+    @Test
+    fun `toggleSelection adds and removes manga id`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        viewModel.toggleSelection(1L)
+        assertEquals(setOf(1L), viewModel.selectedMangaIds.value)
+        viewModel.toggleSelection(2L)
+        assertEquals(setOf(1L, 2L), viewModel.selectedMangaIds.value)
+        viewModel.toggleSelection(1L)
+        assertEquals(setOf(2L), viewModel.selectedMangaIds.value)
+    }
+
+    @Test
+    fun `clearSelection empties selection`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        viewModel.toggleSelection(1L)
+        viewModel.toggleSelection(2L)
+        viewModel.clearSelection()
+        assertEquals(emptySet<Long>(), viewModel.selectedMangaIds.value)
+    }
+
+    @Test
+    fun `isSelectionMode is true when selection is not empty`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        viewModel.isSelectionMode.test {
+            assertEquals(false, awaitItem())
+            viewModel.toggleSelection(1L)
+            assertEquals(true, awaitItem())
+            viewModel.toggleSelection(1L)
+            assertEquals(false, awaitItem())
+        }
+    }
+
+    @Test
+    fun `deleteSelectedManga deletes from repo and cleans local copies`() = runTest(testDispatcher) {
+        val manga1 = Manga(id = 1, uri = "file:///local/manga/a.pdf", title = "A", pageCount = 10)
+        val manga2 = Manga(id = 2, uri = "content://external/b.pdf", title = "B", pageCount = 20)
+        mangaFlow.value = listOf(manga1, manga2)
+        val viewModel = createViewModel()
+
+        viewModel.mangaList.test {
+            skipItems(1)
+            awaitItem() // wait for manga list to be populated
+
+            viewModel.toggleSelection(1L)
+            viewModel.toggleSelection(2L)
+            viewModel.deleteSelectedManga()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            coVerify { pdfFileCopier.deleteLocalCopy("file:///local/manga/a.pdf") }
+            coVerify { pdfFileCopier.deleteLocalCopy("content://external/b.pdf") }
+            coVerify { repository.deleteMangaByIds(match { it.containsAll(listOf(1L, 2L)) }) }
+            assertEquals(emptySet<Long>(), viewModel.selectedMangaIds.value)
+        }
+    }
+
+    @Test
+    fun `showDeleteDialog is false initially and toggles`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        assertEquals(false, viewModel.showDeleteDialog.value)
+        viewModel.requestDelete()
+        assertEquals(true, viewModel.showDeleteDialog.value)
+        viewModel.dismissDelete()
+        assertEquals(false, viewModel.showDeleteDialog.value)
+    }
+
+    @Test
+    fun `confirmDelete calls deleteSelectedManga and dismisses dialog`() = runTest(testDispatcher) {
+        mangaFlow.value = listOf(Manga(id = 1, uri = "file:///x", title = "A", pageCount = 1))
+        val viewModel = createViewModel()
+
+        viewModel.mangaList.test {
+            skipItems(1)
+            awaitItem()
+
+            viewModel.toggleSelection(1L)
+            viewModel.requestDelete()
+
+            viewModel.confirmDelete()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            assertEquals(false, viewModel.showDeleteDialog.value)
+            assertEquals(emptySet<Long>(), viewModel.selectedMangaIds.value)
+            coVerify { repository.deleteMangaByIds(listOf(1L)) }
+        }
     }
 }

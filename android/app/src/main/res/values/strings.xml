@@ -29,6 +29,17 @@
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
 
+    <!-- Delete manga -->
+    <string name="delete">Delete</string>
+    <plurals name="n_selected">
+        <item quantity="one">%d selected</item>
+        <item quantity="other">%d selected</item>
+    </plurals>
+    <plurals name="delete_manga_confirm">
+        <item quantity="one">Delete %d manga?</item>
+        <item quantity="other">Delete %d manga?</item>
+    </plurals>
+
     <!-- PDF thumbnail -->
     <string name="pdf_thumbnail">PDF thumbnail</string>
     <string name="pdf_placeholder">PDF placeholder</string>

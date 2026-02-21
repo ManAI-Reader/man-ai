@@ -10,6 +10,7 @@ import io.mockk.unmockkStatic
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -17,7 +18,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.ByteArrayInputStream
 
-class AndroidPdfFileCopierTest {
+class AndroidPdfFileManagerTest {
 
     @get:Rule
     val tempFolder = TemporaryFolder()
@@ -39,7 +40,7 @@ class AndroidPdfFileCopierTest {
         unmockkStatic(Uri::class)
     }
 
-    private fun createCopier() = AndroidPdfFileCopier(context)
+    private fun createManager() = AndroidPdfFileManager(context)
 
     @Test
     fun `copyToLocalStorage copies content and returns local URI`() = runTest {
@@ -48,8 +49,8 @@ class AndroidPdfFileCopierTest {
         every { Uri.parse("content://external/test.pdf") } returns sourceUri
         every { contentResolver.openInputStream(sourceUri) } returns ByteArrayInputStream(pdfBytes)
 
-        val copier = createCopier()
-        val resultUri = copier.copyToLocalStorage("content://external/test.pdf")
+        val manager = createManager()
+        val resultUri = manager.copyToLocalStorage("content://external/test.pdf")
 
         // Result should be a file:// URI pointing to manga dir
         assertTrue(resultUri.startsWith("file://${mangaDir.absolutePath}"))
@@ -68,7 +69,41 @@ class AndroidPdfFileCopierTest {
         every { Uri.parse("content://invalid") } returns sourceUri
         every { contentResolver.openInputStream(sourceUri) } returns null
 
-        val copier = createCopier()
-        copier.copyToLocalStorage("content://invalid")
+        val manager = createManager()
+        manager.copyToLocalStorage("content://invalid")
+    }
+
+    @Test
+    fun `deleteLocalCopy deletes file in manga directory`() = runTest {
+        val file = java.io.File(mangaDir, "test.pdf")
+        file.writeBytes(byteArrayOf(1, 2, 3))
+        assertTrue(file.exists())
+
+        val manager = createManager()
+        val deleted = manager.deleteLocalCopy("file://${file.absolutePath}")
+
+        assertTrue(deleted)
+        assertFalse(file.exists())
+    }
+
+    @Test
+    fun `deleteLocalCopy ignores content URIs`() = runTest {
+        val manager = createManager()
+        val deleted = manager.deleteLocalCopy("content://external/doc.pdf")
+
+        assertFalse(deleted)
+    }
+
+    @Test
+    fun `deleteLocalCopy ignores file URIs outside manga directory`() = runTest {
+        val otherDir = tempFolder.newFolder("other")
+        val file = java.io.File(otherDir, "outside.pdf")
+        file.writeBytes(byteArrayOf(1, 2, 3))
+
+        val manager = createManager()
+        val deleted = manager.deleteLocalCopy("file://${file.absolutePath}")
+
+        assertFalse(deleted)
+        assertTrue(file.exists())
     }
 }
