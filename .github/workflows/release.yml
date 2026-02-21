@@ -38,39 +38,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: Run instrumented tests
-        id: instrumented
-        timeout-minutes: 8
-        continue-on-error: true
-        env:
-          ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: 1
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 29
-          arch: x86_64
-          target: default
-          force-avd-creation: false
-          emulator-options: >-
-            -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
-            -camera-back none -camera-front none -no-snapshot-save
-          disable-animations: true
-          working-directory: android
-          script: |
-            adb shell settings put system screen_off_timeout 2147483647
-            adb shell settings put secure spell_checker_enabled 0
-            ./gradlew connectedStagingAndroidTest
-            adb emu kill || true
-            pkill -9 -f crashpad_handler || true
-
-      - name: Fail if instrumented tests failed
-        if: steps.instrumented.outcome == 'failure'
-        run: |
-          if [ -d app/build/outputs/androidTest-results/connected/staging ] && \
-             ! find app/build/outputs/androidTest-results/connected/staging -name '*.xml' -exec grep -l 'failures="[1-9]' {} + 2>/dev/null | grep -q .; then
-            echo "Instrumented tests passed (emulator cleanup timed out, ignoring)"
-          else
-            echo "::error::Instrumented tests failed"
-            exit 1
-          fi
+        run: ./gradlew ciDeviceStagingAndroidTest
 
       - name: Decode keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/keystore.jks
