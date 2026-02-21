@@ -6,12 +6,6 @@
       "args": ["-y", "@upstash/context7-mcp@latest"],
       "env": {}
     },
-    "memory": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-memory"],
-      "env": {}
-    },
     "fetch": {
       "type": "stdio",
       "command": "uvx",

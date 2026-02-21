@@ -1,26 +1,25 @@
 package com.highliuk.manai.ui.home
 
+import app.cash.turbine.test
+import com.highliuk.manai.data.hash.FileHashProvider
+import com.highliuk.manai.data.pdf.PdfFileCopier
+import com.highliuk.manai.data.pdf.PdfMetadataExtractor
 import com.highliuk.manai.domain.model.Manga
-import com.highliuk.manai.domain.model.PdfMetadata
-import com.highliuk.manai.domain.repository.PdfDocumentHandler
-import com.highliuk.manai.domain.usecase.GetMangaListUseCase
-import com.highliuk.manai.domain.usecase.ImportMangaUseCase
+import com.highliuk.manai.domain.repository.MangaRepository
+import com.highliuk.manai.domain.repository.UserPreferencesRepository
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -28,13 +27,20 @@ import org.junit.Test
 class HomeViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
-    private val getMangaList = mockk<GetMangaListUseCase>()
-    private val importManga = mockk<ImportMangaUseCase>()
-    private val pdfDocumentHandler = mockk<PdfDocumentHandler>()
+    private val repository = mockk<MangaRepository>(relaxed = true)
+    private val pdfExtractor = mockk<PdfMetadataExtractor>(relaxed = true)
+    private val fileHashProvider = mockk<FileHashProvider>(relaxed = true)
+    private val userPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
+    private val pdfFileCopier = mockk<PdfFileCopier>(relaxed = true)
+    private val mangaFlow = MutableStateFlow<List<Manga>>(emptyList())
+    private val gridColumnsFlow = MutableStateFlow(2)
 
     @Before
-    fun setup() {
+    fun setUp() {
         Dispatchers.setMain(testDispatcher)
+        coEvery { repository.getAllManga() } returns mangaFlow
+        every { userPreferencesRepository.gridColumns } returns gridColumnsFlow
+        coEvery { fileHashProvider.computeHash(uri = any()) } returns "defaulthash"
     }
 
     @After
@@ -42,76 +48,175 @@ class HomeViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel(): HomeViewModel {
-        return HomeViewModel(getMangaList, importManga, pdfDocumentHandler)
-    }
+    private fun createViewModel() = HomeViewModel(
+        repository, pdfExtractor, fileHashProvider, userPreferencesRepository, pdfFileCopier
+    )
 
     @Test
-    fun `initial state is Loading`() = runTest(testDispatcher) {
-        every { getMangaList() } returns flowOf(emptyList())
-
+    fun `mangaList emits empty list initially`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
 
-        assertEquals(HomeUiState.Loading, viewModel.uiState.value)
+        viewModel.mangaList.test {
+            assertEquals(emptyList<Manga>(), awaitItem())
+        }
     }
 
     @Test
-    fun `state is Empty when manga list is empty`() = runTest(testDispatcher) {
-        every { getMangaList() } returns flowOf(emptyList())
-
+    fun `mangaList emits data from repository`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
-        val job = launch { viewModel.uiState.collect {} }
-        advanceUntilIdle()
-
-        assertEquals(HomeUiState.Empty, viewModel.uiState.value)
-        job.cancel()
-    }
-
-    @Test
-    fun `state is Success when manga list is not empty`() = runTest(testDispatcher) {
-        val mangaList = listOf(
-            Manga(id = 1, title = "Test", filePath = "/test.pdf", pageCount = 50),
+        val mangas = listOf(
+            Manga(id = 1, uri = "uri1", title = "Manga 1", pageCount = 10)
         )
-        every { getMangaList() } returns flowOf(mangaList)
 
-        val viewModel = createViewModel()
-        val job = launch { viewModel.uiState.collect {} }
-        advanceUntilIdle()
-
-        val state = viewModel.uiState.value
-        assertTrue(state is HomeUiState.Success)
-        assertEquals(mangaList, (state as HomeUiState.Success).mangaList)
-        job.cancel()
+        viewModel.mangaList.test {
+            assertEquals(emptyList<Manga>(), awaitItem())
+            mangaFlow.value = mangas
+            assertEquals(mangas, awaitItem())
+        }
     }
 
     @Test
-    fun `importManga extracts metadata and delegates to use case`() = runTest(testDispatcher) {
-        val testUri = "content://com.android.providers.media/test.pdf"
-        every { getMangaList() } returns flowOf(emptyList())
-        coEvery { pdfDocumentHandler.importDocument(testUri) } returns PdfMetadata("test", 15)
-        coEvery { importManga("test", testUri, 15) } returns 1L
-
+    fun `importManga extracts page count and inserts manga with content hash`() = runTest(testDispatcher) {
+        coEvery { pdfExtractor.extractPageCount("content://test.pdf") } returns 42
+        coEvery { fileHashProvider.computeHash(uri = "content://test.pdf") } returns "abc123"
         val viewModel = createViewModel()
-        viewModel.importManga(testUri)
-        advanceUntilIdle()
 
-        coVerify { pdfDocumentHandler.importDocument(testUri) }
-        coVerify { importManga("test", testUri, 15) }
+        viewModel.importManga("content://test.pdf", "my-manga.pdf")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify {
+            repository.upsertManga(match {
+                it.uri == "content://test.pdf" &&
+                    it.title == "my-manga" &&
+                    it.pageCount == 42 &&
+                    it.contentHash == "abc123"
+            })
+        }
     }
 
     @Test
-    fun `importManga handles handler failure gracefully`() = runTest(testDispatcher) {
-        val testUri = "content://invalid"
-        every { getMangaList() } returns flowOf(emptyList())
-        coEvery { pdfDocumentHandler.importDocument(testUri) } throws IllegalStateException("Cannot open PDF")
-
+    fun `importManga strips pdf extension from title`() = runTest(testDispatcher) {
+        coEvery { pdfExtractor.extractPageCount("content://file.pdf") } returns 10
         val viewModel = createViewModel()
-        // Should not crash
-        viewModel.importManga(testUri)
-        advanceUntilIdle()
 
-        coVerify { pdfDocumentHandler.importDocument(testUri) }
-        // Use case should NOT be called when handler fails
-        coVerify(exactly = 0) { importManga(any(), any(), any()) }
+        viewModel.importManga("content://file.pdf", "One Piece Vol.1.pdf")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify {
+            repository.upsertManga(match { it.title == "One Piece Vol.1" })
+        }
+    }
+
+    @Test
+    fun `importManga does not crash when extractPageCount throws`() = runTest(testDispatcher) {
+        coEvery { pdfExtractor.extractPageCount(any()) } throws RuntimeException("Cannot open PDF")
+        val viewModel = createViewModel()
+
+        viewModel.importManga("content://bad.pdf", "bad.pdf")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify(exactly = 0) { repository.upsertManga(any()) }
+    }
+
+    @Test
+    fun `importManga works with filename without extension`() = runTest(testDispatcher) {
+        coEvery { pdfExtractor.extractPageCount("content://noext") } returns 5
+        val viewModel = createViewModel()
+
+        viewModel.importManga("content://noext", "my-manga")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify {
+            repository.upsertManga(match { it.title == "my-manga" && it.pageCount == 5 })
+        }
+    }
+
+    @Test
+    fun `importManga emits navigation event with manga id`() = runTest(testDispatcher) {
+        coEvery { pdfExtractor.extractPageCount("content://test.pdf") } returns 42
+        coEvery { repository.upsertManga(any()) } returns 7L
+        val viewModel = createViewModel()
+
+        viewModel.navigateToReader.test {
+            viewModel.importManga("content://test.pdf", "my-manga.pdf")
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(7L, awaitItem())
+        }
+    }
+
+    @Test
+    fun `importManga does not emit navigation event on failure`() = runTest(testDispatcher) {
+        coEvery { pdfExtractor.extractPageCount(any()) } throws RuntimeException("fail")
+        val viewModel = createViewModel()
+
+        viewModel.navigateToReader.test {
+            viewModel.importManga("content://bad.pdf", "bad.pdf")
+            testDispatcher.scheduler.advanceUntilIdle()
+            expectNoEvents()
+        }
+    }
+
+    @Test
+    fun `importManga navigates to existing manga when duplicate content hash`() = runTest(testDispatcher) {
+        coEvery { pdfExtractor.extractPageCount("content://duplicate.pdf") } returns 10
+        coEvery { fileHashProvider.computeHash(uri = "content://duplicate.pdf") } returns "existinghash"
+        coEvery { repository.upsertManga(any()) } returns 42L
+        val viewModel = createViewModel()
+
+        viewModel.navigateToReader.test {
+            viewModel.importManga("content://duplicate.pdf", "duplicate.pdf")
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(42L, awaitItem())
+        }
+    }
+
+    @Test
+    fun `gridColumns emits value from preferences repository`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.gridColumns.test {
+            assertEquals(2, awaitItem())
+            gridColumnsFlow.value = 3
+            assertEquals(3, awaitItem())
+        }
+    }
+
+    @Test
+    fun `importMangaFromIntent copies file then imports`() = runTest(testDispatcher) {
+        coEvery { pdfFileCopier.copyToLocalStorage("content://external/manga.pdf") } returns "file:///local/manga.pdf"
+        coEvery { pdfExtractor.extractPageCount("file:///local/manga.pdf") } returns 20
+        coEvery { fileHashProvider.computeHash(uri = "file:///local/manga.pdf") } returns "hash123"
+        coEvery { repository.upsertManga(any()) } returns 5L
+        val viewModel = createViewModel()
+
+        viewModel.navigateToReader.test {
+            viewModel.importMangaFromIntent("content://external/manga.pdf", "manga.pdf")
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(5L, awaitItem())
+        }
+
+        coVerify {
+            pdfFileCopier.copyToLocalStorage("content://external/manga.pdf")
+            repository.upsertManga(match {
+                it.uri == "file:///local/manga.pdf" &&
+                    it.title == "manga" &&
+                    it.pageCount == 20 &&
+                    it.contentHash == "hash123"
+            })
+        }
+    }
+
+    @Test
+    fun `importMangaFromIntent does not navigate on copy failure`() = runTest(testDispatcher) {
+        coEvery { pdfFileCopier.copyToLocalStorage(any()) } throws RuntimeException("copy failed")
+        val viewModel = createViewModel()
+
+        viewModel.navigateToReader.test {
+            viewModel.importMangaFromIntent("content://bad", "bad.pdf")
+            testDispatcher.scheduler.advanceUntilIdle()
+            expectNoEvents()
+        }
+
+        coVerify(exactly = 0) { repository.upsertManga(any()) }
     }
 }

@@ -2,10 +2,9 @@ package com.highliuk.manai.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.highliuk.manai.domain.model.ReadingDirection
 import com.highliuk.manai.domain.model.ReadingMode
-import com.highliuk.manai.domain.model.ReaderSettings
-import com.highliuk.manai.domain.repository.SettingsRepository
+import com.highliuk.manai.domain.model.ThemeMode
+import com.highliuk.manai.domain.repository.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -15,29 +14,33 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val settingsRepository: SettingsRepository,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
-    val settings: StateFlow<ReaderSettings> = settingsRepository.getSettings()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = ReaderSettings(),
-        )
+    val gridColumns: StateFlow<Int> = userPreferencesRepository.gridColumns
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 2)
 
-    fun updateReadingMode(mode: ReadingMode) {
-        viewModelScope.launch { settingsRepository.updateReadingMode(mode) }
+    fun setGridColumns(columns: Int) {
+        viewModelScope.launch {
+            userPreferencesRepository.setGridColumns(columns)
+        }
     }
 
-    fun updateReadingDirection(direction: ReadingDirection) {
-        viewModelScope.launch { settingsRepository.updateReadingDirection(direction) }
+    val readingMode: StateFlow<ReadingMode> = userPreferencesRepository.readingMode
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ReadingMode.LTR)
+
+    fun setReadingMode(mode: ReadingMode) {
+        viewModelScope.launch {
+            userPreferencesRepository.setReadingMode(mode)
+        }
     }
 
-    fun updateTapNavigationEnabled(enabled: Boolean) {
-        viewModelScope.launch { settingsRepository.updateTapNavigationEnabled(enabled) }
-    }
+    val themeMode: StateFlow<ThemeMode> = userPreferencesRepository.themeMode
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ThemeMode.SYSTEM)
 
-    fun updateCoverAlone(enabled: Boolean) {
-        viewModelScope.launch { settingsRepository.updateCoverAlone(enabled) }
+    fun setThemeMode(mode: ThemeMode) {
+        viewModelScope.launch {
+            userPreferencesRepository.setThemeMode(mode)
+        }
     }
 }

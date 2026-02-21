@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "7accd48b815fc42cf4299f49c84b829a",
+    "identityHash": "e73da491865c908fbea132fd44f459e7",
     "entities": [
       {
         "tableName": "manga",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `filePath` TEXT NOT NULL, `pageCount` INTEGER NOT NULL, `lastReadPage` INTEGER NOT NULL, `addedAt` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `uri` TEXT NOT NULL, `title` TEXT NOT NULL, `pageCount` INTEGER NOT NULL, `lastReadPage` INTEGER NOT NULL DEFAULT 0)",
         "fields": [
           {
             "fieldPath": "id",
@@ -15,14 +15,14 @@
             "notNull": true
           },
           {
-            "fieldPath": "title",
-            "columnName": "title",
+            "fieldPath": "uri",
+            "columnName": "uri",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "filePath",
-            "columnName": "filePath",
+            "fieldPath": "title",
+            "columnName": "title",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -36,13 +36,8 @@
             "fieldPath": "lastReadPage",
             "columnName": "lastReadPage",
             "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "addedAt",
-            "columnName": "addedAt",
-            "affinity": "INTEGER",
-            "notNull": true
+            "notNull": true,
+            "defaultValue": "0"
           }
         ],
         "primaryKey": {
@@ -51,14 +46,24 @@
             "id"
           ]
         },
-        "indices": [],
+        "indices": [
+          {
+            "name": "index_manga_uri",
+            "unique": true,
+            "columnNames": [
+              "uri"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_manga_uri` ON `${TABLE_NAME}` (`uri`)"
+          }
+        ],
         "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7accd48b815fc42cf4299f49c84b829a')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e73da491865c908fbea132fd44f459e7')"
     ]
   }
 }

@@ -14,11 +14,12 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
-
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): ManAiDatabase =
-        Room.databaseBuilder(context, ManAiDatabase::class.java, "manai.db").build()
+        Room.databaseBuilder(context, ManAiDatabase::class.java, "manai.db")
+            .addMigrations(ManAiDatabase.MIGRATION_1_2, ManAiDatabase.MIGRATION_2_3)
+            .build()
 
     @Provides
     fun provideMangaDao(database: ManAiDatabase): MangaDao = database.mangaDao()

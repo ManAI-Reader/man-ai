@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.room)
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.kover)
 }
 
 android {
@@ -15,21 +17,40 @@ android {
         applicationId = "com.highliuk.manai"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.0.1"
+        versionCode = 5
+        versionName = "0.4.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.highliuk.manai.HiltTestRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            val keystoreFile = System.getenv("KEYSTORE_FILE")
+            if (keystoreFile != null) {
+                storeFile = file(keystoreFile)
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
+        create("staging") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".staging"
+        }
     }
+
+    testBuildType = "staging"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -47,6 +68,124 @@ android {
     room {
         schemaDirectory("$projectDir/schemas")
     }
+
+    sourceSets {
+        getByName("androidTest").assets.srcDirs("$projectDir/schemas")
+    }
+
+    @Suppress("UnstableApiUsage")
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+        managedDevices {
+            localDevices {
+                create("ciDevice") {
+                    device = "Pixel 2"
+                    apiLevel = 30
+                    systemImageSource = "aosp"
+                }
+            }
+        }
+    }
+
+    packaging {
+        resources {
+            excludes += setOf(
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE-notice.md"
+            )
+        }
+    }
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    allRules = true
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+    basePath = projectDir.absolutePath
+}
+
+kover {
+    reports {
+        filters {
+            excludes {
+                androidGeneratedClasses()
+                classes(
+                    // Hilt
+                    "dagger.hilt.*",
+                    "hilt_aggregated_deps.*",
+                    "*_HiltModules*",
+                    "*_Factory",
+                    "*_MembersInjector",
+                    "*_GeneratedInjector",
+                    "*Hilt_*",
+                    // Room
+                    "*_Impl",
+                    "*_Impl$*",
+                    // Navigation
+                    "*ComposableSingletons*",
+                    // App entry points
+                    "*.ManAiApplication",
+                    "*.MainActivity",
+                    // DI modules (pure Hilt wiring)
+                    "*.di.*",
+                    // Android-dependent implementations
+                    "*.AndroidPdfMetadataExtractor",
+                    // Room database abstract class
+                    "*.ManAiDatabase",
+                    "*.ManAiDatabase$*",
+                    // Theme color scheme initializations
+                    "*.ui.theme.*",
+                    // Kotlin compiler synthetic classes (unreachable from tests)
+                    "*.UserPreferencesRepositoryImpl${'$'}Companion",
+                    // Room DAO interface — concrete methods compile to $DefaultImpls
+                    // which Room bypasses with its generated implementation
+                    "*.MangaDao*",
+                )
+                annotatedBy(
+                    "*Generated*",
+                    "*Composable*",
+                )
+            }
+        }
+
+        variant("debug") {
+            log {
+                header = "Coverage (Kover engine):"
+                format = "  <entity> — <value>%"
+                groupBy = kotlinx.kover.gradle.plugin.dsl.GroupingEntityType.CLASS
+                coverageUnits = kotlinx.kover.gradle.plugin.dsl.CoverageUnit.LINE
+                aggregationForGroup = kotlinx.kover.gradle.plugin.dsl.AggregationType.COVERED_PERCENTAGE
+            }
+
+            verify {
+                rule {
+                    minBound(100)
+                }
+            }
+        }
+    }
+}
+
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+    jvmTarget = "17"
+    reports {
+        html.required.set(true)
+        xml.required.set(false)
+        txt.required.set(false)
+        sarif.required.set(false)
+    }
+}
+
+tasks.register("printDetektClasspath") {
+    dependsOn("compileDebugKotlin")
+    doLast {
+        val classpath = configurations.getByName("debugCompileClasspath")
+            .resolve()
+            .joinToString(File.pathSeparator) { it.absolutePath }
+        val kotlinClasses = layout.buildDirectory.dir("tmp/kotlin-classes/debug").get().asFile.absolutePath
+        val javaClasses = layout.buildDirectory.dir("intermediates/javac/debug/classes").get().asFile.absolutePath
+        println("DETEKT_CLASSPATH=$kotlinClasses${File.pathSeparator}$javaClasses${File.pathSeparator}$classpath")
+    }
 }
 
 dependencies {
@@ -63,8 +202,11 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
+    implementation(libs.compose.material.icons.extended)
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
+    "stagingImplementation"(libs.compose.ui.tooling)
+    "stagingImplementation"(libs.compose.ui.test.manifest)
 
     // Navigation
     implementation(libs.navigation.compose)
@@ -97,4 +239,9 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test.junit4)
+    androidTestImplementation(libs.room.testing)
+    androidTestImplementation(libs.hilt.android.testing)
+    kspAndroidTest(libs.hilt.compiler)
+    androidTestImplementation(libs.mockk.android)
+    androidTestImplementation(libs.turbine)
 }

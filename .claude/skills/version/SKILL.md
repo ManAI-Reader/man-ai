@@ -14,6 +14,7 @@ Release version `$ARGUMENTS`.
 5. Commit all changes with message: `Release v$ARGUMENTS`
 6. Create an annotated git tag: `git tag -a v$ARGUMENTS -m "Release v$ARGUMENTS"`
 7. Do NOT push unless the user explicitly asks
+8. If the user asks to push, also create a GitHub release: `gh release create v$ARGUMENTS --title "v$ARGUMENTS" --notes "<changelog entries for this version>"`
 
 ## Version format
 

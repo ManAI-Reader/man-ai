@@ -3,10 +3,8 @@ package com.highliuk.manai.ui.settings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -18,29 +16,28 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.highliuk.manai.R
-import com.highliuk.manai.domain.model.ReadingDirection
 import com.highliuk.manai.domain.model.ReadingMode
+import com.highliuk.manai.domain.model.ThemeMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onBack: () -> Unit,
-    viewModel: SettingsViewModel = hiltViewModel(),
+    gridColumns: Int,
+    onGridColumnsChange: (Int) -> Unit,
+    readingMode: ReadingMode,
+    onReadingModeChange: (ReadingMode) -> Unit,
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit,
+    onBack: () -> Unit
 ) {
-    val settings by viewModel.settings.collectAsStateWithLifecycle()
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -48,112 +45,101 @@ fun SettingsScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back),
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
-                },
+                }
             )
-        },
-    ) { padding ->
+        }
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .padding(16.dp)
         ) {
-            // Reading Mode
-            SectionHeader(stringResource(R.string.reading_mode))
-            RadioOption(
-                label = stringResource(R.string.single_page),
-                selected = settings.readingMode == ReadingMode.SINGLE_PAGE,
-                onClick = { viewModel.updateReadingMode(ReadingMode.SINGLE_PAGE) },
+            Text(
+                text = stringResource(R.string.grid_columns),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(bottom = 8.dp)
             )
-            RadioOption(
-                label = stringResource(R.string.double_page),
-                selected = settings.readingMode == ReadingMode.DOUBLE_PAGE,
-                onClick = { viewModel.updateReadingMode(ReadingMode.DOUBLE_PAGE) },
-            )
-            RadioOption(
-                label = stringResource(R.string.long_strip),
-                selected = settings.readingMode == ReadingMode.LONG_STRIP,
-                onClick = { viewModel.updateReadingMode(ReadingMode.LONG_STRIP) },
-            )
+            listOf(2, 3).forEach { columns ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onGridColumnsChange(columns) }
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = gridColumns == columns,
+                        onClick = { onGridColumnsChange(columns) }
+                    )
+                    Text(
+                        text = stringResource(R.string.n_columns, columns),
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+            }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = stringResource(R.string.reading_mode),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
+            )
+            ReadingMode.entries.forEach { mode ->
+                val label = when (mode) {
+                    ReadingMode.LTR -> stringResource(R.string.reading_mode_ltr)
+                    ReadingMode.RTL -> stringResource(R.string.reading_mode_rtl)
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onReadingModeChange(mode) }
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = readingMode == mode,
+                        onClick = { onReadingModeChange(mode) }
+                    )
+                    Text(
+                        text = label,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+            }
 
-            // Reading Direction
-            SectionHeader(stringResource(R.string.reading_direction))
-            RadioOption(
-                label = stringResource(R.string.right_to_left),
-                selected = settings.readingDirection == ReadingDirection.RTL,
-                onClick = { viewModel.updateReadingDirection(ReadingDirection.RTL) },
+            Text(
+                text = stringResource(R.string.theme_mode),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
             )
-            RadioOption(
-                label = stringResource(R.string.left_to_right),
-                selected = settings.readingDirection == ReadingDirection.LTR,
-                onClick = { viewModel.updateReadingDirection(ReadingDirection.LTR) },
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Switches
-            SwitchOption(
-                label = stringResource(R.string.tap_navigation),
-                checked = settings.tapNavigationEnabled,
-                onCheckedChange = { viewModel.updateTapNavigationEnabled(it) },
-            )
-            SwitchOption(
-                label = stringResource(R.string.cover_alone),
-                checked = settings.coverAlone,
-                onCheckedChange = { viewModel.updateCoverAlone(it) },
-            )
+            ThemeMode.entries.forEach { mode ->
+                val themeLabel = when (mode) {
+                    ThemeMode.LIGHT -> stringResource(R.string.theme_mode_light)
+                    ThemeMode.DARK -> stringResource(R.string.theme_mode_dark)
+                    ThemeMode.SYSTEM -> stringResource(R.string.theme_mode_system)
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onThemeModeChange(mode) }
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = themeMode == mode,
+                        onClick = { onThemeModeChange(mode) }
+                    )
+                    Text(
+                        text = themeLabel,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+            }
         }
-    }
-}
-
-@Composable
-private fun SectionHeader(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(bottom = 8.dp),
-    )
-}
-
-@Composable
-private fun RadioOption(label: String, selected: Boolean, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        RadioButton(selected = selected, onClick = onClick)
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(start = 8.dp),
-        )
-    }
-}
-
-@Composable
-private fun SwitchOption(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.weight(1f),
-        )
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }

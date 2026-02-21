@@ -14,6 +14,12 @@ Create atomic git commits for the current changes.
 - Commit message style: imperative mood, concise first line (< 72 chars)
 - Always end with `Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>`
 - Do NOT push unless the user explicitly asks
+- Before committing, verify `./gradlew detekt` passes (the PostToolUse hook catches issues per-file, but run full project detekt before commit as final check)
+- Before committing, run **both** test suites:
+  - `cd android && ./gradlew testDebugUnitTest` — unit tests (JVM)
+  - `cd android && ./gradlew connectedStagingAndroidTest` — instrumented tests (emulator)
+  - If no emulator is running, warn the user and ask to start one before committing
+  - **NEVER skip instrumented tests** — unit tests alone miss Compose UI and device-level regressions
 
 ## Steps
 

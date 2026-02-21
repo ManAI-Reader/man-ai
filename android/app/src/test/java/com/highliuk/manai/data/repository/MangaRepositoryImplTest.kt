@@ -5,7 +5,6 @@ import com.highliuk.manai.data.local.entity.MangaEntity
 import com.highliuk.manai.domain.model.Manga
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -16,95 +15,121 @@ import org.junit.Test
 
 class MangaRepositoryImplTest {
 
-    private val mangaDao = mockk<MangaDao>(relaxed = true)
-    private val repository = MangaRepositoryImpl(mangaDao)
+    private val dao = mockk<MangaDao>(relaxed = true)
+    private val repository = MangaRepositoryImpl(dao)
 
     @Test
-    fun `getMangaList maps entities to domain models`() = runTest {
+    fun `getAllManga maps entities to domain models`() = runTest {
         val entities = listOf(
-            MangaEntity(
-                id = 1,
-                title = "Manga 1",
-                filePath = "/path/1.pdf",
-                pageCount = 100,
-                addedAt = 1000L,
-            ),
+            MangaEntity(id = 1, uri = "uri1", title = "Manga 1", pageCount = 10),
+            MangaEntity(id = 2, uri = "uri2", title = "Manga 2", pageCount = 20)
         )
-        every { mangaDao.getAll() } returns flowOf(entities)
+        coEvery { dao.getAll() } returns flowOf(entities)
 
-        val result = repository.getMangaList().first()
+        val result = repository.getAllManga().first()
 
-        assertEquals(1, result.size)
+        assertEquals(2, result.size)
         assertEquals("Manga 1", result[0].title)
-        assertEquals("/path/1.pdf", result[0].filePath)
+        assertEquals(10, result[0].pageCount)
+        assertEquals("Manga 2", result[1].title)
+    }
+
+    @Test
+    fun `getMangaById maps entity to domain model`() = runTest {
+        val entity = MangaEntity(id = 1, uri = "uri1", title = "Test", pageCount = 10)
+        coEvery { dao.getById(1) } returns flowOf(entity)
+
+        val result = repository.getMangaById(1).first()
+
+        assertEquals("Test", result?.title)
+        assertEquals(10, result?.pageCount)
     }
 
     @Test
     fun `getMangaById returns null when not found`() = runTest {
-        coEvery { mangaDao.getById(99) } returns null
+        coEvery { dao.getById(999) } returns flowOf(null)
 
-        val result = repository.getMangaById(99)
+        val result = repository.getMangaById(999).first()
 
         assertNull(result)
     }
 
     @Test
-    fun `getMangaById returns domain model when found`() = runTest {
-        val entity = MangaEntity(
-            id = 1,
-            title = "Test",
-            filePath = "/test.pdf",
-            pageCount = 50,
-            addedAt = 1000L,
-        )
-        coEvery { mangaDao.getById(1) } returns entity
+    fun `insertManga converts domain model to entity and delegates to dao`() = runTest {
+        val manga = Manga(uri = "uri1", title = "Test", pageCount = 5)
 
-        val result = repository.getMangaById(1)
+        repository.insertManga(manga)
+
+        coVerify {
+            dao.insert(match {
+                it.uri == "uri1" && it.title == "Test" && it.pageCount == 5
+            })
+        }
+    }
+
+    @Test
+    fun `upsertManga delegates to dao upsertByContentHash`() = runTest {
+        val manga = Manga(uri = "uri1", title = "Test", pageCount = 5, contentHash = "hash123")
+        coEvery { dao.upsertByContentHash(any()) } returns 42L
+
+        val result = repository.upsertManga(manga)
+
+        assertEquals(42L, result)
+        coVerify {
+            dao.upsertByContentHash(match {
+                it.uri == "uri1" && it.contentHash == "hash123"
+            })
+        }
+    }
+
+    @Test
+    fun `getMangaByContentHash returns domain model`() = runTest {
+        val entity = MangaEntity(
+            id = 1, uri = "uri1", title = "Test", pageCount = 10, contentHash = "hash123"
+        )
+        coEvery { dao.getByContentHash("hash123") } returns entity
+
+        val result = repository.getMangaByContentHash("hash123")
 
         assertEquals("Test", result?.title)
+        assertEquals("hash123", result?.contentHash)
     }
 
     @Test
-    fun `insertManga delegates to dao`() = runTest {
-        coEvery { mangaDao.insert(any()) } returns 1L
+    fun `getMangaByContentHash returns null when not found`() = runTest {
+        coEvery { dao.getByContentHash("nonexistent") } returns null
 
-        val manga = Manga(title = "New", filePath = "/new.pdf", pageCount = 30)
-        val id = repository.insertManga(manga)
-
-        assertEquals(1L, id)
-        coVerify { mangaDao.insert(any()) }
-    }
-
-    @Test
-    fun `deleteManga delegates to dao`() = runTest {
-        repository.deleteManga(1)
-
-        coVerify { mangaDao.delete(1) }
-    }
-
-    @Test
-    fun `getMangaByFilePath returns domain model when found`() = runTest {
-        val entity = MangaEntity(
-            id = 3,
-            title = "Found",
-            filePath = "content://test/doc.pdf",
-            pageCount = 20,
-            addedAt = 2000L,
-        )
-        coEvery { mangaDao.getByFilePath("content://test/doc.pdf") } returns entity
-
-        val result = repository.getMangaByFilePath("content://test/doc.pdf")
-
-        assertEquals(3L, result?.id)
-        assertEquals("Found", result?.title)
-    }
-
-    @Test
-    fun `getMangaByFilePath returns null when not found`() = runTest {
-        coEvery { mangaDao.getByFilePath("content://unknown") } returns null
-
-        val result = repository.getMangaByFilePath("content://unknown")
+        val result = repository.getMangaByContentHash("nonexistent")
 
         assertNull(result)
+    }
+
+    @Test
+    fun `getMangaByUri returns domain model`() = runTest {
+        val entity = MangaEntity(
+            id = 1, uri = "content://test/file.pdf", title = "Test", pageCount = 10
+        )
+        coEvery { dao.getByUri("content://test/file.pdf") } returns entity
+
+        val result = repository.getMangaByUri("content://test/file.pdf")
+
+        assertEquals("Test", result?.title)
+        assertEquals("content://test/file.pdf", result?.uri)
+    }
+
+    @Test
+    fun `getMangaByUri returns null when not found`() = runTest {
+        coEvery { dao.getByUri("nonexistent") } returns null
+
+        val result = repository.getMangaByUri("nonexistent")
+
+        assertNull(result)
+    }
+
+    @Test
+    fun `updateLastReadPage delegates to dao`() = runTest {
+        repository.updateLastReadPage(1L, 42)
+
+        coVerify { dao.updateLastReadPage(1L, 42) }
     }
 }

@@ -2,6 +2,21 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ MANDATORY WORKFLOW — EXECUTE FOR EVERY TASK
+
+For ANY code change (bug fix, feature, refactor), follow RED-GREEN-REFACTOR:
+
+1. Write FAILING test → run `./gradlew test` → verify RED output
+2. Write MINIMUM production code → run tests → verify GREEN output
+3. Refactor if needed (tests must stay green)
+
+RULES:
+
+- Complete one full RED-GREEN-REFACTOR cycle per task before moving to the next
+- NEVER write production code before its failing test exists
+- If you wrote production code first, DELETE IT and start over with the test
+- Always run and show test output at each step
+
 ## Project
 
 慢愛 (Man AI) — Android manga reader with on-device AI for text detection, OCR, furigana, and translation. Native Android app (Kotlin + Jetpack Compose).
@@ -10,6 +25,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - Root — repo-level config (CLAUDE.md, README, LICENSE, .github, .gitignore)
 - `android/` — Android project (Gradle root)
+
+## Test Infrastructure & Rules
+
+- **MockK** for mocking, **Turbine** for Flow, **StandardTestDispatcher** for coroutines
+- **JUnit 4** as test runner
+- Test files mirror source structure under `src/test/java/`
+- Instrumented Compose UI tests in `src/androidTest/java/` — use `createComposeRule()`
+- **`android.util.Log` is NOT available in unit tests** — never use it in ViewModels or domain logic
+- **Visibility for testability**: if a function needs testing but is `private`, make it `internal`
+- **Tests MUST import and call REAL code** — a test that recreates logic without importing the source is worthless
+- **detekt** for static analysis — runs automatically via Claude Code hook on every `.kt` file edit
+- `./gradlew detekt` for full project analysis with type resolution (CI gate)
+- Zero tolerance: `maxIssues = 0` — all violations must be fixed, not suppressed (unless confirmed false positive)
 
 ## Architecture
 
@@ -21,14 +49,14 @@ MVVM + Clean Architecture with three layers (inside `android/app/src/main/java/c
 
 DI via Hilt. Each layer only depends inward (ui → domain ← data).
 
-### Key Modules
+### Planned Modules
 
 - **Reader**: PDF rendering via `PdfRenderer`, page navigation, zoom/pan with Compose gestures, RTL mode
-- **AI Pipeline**: Text detection (Onnxruntime) → OCR (Onnxruntime) → MeCab (JNI) for furigana → word alignment
-- **Translation**: Strategy pattern across Google Translate offline, DeepL API, ChatGPT API
-- **Balloon UI**: Overlay Compose layer on manga pages showing detected text regions with interactive modals
+- **AI Pipeline**: Text detection → OCR → MeCab for furigana → word alignment
+- **Translation**: Strategy pattern across multiple translation backends
+- **Balloon UI**: Overlay Compose layer on manga pages showing detected text regions
 
-### Data Flow
+### Data Flow (Target)
 
 PDF import → pages rendered as bitmaps → AI pipeline detects balloons → OCR extracts text → MeCab segments words + generates furigana → translation engine translates → UI overlays results on page
 
@@ -44,10 +72,7 @@ Semantic versioning (MAJOR.MINOR.PATCH). Each release: bump `versionName` + `ver
 - Coroutines + Flow for async (no RxJava)
 - Room for local persistence
 - Repository pattern: interface in domain/, implementation in data/
-
-## Non Negotiables
-
-- **Strict TDD**: every feature MUST have tests. Write tests BEFORE the implementation (Red-Green-Refactor). No feature is considered complete without adequate test coverage.
+- **Multi-language**: every user-facing or accessibility string goes in `res/values/strings.xml` — use `stringResource(R.string.xxx)` in composables, NEVER hardcode strings
 
 ## MCP Servers
 
