@@ -15,6 +15,7 @@ Update `CHANGELOG.md` with the changes for version `$ARGUMENTS`.
 - Keep entries concise (one line each)
 - Use plain text, no bold or special formatting per entry
 - Omit internal dev tooling changes (e.g. MCP config) that don't affect the project
+- **Bug fixes must reference bugs that existed in the previous release.** If a commit fixes something introduced by another commit in the same release cycle, it is NOT a changelog-worthy fix — it's just part of developing that feature. Only list fixes for bugs that a user of the previous version could have experienced. When in doubt, check whether the broken behavior existed in the previous tag.
 
 ## Steps
 

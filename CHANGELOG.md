@@ -15,7 +15,6 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - Deduplicate manga by content hash instead of URI
-- Duplicate manga import navigating to reader with invalid ID
 
 ## [0.3.0] - 2026-02-17
 
@@ -27,10 +26,6 @@ All notable changes to this project will be documented in this file.
 - Bottom progress bar with page slider in manga reader
 - Single-tap top bar toggle in manga reader
 - Kover code coverage with 80% threshold gate
-
-### Fixed
-
-- Constrain pan to image bounds instead of container bounds
 
 ## [0.2.0] - 2026-02-15
 
@@ -44,10 +39,6 @@ All notable changes to this project will be documented in this file.
 - Detekt static analysis with zero-tolerance CI gate
 - Instrumented tests in CI and release workflows
 - Release signing configuration
-
-### Fixed
-
-- HomeScreenTest assertions after page count model changes
 
 ## [0.1.0] - 2026-02-15
 
