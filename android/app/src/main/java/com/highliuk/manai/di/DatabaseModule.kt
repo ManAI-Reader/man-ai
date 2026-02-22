@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.highliuk.manai.data.local.ManAiDatabase
 import com.highliuk.manai.data.local.dao.MangaDao
+import com.highliuk.manai.data.local.dao.PageOcrResultDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,9 +19,17 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): ManAiDatabase =
         Room.databaseBuilder(context, ManAiDatabase::class.java, "manai.db")
-            .addMigrations(ManAiDatabase.MIGRATION_1_2, ManAiDatabase.MIGRATION_2_3)
+            .addMigrations(
+                ManAiDatabase.MIGRATION_1_2,
+                ManAiDatabase.MIGRATION_2_3,
+                ManAiDatabase.MIGRATION_3_4,
+            )
             .build()
 
     @Provides
     fun provideMangaDao(database: ManAiDatabase): MangaDao = database.mangaDao()
+
+    @Provides
+    fun providePageOcrResultDao(database: ManAiDatabase): PageOcrResultDao =
+        database.pageOcrResultDao()
 }
