@@ -1,6 +1,8 @@
 package com.highliuk.manai.ui.reader
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -45,12 +47,18 @@ import androidx.compose.ui.res.stringResource
 import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.Manga
 import com.highliuk.manai.domain.model.ReadingMode
+import com.highliuk.manai.ui.navigation.LocalAnimatedVisibilityScope
+import com.highliuk.manai.ui.navigation.LocalSharedTransitionScope
 import kotlinx.coroutines.launch
 
 private const val DOUBLE_TAP_ANIM_DURATION = 300
 
 @Suppress("LongParameterList")
-@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    androidx.compose.foundation.ExperimentalFoundationApi::class,
+    ExperimentalSharedTransitionApi::class
+)
 @Composable
 fun ReaderScreen(
     manga: Manga,
@@ -67,6 +75,9 @@ fun ReaderScreen(
     val coroutineScope = rememberCoroutineScope()
     var showGoToPageDialog by remember { mutableStateOf(false) }
 
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    val animatedVisibilityScope = LocalAnimatedVisibilityScope.current
+
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
             gestureState.resetZoom()
@@ -82,7 +93,25 @@ fun ReaderScreen(
         onDispose { onImmersiveModeChange(false) }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    val sharedModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+        with(sharedTransitionScope) {
+            Modifier.sharedBounds(
+                sharedContentState = rememberSharedContentState(key = "manga_cover_${manga.id}"),
+                animatedVisibilityScope = animatedVisibilityScope,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds
+            )
+        }
+    } else {
+        Modifier
+    }
+
+    Box(
+        modifier = sharedModifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
         HorizontalPager(
             state = pagerState,
             reverseLayout = isRtl,

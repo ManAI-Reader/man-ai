@@ -1,15 +1,23 @@
 package com.highliuk.manai.ui.navigation
 
 import android.app.Activity
-import android.net.Uri
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -39,6 +47,7 @@ import com.highliuk.manai.ui.settings.SettingsViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun ManAiNavHost(
     onImportClick: () -> Unit,
@@ -57,134 +66,178 @@ fun ManAiNavHost(
         }
     }
 
-    NavHost(
-        navController = navController,
-        startDestination = startDestination,
-        enterTransition = {
-            slideInHorizontally(
-                initialOffsetX = { it },
-                animationSpec = tween(300, easing = FastOutSlowInEasing)
-            )
-        },
-        exitTransition = {
-            slideOutHorizontally(
-                targetOffsetX = { -it / 3 },
-                animationSpec = tween(300, easing = FastOutSlowInEasing)
-            )
-        },
-        popEnterTransition = {
-            slideInHorizontally(
-                initialOffsetX = { -it / 3 },
-                animationSpec = tween(300, easing = FastOutSlowInEasing)
-            )
-        },
-        popExitTransition = {
-            slideOutHorizontally(
-                targetOffsetX = { it },
-                animationSpec = tween(300, easing = FastOutSlowInEasing)
-            )
-        }
+    SharedTransitionLayout(
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
     ) {
-        composable("intent-loading") {
-            Box(
-                modifier = Modifier.fillMaxSize().testTag("intent_loading"),
-                contentAlignment = Alignment.Center
+        CompositionLocalProvider(LocalSharedTransitionScope provides this) {
+            NavHost(
+                navController = navController,
+                startDestination = startDestination,
+                enterTransition = { EnterTransition.None },
+                exitTransition = { ExitTransition.None },
+                popEnterTransition = { EnterTransition.None },
+                popExitTransition = { ExitTransition.None }
             ) {
-                CircularProgressIndicator()
-            }
-        }
-        composable("home") {
-            val viewModel: HomeViewModel = hiltViewModel()
-            val mangaList by viewModel.mangaList.collectAsState()
-            val gridColumns by viewModel.gridColumns.collectAsState()
-            val selectedMangaIds by viewModel.selectedMangaIds.collectAsState()
-            val isSelectionMode by viewModel.isSelectionMode.collectAsState()
-            val showDeleteDialog by viewModel.showDeleteDialog.collectAsState()
-
-            HomeScreen(
-                mangaList = mangaList,
-                gridColumns = gridColumns,
-                selectedMangaIds = selectedMangaIds,
-                isSelectionMode = isSelectionMode,
-                onImportClick = onImportClick,
-                onSettingsClick = { navController.navigate("settings") },
-                onMangaClick = { manga -> navController.navigate("reader/${manga.id}") },
-                onToggleSelection = viewModel::toggleSelection,
-                onDeleteClick = viewModel::requestDelete,
-                onClearSelection = viewModel::clearSelection
-            )
-
-            if (showDeleteDialog) {
-                DeleteMangaDialog(
-                    mangaCount = selectedMangaIds.size,
-                    onConfirm = viewModel::confirmDelete,
-                    onDismiss = viewModel::dismissDelete
-                )
-            }
-        }
-        composable(
-            "reader/{mangaId}",
-            arguments = listOf(navArgument("mangaId") { type = NavType.LongType })
-        ) {
-            val viewModel: ReaderViewModel = hiltViewModel()
-            val manga by viewModel.manga.collectAsState()
-            val currentPage by viewModel.currentPage.collectAsState()
-            val readingMode by viewModel.readingMode.collectAsState()
-
-            val view = LocalView.current
-            val window = (view.context as Activity).window
-            val insetsController = WindowCompat.getInsetsController(window, view)
-
-            manga?.let { m ->
-                ReaderScreen(
-                    manga = m,
-                    currentPage = currentPage,
-                    readingMode = readingMode,
-                    onPageChanged = viewModel::onPageChanged,
-                    onBack = {
-                        if (!navController.popBackStack()) {
-                            (view.context as? Activity)?.finish()
+                composable("intent-loading") {
+                    Box(
+                        modifier = Modifier.fillMaxSize().testTag("intent_loading"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+                composable(
+                    "home",
+                    enterTransition = {
+                        if (initialState.destination.route == "settings") {
+                            slideInHorizontally(
+                                initialOffsetX = { -it / 3 },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        } else {
+                            EnterTransition.None
                         }
                     },
-                    onSettingsClick = { navController.navigate("settings") },
-                    onImmersiveModeChange = { immersive ->
-                        if (immersive) {
-                            insetsController.hide(WindowInsetsCompat.Type.statusBars())
-                            insetsController.systemBarsBehavior =
-                                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    exitTransition = {
+                        if (targetState.destination.route == "settings") {
+                            slideOutHorizontally(
+                                targetOffsetX = { -it / 3 },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
                         } else {
-                            insetsController.show(WindowInsetsCompat.Type.statusBars())
+                            ExitTransition.None
+                        }
+                    },
+                    popEnterTransition = { EnterTransition.None },
+                    popExitTransition = { ExitTransition.None }
+                ) {
+                    CompositionLocalProvider(LocalAnimatedVisibilityScope provides this@composable) {
+                        val viewModel: HomeViewModel = hiltViewModel()
+                        val mangaList by viewModel.mangaList.collectAsState()
+                        val gridColumns by viewModel.gridColumns.collectAsState()
+                        val selectedMangaIds by viewModel.selectedMangaIds.collectAsState()
+                        val isSelectionMode by viewModel.isSelectionMode.collectAsState()
+                        val showDeleteDialog by viewModel.showDeleteDialog.collectAsState()
+
+                        HomeScreen(
+                            mangaList = mangaList,
+                            gridColumns = gridColumns,
+                            selectedMangaIds = selectedMangaIds,
+                            isSelectionMode = isSelectionMode,
+                            onImportClick = onImportClick,
+                            onSettingsClick = { navController.navigate("settings") },
+                            onMangaClick = { manga -> navController.navigate("reader/${manga.id}") },
+                            onToggleSelection = viewModel::toggleSelection,
+                            onDeleteClick = viewModel::requestDelete,
+                            onClearSelection = viewModel::clearSelection
+                        )
+
+                        if (showDeleteDialog) {
+                            DeleteMangaDialog(
+                                mangaCount = selectedMangaIds.size,
+                                onConfirm = viewModel::confirmDelete,
+                                onDismiss = viewModel::dismissDelete
+                            )
                         }
                     }
-                )
-            }
-        }
-        composable("settings") {
-            val viewModel: SettingsViewModel = hiltViewModel()
-            val gridColumns by viewModel.gridColumns.collectAsState()
-            val readingMode by viewModel.readingMode.collectAsState()
-            val themeMode by viewModel.themeMode.collectAsState()
-            val appLanguage by viewModel.appLanguage.collectAsState()
+                }
+                composable(
+                    "reader/{mangaId}",
+                    arguments = listOf(navArgument("mangaId") { type = NavType.LongType }),
+                    enterTransition = { fadeIn(tween(300)) },
+                    exitTransition = { fadeOut(tween(300)) },
+                    popEnterTransition = { fadeIn(tween(300)) },
+                    popExitTransition = { fadeOut(tween(300)) },
+                ) {
+                    CompositionLocalProvider(LocalAnimatedVisibilityScope provides this@composable) {
+                        val viewModel: ReaderViewModel = hiltViewModel()
+                        val manga by viewModel.manga.collectAsState()
+                        val currentPage by viewModel.currentPage.collectAsState()
+                        val readingMode by viewModel.readingMode.collectAsState()
 
-            SettingsScreen(
-                gridColumns = gridColumns,
-                onGridColumnsChange = { viewModel.setGridColumns(it) },
-                readingMode = readingMode,
-                onReadingModeChange = { viewModel.setReadingMode(it) },
-                themeMode = themeMode,
-                onThemeModeChange = { viewModel.setThemeMode(it) },
-                appLanguage = appLanguage,
-                onAppLanguageChange = { language ->
-                    viewModel.setAppLanguage(language)
-                    val locales = if (language.tag != null) {
-                        LocaleListCompat.forLanguageTags(language.tag)
-                    } else {
-                        LocaleListCompat.getEmptyLocaleList()
+                        val view = LocalView.current
+                        val window = (view.context as Activity).window
+                        val insetsController = WindowCompat.getInsetsController(window, view)
+
+                        manga?.let { m ->
+                            ReaderScreen(
+                                manga = m,
+                                currentPage = currentPage,
+                                readingMode = readingMode,
+                                onPageChanged = viewModel::onPageChanged,
+                                onBack = {
+                                    if (!navController.popBackStack()) {
+                                        (view.context as? Activity)?.finish()
+                                    }
+                                },
+                                onSettingsClick = { navController.navigate("settings") },
+                                onImmersiveModeChange = { immersive ->
+                                    if (immersive) {
+                                        insetsController.hide(WindowInsetsCompat.Type.statusBars())
+                                        insetsController.systemBarsBehavior =
+                                            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                                    } else {
+                                        insetsController.show(WindowInsetsCompat.Type.statusBars())
+                                    }
+                                }
+                            )
+                        }
                     }
-                    AppCompatDelegate.setApplicationLocales(locales)
-                },
-                onBack = { navController.popBackStack() }
-            )
+                }
+                composable(
+                    "settings",
+                    enterTransition = {
+                        slideInHorizontally(
+                            initialOffsetX = { it },
+                            animationSpec = tween(300, easing = FastOutSlowInEasing)
+                        )
+                    },
+                    exitTransition = {
+                        slideOutHorizontally(
+                            targetOffsetX = { it },
+                            animationSpec = tween(300, easing = FastOutSlowInEasing)
+                        )
+                    },
+                    popEnterTransition = {
+                        slideInHorizontally(
+                            initialOffsetX = { it },
+                            animationSpec = tween(300, easing = FastOutSlowInEasing)
+                        )
+                    },
+                    popExitTransition = {
+                        slideOutHorizontally(
+                            targetOffsetX = { it },
+                            animationSpec = tween(300, easing = FastOutSlowInEasing)
+                        )
+                    }
+                ) {
+                    val viewModel: SettingsViewModel = hiltViewModel()
+                    val gridColumns by viewModel.gridColumns.collectAsState()
+                    val readingMode by viewModel.readingMode.collectAsState()
+                    val themeMode by viewModel.themeMode.collectAsState()
+                    val appLanguage by viewModel.appLanguage.collectAsState()
+
+                    SettingsScreen(
+                        gridColumns = gridColumns,
+                        onGridColumnsChange = { viewModel.setGridColumns(it) },
+                        readingMode = readingMode,
+                        onReadingModeChange = { viewModel.setReadingMode(it) },
+                        themeMode = themeMode,
+                        onThemeModeChange = { viewModel.setThemeMode(it) },
+                        appLanguage = appLanguage,
+                        onAppLanguageChange = { language ->
+                            viewModel.setAppLanguage(language)
+                            val locales = if (language.tag != null) {
+                                LocaleListCompat.forLanguageTags(language.tag)
+                            } else {
+                                LocaleListCompat.getEmptyLocaleList()
+                            }
+                            AppCompatDelegate.setApplicationLocales(locales)
+                        },
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+            }
         }
     }
 }

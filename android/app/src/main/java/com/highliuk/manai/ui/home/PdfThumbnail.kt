@@ -20,10 +20,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.highliuk.manai.R
 
+internal val thumbnailCache = ThumbnailCache()
+
 @Composable
-fun PdfThumbnail(uri: String, modifier: Modifier = Modifier) {
+fun PdfThumbnail(uri: String, mangaId: Long = 0L, modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val bitmap = produceState<Bitmap?>(initialValue = null, uri) {
+    val bitmap = produceState<Bitmap?>(initialValue = thumbnailCache.get(mangaId), uri) {
+        if (value != null) return@produceState
         value = try {
             val pfd = context.contentResolver.openFileDescriptor(Uri.parse(uri), "r")
             pfd?.use { fd ->
@@ -32,6 +35,7 @@ fun PdfThumbnail(uri: String, modifier: Modifier = Modifier) {
                         renderer.openPage(0).use { page ->
                             val bmp = Bitmap.createBitmap(page.width, page.height, Bitmap.Config.ARGB_8888)
                             page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                            if (mangaId != 0L) thumbnailCache.put(mangaId, bmp)
                             bmp
                         }
                     } else null

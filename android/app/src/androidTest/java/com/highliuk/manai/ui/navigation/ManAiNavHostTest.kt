@@ -3,6 +3,7 @@ package com.highliuk.manai.ui.navigation
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -126,11 +127,14 @@ class ManAiNavHostTest {
     fun tappingManga_showsTitleInReaderTopBar() = runTest {
         mangaDao.insert(MangaEntity(uri = "content://nav-test2", title = "Reader Title Test", pageCount = 3))
 
-        composeTestRule.waitForIdle()
-        composeTestRule.onNodeWithText("Reader Title Test").assertIsDisplayed()
+        composeTestRule.waitUntil(timeoutMillis = 5000) {
+            composeTestRule.onAllNodesWithText("Reader Title Test").fetchSemanticsNodes().isNotEmpty()
+        }
         composeTestRule.onNodeWithText("Reader Title Test").performClick()
 
-        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(timeoutMillis = 5000) {
+            composeTestRule.onAllNodesWithTag("reader_pager").fetchSemanticsNodes().isNotEmpty()
+        }
         // Top bar is hidden by default, tap to show it
         composeTestRule.onNodeWithTag("reader_pager").performClick()
         composeTestRule.mainClock.advanceTimeBy(500)

@@ -1,5 +1,9 @@
 package com.highliuk.manai.ui.home
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -43,6 +47,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.Manga
+import com.highliuk.manai.ui.navigation.LocalAnimatedVisibilityScope
+import com.highliuk.manai.ui.navigation.LocalSharedTransitionScope
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -140,7 +146,7 @@ fun HomeScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun MangaGridItem(
     manga: Manga,
@@ -148,9 +154,26 @@ fun MangaGridItem(
     onClick: () -> Unit = {},
     onLongClick: () -> Unit = {}
 ) {
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    val animatedVisibilityScope = LocalAnimatedVisibilityScope.current
+
+    val sharedModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+        with(sharedTransitionScope) {
+            Modifier.sharedBounds(
+                sharedContentState = rememberSharedContentState(key = "manga_cover_${manga.id}"),
+                animatedVisibilityScope = animatedVisibilityScope,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds
+            )
+        }
+    } else {
+        Modifier
+    }
+
     val shape = RoundedCornerShape(8.dp)
     Box(
-        modifier = Modifier
+        modifier = sharedModifier
             .fillMaxWidth()
             .aspectRatio(2f / 3f)
             .clip(shape)
@@ -168,6 +191,7 @@ fun MangaGridItem(
     ) {
         PdfThumbnail(
             uri = manga.uri,
+            mangaId = manga.id,
             modifier = Modifier.fillMaxSize()
         )
         Box(
