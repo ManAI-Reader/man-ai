@@ -171,6 +171,29 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun `importManga deletes local copy when re-importing via picker a manga previously added by intent`() =
+        runTest(testDispatcher) {
+            coEvery { pdfExtractor.extractPageCount("content://picker/manga.pdf") } returns 20
+            coEvery { fileHashProvider.computeHash(uri = "content://picker/manga.pdf") } returns "samehash"
+            coEvery {
+                repository.getMangaByContentHash("samehash")
+            } returns Manga(
+                id = 10, uri = "file:///data/manga/old.pdf",
+                title = "manga", pageCount = 20, contentHash = "samehash"
+            )
+            coEvery { repository.upsertManga(any()) } returns 10L
+            val viewModel = createViewModel()
+
+            viewModel.navigateToReader.test {
+                viewModel.importManga("content://picker/manga.pdf", "manga.pdf")
+                testDispatcher.scheduler.advanceUntilIdle()
+                assertEquals(10L, awaitItem())
+            }
+
+            coVerify { pdfFileCopier.deleteLocalCopy("file:///data/manga/old.pdf") }
+        }
+
+    @Test
     fun `gridColumns emits value from preferences repository`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
 
@@ -183,6 +206,8 @@ class HomeViewModelTest {
 
     @Test
     fun `importMangaFromIntent copies file then imports`() = runTest(testDispatcher) {
+        coEvery { fileHashProvider.computeHash(uri = "content://external/manga.pdf") } returns "hash123"
+        coEvery { repository.getMangaByContentHash("hash123") } returns null
         coEvery { pdfFileCopier.copyToLocalStorage("content://external/manga.pdf") } returns "file:///local/manga.pdf"
         coEvery { pdfExtractor.extractPageCount("file:///local/manga.pdf") } returns 20
         coEvery { fileHashProvider.computeHash(uri = "file:///local/manga.pdf") } returns "hash123"
@@ -207,7 +232,27 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun `importMangaFromIntent skips copy when manga already exists`() = runTest(testDispatcher) {
+        val existingManga = Manga(
+            id = 42, uri = "content://picker/original.pdf",
+            title = "manga", pageCount = 20, contentHash = "samehash"
+        )
+        coEvery { fileHashProvider.computeHash(uri = "content://intent/manga.pdf") } returns "samehash"
+        coEvery { repository.getMangaByContentHash("samehash") } returns existingManga
+        val viewModel = createViewModel()
+
+        viewModel.navigateToReader.test {
+            viewModel.importMangaFromIntent("content://intent/manga.pdf", "manga.pdf")
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(42L, awaitItem())
+        }
+
+        coVerify(exactly = 0) { pdfFileCopier.copyToLocalStorage(any()) }
+    }
+
+    @Test
     fun `importMangaFromIntent does not navigate on copy failure`() = runTest(testDispatcher) {
+        coEvery { repository.getMangaByContentHash(any()) } returns null
         coEvery { pdfFileCopier.copyToLocalStorage(any()) } throws RuntimeException("copy failed")
         val viewModel = createViewModel()
 
