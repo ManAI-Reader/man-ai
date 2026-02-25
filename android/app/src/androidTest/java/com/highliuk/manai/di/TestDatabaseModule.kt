@@ -1,9 +1,11 @@
 package com.highliuk.manai.di
 
+import android.content.ContentResolver
 import android.content.Context
 import androidx.room.Room
 import com.highliuk.manai.data.local.ManAiDatabase
 import com.highliuk.manai.data.local.dao.MangaDao
+import com.highliuk.manai.data.local.dao.PageOcrResultDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,4 +29,12 @@ object TestDatabaseModule {
 
     @Provides
     fun provideMangaDao(database: ManAiDatabase): MangaDao = database.mangaDao()
+
+    @Provides
+    fun providePageOcrResultDao(database: ManAiDatabase): PageOcrResultDao =
+        database.pageOcrResultDao()
+
+    @Provides
+    fun provideContentResolver(@ApplicationContext context: Context): ContentResolver =
+        context.contentResolver
 }

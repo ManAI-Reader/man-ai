@@ -1,5 +1,6 @@
 package com.highliuk.manai.di
 
+import android.content.ContentResolver
 import android.content.Context
 import androidx.room.Room
 import com.highliuk.manai.data.local.ManAiDatabase
@@ -32,4 +33,8 @@ object DatabaseModule {
     @Provides
     fun providePageOcrResultDao(database: ManAiDatabase): PageOcrResultDao =
         database.pageOcrResultDao()
+
+    @Provides
+    fun provideContentResolver(@ApplicationContext context: Context): ContentResolver =
+        context.contentResolver
 }

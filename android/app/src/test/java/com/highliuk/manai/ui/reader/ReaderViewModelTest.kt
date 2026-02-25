@@ -2,10 +2,17 @@ package com.highliuk.manai.ui.reader
 
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
+import com.highliuk.manai.data.pdf.PdfPageRenderer
 import com.highliuk.manai.domain.model.Manga
+import com.highliuk.manai.domain.model.PageRegion
 import com.highliuk.manai.domain.model.ReadingMode
 import com.highliuk.manai.domain.repository.MangaRepository
+import com.highliuk.manai.domain.repository.OcrCacheRepository
 import com.highliuk.manai.domain.repository.UserPreferencesRepository
+import com.highliuk.manai.domain.usecase.ProcessPageUseCase
+import com.highliuk.manai.domain.usecase.WarmUpOnnxUseCase
+import android.graphics.Bitmap
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -21,6 +28,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -30,6 +39,10 @@ class ReaderViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private val repository = mockk<MangaRepository>(relaxed = true)
     private val userPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
+    private val processPageUseCase = mockk<ProcessPageUseCase>(relaxed = true)
+    private val warmUpOnnxUseCase = mockk<WarmUpOnnxUseCase>(relaxed = true)
+    private val ocrCache = mockk<OcrCacheRepository>(relaxed = true)
+    private val pdfPageRenderer = mockk<PdfPageRenderer>(relaxed = true)
     private val readingModeFlow = MutableStateFlow(ReadingMode.LTR)
 
     @Before
@@ -45,7 +58,10 @@ class ReaderViewModelTest {
 
     private fun createViewModel(mangaId: Long = 1L): ReaderViewModel {
         val savedStateHandle = SavedStateHandle(mapOf("mangaId" to mangaId))
-        return ReaderViewModel(savedStateHandle, repository, userPreferencesRepository)
+        return ReaderViewModel(
+            savedStateHandle, repository, userPreferencesRepository,
+            processPageUseCase, warmUpOnnxUseCase, ocrCache, pdfPageRenderer,
+        )
     }
 
     @Test
@@ -179,5 +195,133 @@ class ReaderViewModelTest {
             readingModeFlow.value = ReadingMode.RTL
             assertEquals(ReadingMode.RTL, awaitItem())
         }
+    }
+
+    @Test
+    fun `currentPageRegions emits regions for current page`() = runTest(testDispatcher) {
+        val manga = Manga(id = 1, uri = "uri1", title = "Test", pageCount = 10)
+        coEvery { repository.getMangaById(1L) } returns flowOf(manga)
+
+        val regions = listOf(
+            PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "hello")
+        )
+        every { ocrCache.observeRegions(1L, any()) } returns flowOf(emptyList())
+        every { ocrCache.observeRegions(1L, 0) } returns flowOf(regions)
+
+        val viewModel = createViewModel(1L)
+
+        viewModel.currentPageRegions.test {
+            assertEquals(emptyList<PageRegion>(), awaitItem())
+            assertEquals(regions, awaitItem())
+        }
+    }
+
+    @Test
+    fun `onRegionTapped sets selectedRegion`() = runTest(testDispatcher) {
+        coEvery { repository.getMangaById(1L) } returns flowOf(null)
+        every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+        val viewModel = createViewModel(1L)
+
+        val region = PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "hello")
+        viewModel.onRegionTapped(region)
+
+        assertEquals(region, viewModel.selectedRegion.value)
+    }
+
+    @Test
+    fun `dismissBottomSheet clears selectedRegion`() = runTest(testDispatcher) {
+        coEvery { repository.getMangaById(1L) } returns flowOf(null)
+        every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+        val viewModel = createViewModel(1L)
+
+        viewModel.onRegionTapped(PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "hi"))
+        viewModel.dismissBottomSheet()
+
+        assertNull(viewModel.selectedRegion.value)
+    }
+
+    @Test
+    fun `pipeline launches on page change`() = runTest(testDispatcher) {
+        val manga = Manga(id = 1, uri = "content://test", title = "Test", pageCount = 10)
+        coEvery { repository.getMangaById(1L) } returns flowOf(manga)
+        every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+        val fakeBitmap = mockk<Bitmap>(relaxed = true)
+        coEvery { pdfPageRenderer.render("content://test", 0) } returns fakeBitmap
+
+        val viewModel = createViewModel(1L)
+        advanceTimeBy(400)
+        testScheduler.advanceUntilIdle()
+
+        coVerify { pdfPageRenderer.render("content://test", 0) }
+        coVerify {
+            processPageUseCase.execute(1L, 0, fakeBitmap, detectionOnly = false, priorityRegionIndex = null)
+        }
+    }
+
+    @Test
+    fun `slow pipeline is cancelled when new page arrives`() = runTest(testDispatcher) {
+        val manga = Manga(id = 1, uri = "content://test", title = "Test", pageCount = 10)
+        coEvery { repository.getMangaById(1L) } returns flowOf(manga)
+        every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+        coEvery { pdfPageRenderer.render(any(), any()) } returns mockk(relaxed = true)
+
+        val page0Cancelled = java.util.concurrent.atomic.AtomicBoolean(false)
+
+        coEvery { processPageUseCase.execute(1L, 0, any(), any(), any()) } coAnswers {
+            try {
+                kotlinx.coroutines.awaitCancellation()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                page0Cancelled.set(true)
+                throw e
+            }
+        }
+        coEvery { processPageUseCase.execute(1L, 5, any(), any(), any()) } returns Unit
+
+        val viewModel = createViewModel(1L)
+        advanceTimeBy(400)
+        testScheduler.advanceUntilIdle()
+
+        viewModel.onPageChanged(5)
+        advanceTimeBy(400)
+        testScheduler.advanceUntilIdle()
+
+        assertTrue("Page 0 pipeline should have been cancelled", page0Cancelled.get())
+    }
+
+    @Test
+    fun `onRegionTapped with null ocrText relaunches pipeline with priority`() =
+        runTest(testDispatcher) {
+            val manga = Manga(id = 1, uri = "content://test", title = "Test", pageCount = 10)
+            coEvery { repository.getMangaById(1L) } returns flowOf(manga)
+            every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+            coEvery { pdfPageRenderer.render(any(), any()) } returns mockk(relaxed = true)
+
+            val viewModel = createViewModel(1L)
+            advanceTimeBy(400)
+            testScheduler.advanceUntilIdle()
+
+            // Clear invocations from init pipeline
+            clearMocks(processPageUseCase, answers = false)
+
+            val pendingRegion = PageRegion(2, 0.5f, 0.5f, 0.8f, 0.8f, 0.9f, null)
+            viewModel.onRegionTapped(pendingRegion)
+            testScheduler.advanceUntilIdle()
+
+            coVerify {
+                processPageUseCase.execute(
+                    1L, 0, any(), detectionOnly = false, priorityRegionIndex = 2
+                )
+            }
+        }
+
+    @Test
+    fun `warm-up fires on init`() = runTest(testDispatcher) {
+        coEvery { repository.getMangaById(1L) } returns flowOf(null)
+        every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+
+        createViewModel(1L)
+        testScheduler.advanceUntilIdle()
+
+        coVerify { warmUpOnnxUseCase.execute() }
     }
 }

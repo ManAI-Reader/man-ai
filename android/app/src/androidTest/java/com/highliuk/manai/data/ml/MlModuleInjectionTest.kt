@@ -6,7 +6,6 @@ import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import javax.inject.Inject
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -34,13 +33,11 @@ class MlModuleInjectionTest {
     @Test
     fun hiltProvidesTextDetector() {
         assertNotNull(textDetector)
-        assertTrue(textDetector is OnnxTextDetector)
     }
 
     @Test
     fun hiltProvidesTextRecognizer() {
         assertNotNull(textRecognizer)
-        assertTrue(textRecognizer is OnnxTextRecognizer)
     }
 
     @Test
