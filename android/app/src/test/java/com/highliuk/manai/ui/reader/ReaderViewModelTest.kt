@@ -10,7 +10,6 @@ import com.highliuk.manai.domain.repository.MangaRepository
 import com.highliuk.manai.domain.repository.OcrCacheRepository
 import com.highliuk.manai.domain.repository.UserPreferencesRepository
 import com.highliuk.manai.domain.usecase.ProcessPageUseCase
-import com.highliuk.manai.domain.usecase.WarmUpOnnxUseCase
 import android.graphics.Bitmap
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -40,7 +39,6 @@ class ReaderViewModelTest {
     private val repository = mockk<MangaRepository>(relaxed = true)
     private val userPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
     private val processPageUseCase = mockk<ProcessPageUseCase>(relaxed = true)
-    private val warmUpOnnxUseCase = mockk<WarmUpOnnxUseCase>(relaxed = true)
     private val ocrCache = mockk<OcrCacheRepository>(relaxed = true)
     private val pdfPageRenderer = mockk<PdfPageRenderer>(relaxed = true)
     private val readingModeFlow = MutableStateFlow(ReadingMode.LTR)
@@ -60,7 +58,7 @@ class ReaderViewModelTest {
         val savedStateHandle = SavedStateHandle(mapOf("mangaId" to mangaId))
         return ReaderViewModel(
             savedStateHandle, repository, userPreferencesRepository,
-            processPageUseCase, warmUpOnnxUseCase, ocrCache, pdfPageRenderer,
+            processPageUseCase, ocrCache, pdfPageRenderer,
         )
     }
 
@@ -314,14 +312,4 @@ class ReaderViewModelTest {
             }
         }
 
-    @Test
-    fun `warm-up fires on init`() = runTest(testDispatcher) {
-        coEvery { repository.getMangaById(1L) } returns flowOf(null)
-        every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
-
-        createViewModel(1L)
-        testScheduler.advanceUntilIdle()
-
-        coVerify { warmUpOnnxUseCase.execute() }
-    }
 }

@@ -23,12 +23,14 @@ object TestMlModule {
     @Provides
     @Singleton
     fun provideTextDetector(): TextDetector = object : TextDetector {
+        override suspend fun initialize() = Unit
         override suspend fun detect(bitmap: Bitmap): List<TextRegion> = emptyList()
     }
 
     @Provides
     @Singleton
     fun provideTextRecognizer(): TextRecognizer = object : TextRecognizer {
+        override suspend fun initialize() = Unit
         override suspend fun recognize(bitmap: Bitmap, region: TextRegion): OcrResult =
             OcrResult("", region)
     }

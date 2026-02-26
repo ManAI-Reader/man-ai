@@ -154,6 +154,8 @@ fun ManAiNavHost(
                         val manga by viewModel.manga.collectAsState()
                         val currentPage by viewModel.currentPage.collectAsState()
                         val readingMode by viewModel.readingMode.collectAsState()
+                        val regions by viewModel.currentPageRegions.collectAsState()
+                        val selectedRegion by viewModel.selectedRegion.collectAsState()
 
                         val view = LocalView.current
                         val window = (view.context as Activity).window
@@ -164,7 +166,11 @@ fun ManAiNavHost(
                                 manga = m,
                                 currentPage = currentPage,
                                 readingMode = readingMode,
+                                regions = regions,
+                                selectedRegion = selectedRegion,
                                 onPageChanged = viewModel::onPageChanged,
+                                onRegionTapped = viewModel::onRegionTapped,
+                                onDismissBottomSheet = viewModel::dismissBottomSheet,
                                 onBack = {
                                     if (!navController.popBackStack()) {
                                         (view.context as? Activity)?.finish()

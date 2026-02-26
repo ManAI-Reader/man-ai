@@ -231,6 +231,15 @@ class ReaderGestureStateTest {
     }
 
     @Test
+    fun `contentWidth and contentHeight are accessible after setContentSize`() {
+        val state = ReaderGestureState()
+        state.setContentSize(640f, 480f)
+
+        assertEquals(640f, state.contentWidth, 0.01f)
+        assertEquals(480f, state.contentHeight, 0.01f)
+    }
+
+    @Test
     fun `applyZoomTarget updates scale and offsets`() {
         val state = ReaderGestureState()
         val target = ZoomTarget(2f, 100f, 200f)

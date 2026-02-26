@@ -12,6 +12,7 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
 import com.highliuk.manai.domain.model.Manga
+import com.highliuk.manai.domain.model.PageRegion
 import com.highliuk.manai.domain.model.ReadingMode
 import androidx.compose.runtime.mutableStateOf
 import org.junit.Assert.assertEquals
@@ -288,6 +289,52 @@ class ReaderScreenTest {
         setUpReaderScreen(onImmersiveModeChange = { lastImmersiveState = it })
         composeTestRule.waitForIdle()
         assertEquals(true, lastImmersiveState)
+    }
+
+    @Test
+    fun tappingOnScreen_withRegionsParam_compilesAndRuns() {
+        var tappedRegion: PageRegion? = null
+        val regions = listOf(
+            PageRegion(0, 0.0f, 0.0f, 1.0f, 1.0f, 0.9f, "\u5168\u753b\u9762")
+        )
+
+        composeTestRule.setContent {
+            ReaderScreen(
+                manga = Manga(id = 1, uri = "content://test", title = "Test", pageCount = 1),
+                currentPage = 0,
+                regions = regions,
+                selectedRegion = null,
+                onPageChanged = {},
+                onRegionTapped = { tappedRegion = it },
+                onDismissBottomSheet = {},
+                onBack = {},
+                onSettingsClick = {},
+            )
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("reader_pager").assertIsDisplayed()
+    }
+
+    @Test
+    fun bottomSheet_appearsWhenSelectedRegionIsNotNull() {
+        val region = PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "\u30c6\u30b9\u30c8")
+
+        composeTestRule.setContent {
+            ReaderScreen(
+                manga = Manga(id = 1, uri = "content://test", title = "Test", pageCount = 1),
+                currentPage = 0,
+                regions = listOf(region),
+                selectedRegion = region,
+                onPageChanged = {},
+                onRegionTapped = {},
+                onDismissBottomSheet = {},
+                onBack = {},
+                onSettingsClick = {},
+            )
+        }
+
+        composeTestRule.onNodeWithText("\u30c6\u30b9\u30c8").assertIsDisplayed()
     }
 
     @Test

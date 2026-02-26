@@ -11,7 +11,6 @@ import com.highliuk.manai.domain.repository.MangaRepository
 import com.highliuk.manai.domain.repository.OcrCacheRepository
 import com.highliuk.manai.domain.repository.UserPreferencesRepository
 import com.highliuk.manai.domain.usecase.ProcessPageUseCase
-import com.highliuk.manai.domain.usecase.WarmUpOnnxUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +35,6 @@ class ReaderViewModel @Inject constructor(
     private val repository: MangaRepository,
     userPreferencesRepository: UserPreferencesRepository,
     private val processPageUseCase: ProcessPageUseCase,
-    private val warmUpOnnxUseCase: WarmUpOnnxUseCase,
     private val ocrCache: OcrCacheRepository,
     private val pdfPageRenderer: PdfPageRenderer,
 ) : ViewModel() {
@@ -65,10 +63,6 @@ class ReaderViewModel @Inject constructor(
     private var pipelineJob: Job? = null
 
     init {
-        viewModelScope.launch {
-            warmUpOnnxUseCase.execute()
-        }
-
         viewModelScope.launch {
             val loadedManga = manga.filterNotNull().first()
             _currentPage.value = loadedManga.lastReadPage

@@ -14,6 +14,11 @@ class OnnxTextDetector @Inject constructor(
     private val sessionManager: OnnxSessionManager,
 ) : TextDetector {
 
+    override suspend fun initialize() = withContext(Dispatchers.Default) {
+        sessionManager.detectorSession // force lazy load
+        Unit
+    }
+
     override suspend fun detect(bitmap: Bitmap): List<TextRegion> = withContext(Dispatchers.Default) {
         val letterbox = computeLetterboxParams(bitmap.width, bitmap.height, DETECTOR_INPUT_SIZE)
         val inputTensor = preprocessDetector(bitmap, letterbox)

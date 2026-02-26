@@ -18,8 +18,10 @@ class ReaderGestureState {
     var offsetY by mutableFloatStateOf(0f)
         private set
 
-    private var contentWidth = 0f
-    private var contentHeight = 0f
+    internal var contentWidth = 0f
+        private set
+    internal var contentHeight = 0f
+        private set
 
     val isZoomed: Boolean
         get() = scale > 1f

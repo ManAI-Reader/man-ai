@@ -35,6 +35,11 @@
     <string name="ok">OK</string>
     <string name="cancel">Annulla</string>
 
+    <string name="ocr_loading">Riconoscimento testo…</string>
+    <string name="copy_text">Copia testo</string>
+    <string name="share_text">Condividi testo</string>
+    <string name="text_copied">Testo copiato</string>
+
     <!-- Delete manga -->
     <string name="delete">Elimina</string>
     <plurals name="n_selected">

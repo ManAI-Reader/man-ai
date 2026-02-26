@@ -48,6 +48,14 @@ class WarmUpOnnxUseCaseTest {
     }
 
     @Test
+    fun `execute calls initialize on detector and recognizer`() = runTest {
+        useCase.execute()
+
+        coVerify { textDetector.initialize() }
+        coVerify { textRecognizer.initialize() }
+    }
+
+    @Test
     fun `execute recycles bitmap in finally block`() = runTest {
         val dummyBitmap = mockk<Bitmap>(relaxed = true)
         every { Bitmap.createBitmap(any<Int>(), any<Int>(), any()) } returns dummyBitmap

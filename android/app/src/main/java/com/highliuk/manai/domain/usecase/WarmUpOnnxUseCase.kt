@@ -11,6 +11,8 @@ class WarmUpOnnxUseCase @Inject constructor(
     private val textRecognizer: TextRecognizer,
 ) {
     suspend fun execute() {
+        textDetector.initialize()
+        textRecognizer.initialize()
         val bitmap = Bitmap.createBitmap(WARM_UP_SIZE, WARM_UP_SIZE, Bitmap.Config.ARGB_8888)
         try {
             textDetector.detect(bitmap)

@@ -45,7 +45,9 @@ import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.highliuk.manai.R
+import androidx.compose.runtime.mutableIntStateOf
 import com.highliuk.manai.domain.model.Manga
+import com.highliuk.manai.domain.model.PageRegion
 import com.highliuk.manai.domain.model.ReadingMode
 import com.highliuk.manai.ui.navigation.LocalAnimatedVisibilityScope
 import com.highliuk.manai.ui.navigation.LocalSharedTransitionScope
@@ -53,7 +55,7 @@ import kotlinx.coroutines.launch
 
 private const val DOUBLE_TAP_ANIM_DURATION = 300
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "CyclomaticComplexMethod")
 @OptIn(
     ExperimentalMaterial3Api::class,
     androidx.compose.foundation.ExperimentalFoundationApi::class,
@@ -64,7 +66,11 @@ fun ReaderScreen(
     manga: Manga,
     currentPage: Int,
     readingMode: ReadingMode = ReadingMode.LTR,
+    regions: List<PageRegion> = emptyList(),
+    selectedRegion: PageRegion? = null,
     onPageChanged: (Int) -> Unit,
+    onRegionTapped: (PageRegion) -> Unit = {},
+    onDismissBottomSheet: () -> Unit = {},
     onBack: () -> Unit,
     onSettingsClick: () -> Unit,
     onImmersiveModeChange: (Boolean) -> Unit = {},
@@ -74,6 +80,8 @@ fun ReaderScreen(
     val gestureState = remember { ReaderGestureState() }
     val coroutineScope = rememberCoroutineScope()
     var showGoToPageDialog by remember { mutableStateOf(false) }
+    var bitmapWidth by remember { mutableIntStateOf(0) }
+    var bitmapHeight by remember { mutableIntStateOf(0) }
 
     val sharedTransitionScope = LocalSharedTransitionScope.current
     val animatedVisibilityScope = LocalAnimatedVisibilityScope.current
@@ -125,13 +133,27 @@ fun ReaderScreen(
                 pageIndex = pageIndex,
                 onBitmapLoaded = { w, h ->
                     gestureState.setContentSize(w.toFloat(), h.toFloat())
+                    bitmapWidth = w
+                    bitmapHeight = h
                 },
                 modifier = Modifier
                     .fillMaxSize()
                     .testTag("reader_zoom_container")
                     .pointerInput(Unit) {
                         detectTapGestures(
-                            onTap = { gestureState.toggleBars() },
+                            onTap = { offset ->
+                                if (bitmapWidth > 0 && bitmapHeight > 0) {
+                                    val hit = RegionHitTester.hitTest(
+                                        offset.x, offset.y, regions,
+                                        size.width.toFloat(), size.height.toFloat(),
+                                        bitmapWidth, bitmapHeight,
+                                        gestureState.scale, gestureState.offsetX, gestureState.offsetY,
+                                    )
+                                    if (hit != null) onRegionTapped(hit) else gestureState.toggleBars()
+                                } else {
+                                    gestureState.toggleBars()
+                                }
+                            },
                             onDoubleTap = { offset ->
                                 val target = gestureState.onDoubleTap(
                                     tapX = offset.x,
@@ -237,6 +259,12 @@ fun ReaderScreen(
                 },
                 onPageIndicatorClick = { showGoToPageDialog = true }
             )
+        }
+
+        if (selectedRegion != null) {
+            val liveRegion = regions.find { it.regionIndex == selectedRegion.regionIndex }
+                ?: selectedRegion
+            OcrBottomSheet(region = liveRegion, onDismiss = onDismissBottomSheet)
         }
 
         if (showGoToPageDialog) {
