@@ -17,4 +17,7 @@ interface UserPreferencesRepository {
 
     val appLanguage: Flow<AppLanguage>
     suspend fun setAppLanguage(language: AppLanguage)
+
+    val tapToNavigate: Flow<Boolean>
+    suspend fun setTapToNavigate(enabled: Boolean)
 }

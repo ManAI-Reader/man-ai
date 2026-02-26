@@ -154,6 +154,7 @@ fun ManAiNavHost(
                         val manga by viewModel.manga.collectAsState()
                         val currentPage by viewModel.currentPage.collectAsState()
                         val readingMode by viewModel.readingMode.collectAsState()
+                        val tapToNavigate by viewModel.tapToNavigate.collectAsState()
 
                         val view = LocalView.current
                         val window = (view.context as Activity).window
@@ -164,6 +165,7 @@ fun ManAiNavHost(
                                 manga = m,
                                 currentPage = currentPage,
                                 readingMode = readingMode,
+                                tapToNavigate = tapToNavigate,
                                 onPageChanged = viewModel::onPageChanged,
                                 onBack = {
                                     if (!navController.popBackStack()) {
@@ -216,6 +218,7 @@ fun ManAiNavHost(
                     val readingMode by viewModel.readingMode.collectAsState()
                     val themeMode by viewModel.themeMode.collectAsState()
                     val appLanguage by viewModel.appLanguage.collectAsState()
+                    val tapToNavigate by viewModel.tapToNavigate.collectAsState()
 
                     SettingsScreen(
                         gridColumns = gridColumns,
@@ -234,6 +237,8 @@ fun ManAiNavHost(
                             }
                             AppCompatDelegate.setApplicationLocales(locales)
                         },
+                        tapToNavigate = tapToNavigate,
+                        onTapToNavigateChange = { viewModel.setTapToNavigate(it) },
                         onBack = { navController.popBackStack() }
                     )
                 }

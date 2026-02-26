@@ -18,6 +18,8 @@
     <string name="reading_mode">Режим чтения</string>
     <string name="reading_mode_ltr">Слева направо</string>
     <string name="reading_mode_rtl">Справа налево</string>
+    <string name="tap_to_navigate">Нажатие для навигации</string>
+    <string name="tap_to_navigate_description">Нажмите на левый или правый край для смены страницы</string>
 
     <!-- Theme mode -->
     <string name="theme_mode">Тема</string>

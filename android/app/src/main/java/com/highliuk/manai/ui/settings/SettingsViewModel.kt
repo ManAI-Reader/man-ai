@@ -53,4 +53,13 @@ class SettingsViewModel @Inject constructor(
             userPreferencesRepository.setAppLanguage(language)
         }
     }
+
+    val tapToNavigate: StateFlow<Boolean> = userPreferencesRepository.tapToNavigate
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun setTapToNavigate(enabled: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.setTapToNavigate(enabled)
+        }
+    }
 }

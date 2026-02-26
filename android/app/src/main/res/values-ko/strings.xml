@@ -15,6 +15,8 @@
     <string name="reading_mode">읽기 방향</string>
     <string name="reading_mode_ltr">왼쪽에서 오른쪽</string>
     <string name="reading_mode_rtl">오른쪽에서 왼쪽</string>
+    <string name="tap_to_navigate">탭하여 페이지 이동</string>
+    <string name="tap_to_navigate_description">왼쪽 또는 오른쪽 가장자리를 탭하여 페이지 전환</string>
 
     <!-- Theme mode -->
     <string name="theme_mode">테마</string>

@@ -16,6 +16,8 @@
     <string name="reading_mode">Reading Mode</string>
     <string name="reading_mode_ltr">Left to Right</string>
     <string name="reading_mode_rtl">Right to Left</string>
+    <string name="tap_to_navigate">Tap to navigate</string>
+    <string name="tap_to_navigate_description">Tap left or right edge to change page</string>
 
     <!-- Theme mode -->
     <string name="theme_mode">Theme</string>

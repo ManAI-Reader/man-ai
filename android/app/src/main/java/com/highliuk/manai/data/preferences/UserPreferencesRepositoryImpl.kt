@@ -3,6 +3,7 @@ package com.highliuk.manai.data.preferences
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.highliuk.manai.domain.model.AppLanguage
@@ -31,6 +32,9 @@ class UserPreferencesRepositoryImpl @Inject constructor(
 
         val APP_LANGUAGE = stringPreferencesKey("app_language")
         val DEFAULT_APP_LANGUAGE = AppLanguage.SYSTEM
+
+        val TAP_TO_NAVIGATE = booleanPreferencesKey("tap_to_navigate")
+        const val DEFAULT_TAP_TO_NAVIGATE = false
     }
 
     override val gridColumns: Flow<Int> = dataStore.data.map { preferences ->
@@ -98,6 +102,16 @@ class UserPreferencesRepositoryImpl @Inject constructor(
     override suspend fun setAppLanguage(language: AppLanguage) {
         dataStore.edit { preferences ->
             preferences[APP_LANGUAGE] = language.name
+        }
+    }
+
+    override val tapToNavigate: Flow<Boolean> = dataStore.data.map { preferences ->
+        preferences[TAP_TO_NAVIGATE] ?: DEFAULT_TAP_TO_NAVIGATE
+    }
+
+    override suspend fun setTapToNavigate(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[TAP_TO_NAVIGATE] = enabled
         }
     }
 }
