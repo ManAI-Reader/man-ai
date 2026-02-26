@@ -136,7 +136,7 @@ cd android && ./gradlew testDebugUnitTest --tests "<fully.qualified.TestClass.te
 ### Step 5: Run the instrumented test
 
 ```bash
-cd android && ./gradlew connectedStagingAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=<fully.qualified.TestClass>
+cd android && ./gradlew connectedIsolatedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=<fully.qualified.TestClass>
 ```
 
 ### Step 6: Analyze results
@@ -186,7 +186,7 @@ For each confirmed duplicate:
 
 ```bash
 cd android && ./gradlew testDebugUnitTest
-cd android && ./gradlew connectedStagingAndroidTest
+cd android && ./gradlew connectedIsolatedAndroidTest
 ```
 
 **Both must be green.**

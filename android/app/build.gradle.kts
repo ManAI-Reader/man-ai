@@ -53,13 +53,13 @@ android {
                 "proguard-rules.pro"
             )
         }
-        create("staging") {
+        create("isolated") {
             initWith(getByName("debug"))
-            applicationIdSuffix = ".staging"
+            applicationIdSuffix = ".isolated"
         }
     }
 
-    testBuildType = "staging"
+    testBuildType = "isolated"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -231,8 +231,8 @@ dependencies {
     implementation(libs.compose.material.icons.extended)
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
-    "stagingImplementation"(libs.compose.ui.tooling)
-    "stagingImplementation"(libs.compose.ui.test.manifest)
+    "isolatedImplementation"(libs.compose.ui.tooling)
+    "isolatedImplementation"(libs.compose.ui.test.manifest)
 
     // Navigation
     implementation(libs.navigation.compose)

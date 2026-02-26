@@ -53,7 +53,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: Run instrumented tests
-        run: ./gradlew ciDeviceStagingAndroidTest
+        run: ./gradlew ciDeviceIsolatedAndroidTest
 
       - name: Verify coverage
         run: ./gradlew koverHtmlReportDebug koverVerifyDebug
