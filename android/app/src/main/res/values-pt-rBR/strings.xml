@@ -16,6 +16,8 @@
     <string name="reading_mode">Modo de leitura</string>
     <string name="reading_mode_ltr">Esquerda para direita</string>
     <string name="reading_mode_rtl">Direita para esquerda</string>
+    <string name="tap_to_navigate">Tocar para navegar</string>
+    <string name="tap_to_navigate_description">Toque na borda esquerda ou direita para mudar de página</string>
 
     <!-- Theme mode -->
     <string name="theme_mode">Tema</string>

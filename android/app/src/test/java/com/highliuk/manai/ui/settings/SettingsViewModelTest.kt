@@ -29,6 +29,7 @@ class SettingsViewModelTest {
     private val readingModeFlow = MutableStateFlow(ReadingMode.LTR)
     private val themeModeFlow = MutableStateFlow(ThemeMode.SYSTEM)
     private val appLanguageFlow = MutableStateFlow(AppLanguage.SYSTEM)
+    private val tapToNavigateFlow = MutableStateFlow(false)
 
     @Before
     fun setUp() {
@@ -37,6 +38,7 @@ class SettingsViewModelTest {
         every { userPreferencesRepository.readingMode } returns readingModeFlow
         every { userPreferencesRepository.themeMode } returns themeModeFlow
         every { userPreferencesRepository.appLanguage } returns appLanguageFlow
+        every { userPreferencesRepository.tapToNavigate } returns tapToNavigateFlow
     }
 
     @After
@@ -128,5 +130,26 @@ class SettingsViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         coVerify { userPreferencesRepository.setAppLanguage(AppLanguage.ITALIAN) }
+    }
+
+    @Test
+    fun `tapToNavigate emits current preference value`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.tapToNavigate.test {
+            assertEquals(false, awaitItem())
+            tapToNavigateFlow.value = true
+            assertEquals(true, awaitItem())
+        }
+    }
+
+    @Test
+    fun `setTapToNavigate updates preference`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.setTapToNavigate(true)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify { userPreferencesRepository.setTapToNavigate(true) }
     }
 }

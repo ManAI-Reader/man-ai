@@ -32,6 +32,8 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
                 onBack = {}
             )
         }
@@ -55,6 +57,8 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
                 onBack = {}
             )
         }
@@ -78,6 +82,8 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
                 onBack = { backCalled = true }
             )
         }
@@ -100,6 +106,8 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
                 onBack = {}
             )
         }
@@ -123,6 +131,8 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
                 onBack = {}
             )
         }
@@ -144,6 +154,8 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
                 onBack = {}
             )
         }
@@ -168,6 +180,8 @@ class SettingsScreenTest {
                 onThemeModeChange = { selectedTheme = it },
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
                 onBack = {}
             )
         }
@@ -189,6 +203,8 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
                 onBack = {}
             )
         }
@@ -213,6 +229,8 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = { selectedLanguage = it },
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
                 onBack = {}
             )
         }
@@ -220,5 +238,53 @@ class SettingsScreenTest {
         composeTestRule.onNodeWithText("Italiano").performScrollTo().performClick()
 
         assertEquals(AppLanguage.ITALIAN, selectedLanguage)
+    }
+
+    @Test
+    fun displaysTapToNavigateSwitch() {
+        composeTestRule.setContent {
+            SettingsScreen(
+                gridColumns = 2,
+                onGridColumnsChange = {},
+                readingMode = ReadingMode.LTR,
+                onReadingModeChange = {},
+                themeMode = ThemeMode.SYSTEM,
+                onThemeModeChange = {},
+                appLanguage = AppLanguage.SYSTEM,
+                onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
+                onBack = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("Tap to navigate").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Tap left or right edge to change page")
+            .performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun tappingSwitchCallsCallback() {
+        var toggled = false
+
+        composeTestRule.setContent {
+            SettingsScreen(
+                gridColumns = 2,
+                onGridColumnsChange = {},
+                readingMode = ReadingMode.LTR,
+                onReadingModeChange = {},
+                themeMode = ThemeMode.SYSTEM,
+                onThemeModeChange = {},
+                appLanguage = AppLanguage.SYSTEM,
+                onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = { toggled = true },
+                onBack = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("Tap to navigate").performScrollTo().performClick()
+
+        assert(toggled)
     }
 }

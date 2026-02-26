@@ -30,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -44,14 +45,69 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.SemanticsPropertyKey
+import androidx.compose.ui.semantics.SemanticsPropertyReceiver
+import androidx.compose.ui.semantics.semantics
 import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.Manga
 import com.highliuk.manai.domain.model.ReadingMode
 import com.highliuk.manai.ui.navigation.LocalAnimatedVisibilityScope
 import com.highliuk.manai.ui.navigation.LocalSharedTransitionScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 private const val DOUBLE_TAP_ANIM_DURATION = 300
+
+internal val ZoomScaleKey = SemanticsPropertyKey<Float>("ZoomScale")
+internal var SemanticsPropertyReceiver.zoomScale by ZoomScaleKey
+
+private fun Modifier.pageZoom(
+    isCurrentPage: Boolean,
+    gestureState: ReaderGestureState,
+): Modifier = this
+    .semantics { zoomScale = if (isCurrentPage) gestureState.scale else 1f }
+    .graphicsLayer {
+        scaleX = if (isCurrentPage) gestureState.scale else 1f
+        scaleY = if (isCurrentPage) gestureState.scale else 1f
+        translationX = if (isCurrentPage) gestureState.offsetX else 0f
+        translationY = if (isCurrentPage) gestureState.offsetY else 0f
+    }
+
+internal data class TapHandler(
+    val tapToNavigate: Boolean,
+    val isZoomed: Boolean,
+    val isRtl: Boolean,
+    val currentPage: Int,
+    val pageCount: Int,
+) {
+    fun handle(
+        offset: Offset,
+        containerWidth: Float,
+        toggleBars: () -> Unit,
+        navigateToPage: (Int) -> Unit,
+    ) {
+        val delta = computePageDelta(offset.x, containerWidth)
+        if (delta == 0) {
+            toggleBars()
+        } else {
+            val target = (currentPage + delta).coerceIn(0, pageCount - 1)
+            if (target == currentPage) {
+                toggleBars()
+            } else {
+                navigateToPage(target)
+            }
+        }
+    }
+
+    private fun computePageDelta(tapX: Float, containerWidth: Float): Int {
+        if (!tapToNavigate || isZoomed) return 0
+        return when (classifyTapZone(tapX, containerWidth)) {
+            TapZone.LEFT -> if (isRtl) 1 else -1
+            TapZone.RIGHT -> if (isRtl) -1 else 1
+            TapZone.CENTER -> 0
+        }
+    }
+}
 
 @Suppress("LongParameterList")
 @OptIn(
@@ -64,6 +120,7 @@ fun ReaderScreen(
     manga: Manga,
     currentPage: Int,
     readingMode: ReadingMode = ReadingMode.LTR,
+    tapToNavigate: Boolean = false,
     onPageChanged: (Int) -> Unit,
     onBack: () -> Unit,
     onSettingsClick: () -> Unit,
@@ -73,6 +130,9 @@ fun ReaderScreen(
     val pagerState = rememberPagerState(initialPage = currentPage) { manga.pageCount }
     val gestureState = remember { ReaderGestureState() }
     val coroutineScope = rememberCoroutineScope()
+    var intendedPage by remember { mutableIntStateOf(currentPage) }
+    var isNavigatingByTap by remember { mutableStateOf(false) }
+    var navigationJob by remember { mutableStateOf<Job?>(null) }
     var showGoToPageDialog by remember { mutableStateOf(false) }
 
     val sharedTransitionScope = LocalSharedTransitionScope.current
@@ -80,6 +140,7 @@ fun ReaderScreen(
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
+            intendedPage = page
             gestureState.resetZoom()
             onPageChanged(page)
         }
@@ -115,7 +176,8 @@ fun ReaderScreen(
         HorizontalPager(
             state = pagerState,
             reverseLayout = isRtl,
-            userScrollEnabled = !gestureState.isZoomed,
+            beyondViewportPageCount = 1,
+            userScrollEnabled = !gestureState.isZoomed && !isNavigatingByTap,
             modifier = Modifier
                 .fillMaxSize()
                 .testTag("reader_pager")
@@ -129,9 +191,33 @@ fun ReaderScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .testTag("reader_zoom_container")
-                    .pointerInput(Unit) {
+                    .pointerInput(tapToNavigate) {
                         detectTapGestures(
-                            onTap = { gestureState.toggleBars() },
+                            onTap = { offset ->
+                                TapHandler(
+                                    tapToNavigate = tapToNavigate,
+                                    isZoomed = gestureState.isZoomed,
+                                    isRtl = isRtl,
+                                    currentPage = intendedPage,
+                                    pageCount = manga.pageCount,
+                                ).handle(
+                                    offset = offset,
+                                    containerWidth = size.width.toFloat(),
+                                    toggleBars = gestureState::toggleBars,
+                                    navigateToPage = { target ->
+                                        intendedPage = target
+                                        navigationJob?.cancel()
+                                        navigationJob = coroutineScope.launch {
+                                            isNavigatingByTap = true
+                                            try {
+                                                pagerState.animateScrollToPage(target)
+                                            } finally {
+                                                isNavigatingByTap = false
+                                            }
+                                        }
+                                    }
+                                )
+                            },
                             onDoubleTap = { offset ->
                                 val target = gestureState.onDoubleTap(
                                     tapX = offset.x,
@@ -181,12 +267,10 @@ fun ReaderScreen(
                             } while (event.changes.any { it.pressed })
                         }
                     }
-                    .graphicsLayer {
-                        scaleX = gestureState.scale
-                        scaleY = gestureState.scale
-                        translationX = gestureState.offsetX
-                        translationY = gestureState.offsetY
-                    }
+                    .pageZoom(
+                        isCurrentPage = pageIndex == pagerState.currentPage,
+                        gestureState = gestureState,
+                    )
             )
         }
 

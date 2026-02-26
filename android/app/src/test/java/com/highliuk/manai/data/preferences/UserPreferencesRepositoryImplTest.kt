@@ -175,4 +175,32 @@ class UserPreferencesRepositoryImplTest {
 
         assertEquals(AppLanguage.SYSTEM, repository.appLanguage.first())
     }
+
+    @Test
+    fun `tapToNavigate emits default value false`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        val result = repository.tapToNavigate.first()
+
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun `setTapToNavigate persists true`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        repository.setTapToNavigate(true)
+
+        assertEquals(true, repository.tapToNavigate.first())
+    }
+
+    @Test
+    fun `setTapToNavigate persists false after true`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        repository.setTapToNavigate(true)
+        repository.setTapToNavigate(false)
+
+        assertEquals(false, repository.tapToNavigate.first())
+    }
 }

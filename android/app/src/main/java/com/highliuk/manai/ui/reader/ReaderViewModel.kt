@@ -34,6 +34,9 @@ class ReaderViewModel @Inject constructor(
     val readingMode: StateFlow<ReadingMode> = userPreferencesRepository.readingMode
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ReadingMode.LTR)
 
+    val tapToNavigate: StateFlow<Boolean> = userPreferencesRepository.tapToNavigate
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     val manga: StateFlow<Manga?> = repository.getMangaById(mangaId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
