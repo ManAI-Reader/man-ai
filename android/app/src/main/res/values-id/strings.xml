@@ -15,6 +15,7 @@
     <string name="reading_mode">Mode baca</string>
     <string name="reading_mode_ltr">Kiri ke kanan</string>
     <string name="reading_mode_rtl">Kanan ke kiri</string>
+    <string name="reading_mode_webtoon">Webtoon</string>
 
     <!-- Theme mode -->
     <string name="theme_mode">Tema</string>

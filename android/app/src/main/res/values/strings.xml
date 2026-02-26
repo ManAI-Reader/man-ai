@@ -16,6 +16,7 @@
     <string name="reading_mode">Reading Mode</string>
     <string name="reading_mode_ltr">Left to Right</string>
     <string name="reading_mode_rtl">Right to Left</string>
+    <string name="reading_mode_webtoon">Webtoon</string>
 
     <!-- Theme mode -->
     <string name="theme_mode">Theme</string>

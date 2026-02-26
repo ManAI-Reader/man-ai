@@ -18,6 +18,7 @@
     <string name="reading_mode">Tryb czytania</string>
     <string name="reading_mode_ltr">Od lewej do prawej</string>
     <string name="reading_mode_rtl">Od prawej do lewej</string>
+    <string name="reading_mode_webtoon">Webtoon</string>
 
     <!-- Theme mode -->
     <string name="theme_mode">Motyw</string>

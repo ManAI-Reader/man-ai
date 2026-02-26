@@ -16,6 +16,7 @@
     <string name="reading_mode">Modalità di lettura</string>
     <string name="reading_mode_ltr">Da sinistra a destra</string>
     <string name="reading_mode_rtl">Da destra a sinistra</string>
+    <string name="reading_mode_webtoon">Webtoon</string>
 
     <!-- Theme mode -->
     <string name="theme_mode">Tema</string>

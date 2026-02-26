@@ -15,6 +15,7 @@
     <string name="reading_mode">읽기 방향</string>
     <string name="reading_mode_ltr">왼쪽에서 오른쪽</string>
     <string name="reading_mode_rtl">오른쪽에서 왼쪽</string>
+    <string name="reading_mode_webtoon">Webtoon</string>
 
     <!-- Theme mode -->
     <string name="theme_mode">테마</string>

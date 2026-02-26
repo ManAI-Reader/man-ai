@@ -11,6 +11,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
+import androidx.compose.ui.test.swipeUp
 import com.highliuk.manai.domain.model.Manga
 import com.highliuk.manai.domain.model.ReadingMode
 import androidx.compose.runtime.mutableStateOf
@@ -288,6 +289,124 @@ class ReaderScreenTest {
         setUpReaderScreen(onImmersiveModeChange = { lastImmersiveState = it })
         composeTestRule.waitForIdle()
         assertEquals(true, lastImmersiveState)
+    }
+
+    @Test
+    fun webtoonMode_showsWebtoonViewer() {
+        lastPage = 0
+        composeTestRule.setContent {
+            ReaderScreen(
+                manga = testManga,
+                currentPage = 0,
+                readingMode = ReadingMode.WEBTOON,
+                onPageChanged = { lastPage = it },
+                onBack = {},
+                onSettingsClick = {}
+            )
+        }
+
+        composeTestRule.onNodeWithTag("webtoon_viewer").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("reader_pager").assertDoesNotExist()
+    }
+
+    @Test
+    fun webtoonMode_tapTogglesBars() {
+        composeTestRule.setContent {
+            ReaderScreen(
+                manga = testManga,
+                currentPage = 0,
+                readingMode = ReadingMode.WEBTOON,
+                onPageChanged = {},
+                onBack = {},
+                onSettingsClick = {}
+            )
+        }
+
+        composeTestRule.onNodeWithTag("webtoon_viewer").performClick()
+        advancePastDoubleTapTimeout()
+        composeTestRule.onNodeWithText("One Piece").assertIsDisplayed()
+    }
+
+    @Test
+    fun webtoonMode_resumesAtCorrectPage() {
+        composeTestRule.setContent {
+            ReaderScreen(
+                manga = testManga,
+                currentPage = 5,
+                readingMode = ReadingMode.WEBTOON,
+                onPageChanged = {},
+                onBack = {},
+                onSettingsClick = {}
+            )
+        }
+        composeTestRule.waitForIdle()
+
+        // Show bars to see page indicator
+        composeTestRule.onNodeWithTag("webtoon_viewer").performClick()
+        advancePastDoubleTapTimeout()
+
+        composeTestRule.onNodeWithText("6 / 10").assertIsDisplayed()
+    }
+
+    @Test
+    fun webtoonMode_goToPageNavigatesCorrectly() {
+        var lastPage = 0
+        composeTestRule.setContent {
+            ReaderScreen(
+                manga = testManga,
+                currentPage = 0,
+                readingMode = ReadingMode.WEBTOON,
+                onPageChanged = { lastPage = it },
+                onBack = {},
+                onSettingsClick = {}
+            )
+        }
+
+        // Show bars
+        composeTestRule.onNodeWithTag("webtoon_viewer").performClick()
+        advancePastDoubleTapTimeout()
+
+        // Open GoToPage dialog and navigate to page 5
+        composeTestRule.onNodeWithTag("page_indicator").performClick()
+        composeTestRule.onNodeWithTag("go_to_page_input").performTextInput("5")
+        composeTestRule.onNodeWithText("OK").performClick()
+        composeTestRule.waitForIdle()
+
+        assertEquals(4, lastPage)
+    }
+
+    @Test
+    fun webtoonMode_scrollUpdatesPageIndicator() {
+        composeTestRule.setContent {
+            ReaderScreen(
+                manga = testManga,
+                currentPage = 0,
+                readingMode = ReadingMode.WEBTOON,
+                onPageChanged = {},
+                onBack = {},
+                onSettingsClick = {}
+            )
+        }
+
+        // Show bars, verify starts at page 1
+        composeTestRule.onNodeWithTag("webtoon_viewer").performClick()
+        advancePastDoubleTapTimeout()
+        composeTestRule.onNodeWithText("1 / 10").assertIsDisplayed()
+
+        // Hide bars (to avoid hitting bottom bar during scroll)
+        composeTestRule.onNodeWithTag("webtoon_viewer").performClick()
+        advancePastDoubleTapTimeout()
+
+        // Scroll down
+        composeTestRule.onNodeWithTag("webtoon_viewer")
+            .performTouchInput { swipeUp() }
+        composeTestRule.waitForIdle()
+
+        // Show bars again — page should have changed
+        composeTestRule.onNodeWithTag("webtoon_viewer").performClick()
+        advancePastDoubleTapTimeout()
+
+        composeTestRule.onNodeWithText("1 / 10").assertDoesNotExist()
     }
 
     @Test

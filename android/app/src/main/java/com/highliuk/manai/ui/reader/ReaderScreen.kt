@@ -3,19 +3,12 @@ package com.highliuk.manai.ui.reader
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.calculatePan
-import androidx.compose.foundation.gestures.calculateZoom
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -23,6 +16,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -37,12 +31,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.positionChanged
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.Manga
@@ -51,9 +39,7 @@ import com.highliuk.manai.ui.navigation.LocalAnimatedVisibilityScope
 import com.highliuk.manai.ui.navigation.LocalSharedTransitionScope
 import kotlinx.coroutines.launch
 
-private const val DOUBLE_TAP_ANIM_DURATION = 300
-
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 @OptIn(
     ExperimentalMaterial3Api::class,
     androidx.compose.foundation.ExperimentalFoundationApi::class,
@@ -70,7 +56,9 @@ fun ReaderScreen(
     onImmersiveModeChange: (Boolean) -> Unit = {},
 ) {
     val isRtl = readingMode == ReadingMode.RTL
+    val isWebtoon = readingMode == ReadingMode.WEBTOON
     val pagerState = rememberPagerState(initialPage = currentPage) { manga.pageCount }
+    val lazyListState = rememberLazyListState(initialFirstVisibleItemIndex = currentPage)
     val gestureState = remember { ReaderGestureState() }
     val coroutineScope = rememberCoroutineScope()
     var showGoToPageDialog by remember { mutableStateOf(false) }
@@ -80,8 +68,18 @@ fun ReaderScreen(
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
-            gestureState.resetZoom()
-            onPageChanged(page)
+            if (!isWebtoon) {
+                gestureState.resetZoom()
+                onPageChanged(page)
+            }
+        }
+    }
+
+    LaunchedEffect(lazyListState, isWebtoon) {
+        if (isWebtoon) {
+            snapshotFlow { lazyListState.firstVisibleItemIndex }.collect { page ->
+                onPageChanged(page)
+            }
         }
     }
 
@@ -107,86 +105,30 @@ fun ReaderScreen(
         Modifier
     }
 
+    val displayedCurrentPage = if (isWebtoon) {
+        lazyListState.firstVisibleItemIndex
+    } else {
+        pagerState.currentPage
+    }
+
     Box(
         modifier = sharedModifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        HorizontalPager(
-            state = pagerState,
-            reverseLayout = isRtl,
-            userScrollEnabled = !gestureState.isZoomed,
-            modifier = Modifier
-                .fillMaxSize()
-                .testTag("reader_pager")
-        ) { pageIndex ->
-            PdfPage(
+        if (isWebtoon) {
+            WebtoonViewer(
+                lazyListState = lazyListState,
                 uri = manga.uri,
-                pageIndex = pageIndex,
-                onBitmapLoaded = { w, h ->
-                    gestureState.setContentSize(w.toFloat(), h.toFloat())
-                },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .testTag("reader_zoom_container")
-                    .pointerInput(Unit) {
-                        detectTapGestures(
-                            onTap = { gestureState.toggleBars() },
-                            onDoubleTap = { offset ->
-                                val target = gestureState.onDoubleTap(
-                                    tapX = offset.x,
-                                    tapY = offset.y,
-                                    containerWidth = size.width.toFloat(),
-                                    containerHeight = size.height.toFloat()
-                                )
-                                coroutineScope.launch {
-                                    val startScale = gestureState.scale
-                                    val startOffsetX = gestureState.offsetX
-                                    val startOffsetY = gestureState.offsetY
-                                    val anim = Animatable(0f)
-                                    anim.animateTo(1f, tween(DOUBLE_TAP_ANIM_DURATION)) {
-                                        val progress = value
-                                        gestureState.applyZoomTarget(
-                                            ZoomTarget(
-                                                scale = startScale + (target.scale - startScale) * progress,
-                                                offsetX = startOffsetX + (target.offsetX - startOffsetX) * progress,
-                                                offsetY = startOffsetY + (target.offsetY - startOffsetY) * progress
-                                            )
-                                        )
-                                    }
-                                }
-                            }
-                        )
-                    }
-                    .pointerInput(Unit) {
-                        awaitEachGesture {
-                            awaitFirstDown(requireUnconsumed = false)
-                            do {
-                                val event = awaitPointerEvent()
-                                val zoomChange = event.calculateZoom()
-                                val panChange = event.calculatePan()
-
-                                if (zoomChange != 1f) {
-                                    gestureState.onZoom(zoomChange)
-                                    event.changes.forEach { if (it.positionChanged()) it.consume() }
-                                }
-
-                                if (gestureState.isZoomed && panChange != Offset.Zero) {
-                                    gestureState.onPan(
-                                        panChange.x, panChange.y,
-                                        size.width.toFloat(), size.height.toFloat()
-                                    )
-                                    event.changes.forEach { if (it.positionChanged()) it.consume() }
-                                }
-                            } while (event.changes.any { it.pressed })
-                        }
-                    }
-                    .graphicsLayer {
-                        scaleX = gestureState.scale
-                        scaleY = gestureState.scale
-                        translationX = gestureState.offsetX
-                        translationY = gestureState.offsetY
-                    }
+                pageCount = manga.pageCount,
+                gestureState = gestureState,
+            )
+        } else {
+            HorizontalPagerViewer(
+                pagerState = pagerState,
+                uri = manga.uri,
+                isRtl = isRtl,
+                gestureState = gestureState,
             )
         }
 
@@ -229,11 +171,17 @@ fun ReaderScreen(
             modifier = Modifier.align(Alignment.BottomCenter)
         ) {
             ReaderBottomBar(
-                currentPage = pagerState.currentPage,
+                currentPage = displayedCurrentPage,
                 pageCount = manga.pageCount,
-                isRtl = isRtl,
+                isRtl = if (isWebtoon) false else isRtl,
                 onPageSelected = { page ->
-                    coroutineScope.launch { pagerState.scrollToPage(page) }
+                    coroutineScope.launch {
+                        if (isWebtoon) {
+                            lazyListState.scrollToItem(page)
+                        } else {
+                            pagerState.scrollToPage(page)
+                        }
+                    }
                 },
                 onPageIndicatorClick = { showGoToPageDialog = true }
             )
@@ -243,8 +191,14 @@ fun ReaderScreen(
             GoToPageDialog(
                 onConfirm = { pageNumber ->
                     showGoToPageDialog = false
-                    val targetPage = pageNumber - 1
-                    coroutineScope.launch { pagerState.scrollToPage(targetPage) }
+                    val targetPage = (pageNumber - 1).coerceIn(0, manga.pageCount - 1)
+                    coroutineScope.launch {
+                        if (isWebtoon) {
+                            lazyListState.scrollToItem(targetPage)
+                        } else {
+                            pagerState.scrollToPage(targetPage)
+                        }
+                    }
                 },
                 onDismiss = { showGoToPageDialog = false }
             )

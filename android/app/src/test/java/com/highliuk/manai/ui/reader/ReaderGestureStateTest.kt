@@ -231,6 +231,68 @@ class ReaderGestureStateTest {
     }
 
     @Test
+    fun `onPanX updates only offsetX when zoomed`() {
+        val state = ReaderGestureState()
+        state.onZoom(2f)
+
+        state.onPanX(50f, 400f)
+
+        assertTrue(state.offsetX != 0f)
+        assertEquals(0f, state.offsetY)
+    }
+
+    @Test
+    fun `onPanX does nothing when not zoomed`() {
+        val state = ReaderGestureState()
+
+        state.onPanX(50f, 400f)
+
+        assertEquals(0f, state.offsetX)
+    }
+
+    @Test
+    fun `onPanX clamps to max offset`() {
+        val state = ReaderGestureState()
+        state.onZoom(2f) // maxOffsetX = 400 * (2-1) / 2 = 200
+
+        state.onPanX(999f, 400f)
+
+        assertEquals(200f, state.offsetX)
+    }
+
+    @Test
+    fun `onDoubleTapWebtoon returns target with zero offsetY`() {
+        val state = ReaderGestureState()
+
+        val target = state.onDoubleTapWebtoon(tapX = 100f, containerWidth = 400f)
+
+        assertEquals(2f, target.scale)
+        assertEquals(0f, target.offsetY)
+    }
+
+    @Test
+    fun `onDoubleTapWebtoon when zoomed returns reset target`() {
+        val state = ReaderGestureState()
+        state.onZoom(2f)
+
+        val target = state.onDoubleTapWebtoon(tapX = 100f, containerWidth = 400f)
+
+        assertEquals(1f, target.scale)
+        assertEquals(0f, target.offsetX)
+        assertEquals(0f, target.offsetY)
+    }
+
+    @Test
+    fun `onDoubleTapWebtoon centers X on tap position`() {
+        val state = ReaderGestureState()
+
+        val target = state.onDoubleTapWebtoon(tapX = 100f, containerWidth = 400f)
+
+        // centerX=200, targetOffsetX = (200-100) = 100, maxOffsetX = 400*(2-1)/2 = 200
+        assertEquals(100f, target.offsetX)
+    }
+
+    @Test
     fun `applyZoomTarget updates scale and offsets`() {
         val state = ReaderGestureState()
         val target = ZoomTarget(2f, 100f, 200f)
