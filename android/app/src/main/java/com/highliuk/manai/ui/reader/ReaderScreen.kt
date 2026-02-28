@@ -86,7 +86,14 @@ fun ReaderScreen(
 
     LaunchedEffect(lazyListState, isWebtoon) {
         if (isWebtoon) {
-            snapshotFlow { lazyListState.firstVisibleItemIndex }.collect { page ->
+            snapshotFlow {
+                computeWebtoonCurrentPage(
+                    firstVisibleItemIndex = lazyListState.firstVisibleItemIndex,
+                    canScrollForward = lazyListState.canScrollForward,
+                    lastVisibleItemIndex = lazyListState.layoutInfo.visibleItemsInfo
+                        .lastOrNull()?.index,
+                )
+            }.collect { page ->
                 onPageChanged(page)
             }
         }
@@ -115,7 +122,12 @@ fun ReaderScreen(
     }
 
     val displayedCurrentPage = if (isWebtoon) {
-        lazyListState.firstVisibleItemIndex
+        computeWebtoonCurrentPage(
+            firstVisibleItemIndex = lazyListState.firstVisibleItemIndex,
+            canScrollForward = lazyListState.canScrollForward,
+            lastVisibleItemIndex = lazyListState.layoutInfo.visibleItemsInfo
+                .lastOrNull()?.index,
+        )
     } else {
         pagerState.currentPage
     }
