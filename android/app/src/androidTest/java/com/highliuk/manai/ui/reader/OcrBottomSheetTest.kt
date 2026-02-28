@@ -4,6 +4,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import com.highliuk.manai.domain.model.PageRegion
 import org.junit.Rule
@@ -60,5 +61,17 @@ class OcrBottomSheetTest {
         }
 
         composeTestRule.onNodeWithContentDescription("Share text").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Test
+    fun ocrTextUsesJapaneseLocale() {
+        val region = PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "\u6f22\u5b57\u30c6\u30b9\u30c8")
+
+        composeTestRule.setContent {
+            OcrBottomSheet(region = region, onDismiss = {})
+        }
+
+        composeTestRule.onNodeWithTag("ocr_text").assertIsDisplayed()
     }
 }

@@ -23,7 +23,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.intl.LocaleList as ComposeLocaleList
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.PageRegion
@@ -52,9 +57,15 @@ fun OcrBottomSheet(
                 )
             } else {
                 Text(
-                    text = region.ocrText,
+                    text = buildAnnotatedString {
+                        withStyle(SpanStyle(localeList = ComposeLocaleList("ja"))) {
+                            append(region.ocrText)
+                        }
+                    },
                     style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("ocr_text"),
                 )
                 Row(
                     modifier = Modifier
