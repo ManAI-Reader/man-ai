@@ -467,6 +467,119 @@ class ReaderScreenTest {
     }
 
     @Test
+    fun ltrMode_switchToWebtoon_preservesCurrentPage() {
+        lastPage = 0
+        val readingMode = mutableStateOf(ReadingMode.LTR)
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            NavHost(navController = navController, startDestination = "reader") {
+                composable("reader") {
+                    ReaderScreen(
+                        manga = testManga,
+                        currentPage = lastPage,
+                        readingMode = readingMode.value,
+                        onPageChanged = { lastPage = it },
+                        onBack = {},
+                        onSettingsClick = { navController.navigate("settings") }
+                    )
+                }
+                composable("settings") {
+                    Text("Settings")
+                }
+            }
+        }
+
+        // Swipe left to advance to page 2 in LTR mode
+        composeTestRule.onNodeWithTag("reader_pager")
+            .performTouchInput { swipeLeft() }
+        composeTestRule.waitForIdle()
+        assertEquals(1, lastPage)
+
+        // Show bars and verify we're at page 2
+        composeTestRule.onNodeWithTag("reader_pager").performClick()
+        advancePastDoubleTapTimeout()
+        composeTestRule.onNodeWithText("2 / 10").assertIsDisplayed()
+
+        // Open settings
+        composeTestRule.onNodeWithContentDescription("Reader settings").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Settings").assertIsDisplayed()
+
+        // Switch reading mode to WEBTOON (simulates settings change)
+        readingMode.value = ReadingMode.WEBTOON
+
+        // Return from settings
+        composeTestRule.activityRule.scenario.onActivity { activity ->
+            activity.onBackPressedDispatcher.onBackPressed()
+        }
+        composeTestRule.waitForIdle()
+
+        // Verify webtoon viewer is shown
+        composeTestRule.onNodeWithTag("webtoon_viewer").assertIsDisplayed()
+
+        // Show bars and verify we're still at page 2
+        composeTestRule.onNodeWithTag("webtoon_viewer").performClick()
+        advancePastDoubleTapTimeout()
+        composeTestRule.onNodeWithText("2 / 10").assertIsDisplayed()
+    }
+
+    @Test
+    fun webtoonMode_switchToLtr_preservesCurrentPage() {
+        lastPage = 0
+        val readingMode = mutableStateOf(ReadingMode.WEBTOON)
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            NavHost(navController = navController, startDestination = "reader") {
+                composable("reader") {
+                    ReaderScreen(
+                        manga = testManga,
+                        currentPage = lastPage,
+                        readingMode = readingMode.value,
+                        onPageChanged = { lastPage = it },
+                        onBack = {},
+                        onSettingsClick = { navController.navigate("settings") }
+                    )
+                }
+                composable("settings") {
+                    Text("Settings")
+                }
+            }
+        }
+
+        // Scroll down in webtoon mode to advance pages
+        composeTestRule.onNodeWithTag("webtoon_viewer")
+            .performTouchInput { swipeUp() }
+        composeTestRule.waitForIdle()
+
+        // Show bars and note current page
+        composeTestRule.onNodeWithTag("webtoon_viewer").performClick()
+        advancePastDoubleTapTimeout()
+        val webtoonPage = lastPage
+
+        // Open settings
+        composeTestRule.onNodeWithContentDescription("Reader settings").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Settings").assertIsDisplayed()
+
+        // Switch reading mode to LTR
+        readingMode.value = ReadingMode.LTR
+
+        // Return from settings
+        composeTestRule.activityRule.scenario.onActivity { activity ->
+            activity.onBackPressedDispatcher.onBackPressed()
+        }
+        composeTestRule.waitForIdle()
+
+        // Verify pager is shown
+        composeTestRule.onNodeWithTag("reader_pager").assertIsDisplayed()
+
+        // Show bars and verify we're at the same page
+        composeTestRule.onNodeWithTag("reader_pager").performClick()
+        advancePastDoubleTapTimeout()
+        composeTestRule.onNodeWithText("${webtoonPage + 1} / 10").assertIsDisplayed()
+    }
+
+    @Test
     fun swipeLeft_doesNotAdvancePage_inRtlMode() {
         lastPage = 0
         composeTestRule.setContent {

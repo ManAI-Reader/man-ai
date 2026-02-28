@@ -66,6 +66,15 @@ fun ReaderScreen(
     val sharedTransitionScope = LocalSharedTransitionScope.current
     val animatedVisibilityScope = LocalAnimatedVisibilityScope.current
 
+    LaunchedEffect(readingMode) {
+        if (isWebtoon) {
+            lazyListState.scrollToItem(currentPage)
+        } else {
+            pagerState.scrollToPage(currentPage)
+        }
+        gestureState.resetZoom()
+    }
+
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
             if (!isWebtoon) {
