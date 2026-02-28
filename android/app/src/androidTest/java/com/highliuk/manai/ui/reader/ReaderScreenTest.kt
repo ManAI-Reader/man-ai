@@ -1,8 +1,10 @@
 package com.highliuk.manai.ui.reader
 
+import androidx.activity.ComponentActivity
+import androidx.compose.material3.Text
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.doubleClick
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -12,6 +14,9 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.test.swipeUp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.highliuk.manai.domain.model.Manga
 import com.highliuk.manai.domain.model.ReadingMode
 import androidx.compose.runtime.mutableStateOf
@@ -22,7 +27,7 @@ import org.junit.Test
 class ReaderScreenTest {
 
     @get:Rule
-    val composeTestRule = createComposeRule()
+    val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
     private val testManga = Manga(id = 1, uri = "content://test", title = "One Piece", pageCount = 10)
 
@@ -407,6 +412,58 @@ class ReaderScreenTest {
         advancePastDoubleTapTimeout()
 
         composeTestRule.onNodeWithText("1 / 10").assertDoesNotExist()
+    }
+
+    @Test
+    fun rtlMode_openSettingsAndReturn_preservesCurrentPage() {
+        lastPage = 0
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            NavHost(navController = navController, startDestination = "reader") {
+                composable("reader") {
+                    ReaderScreen(
+                        manga = testManga,
+                        currentPage = lastPage,
+                        readingMode = ReadingMode.RTL,
+                        onPageChanged = { lastPage = it },
+                        onBack = {},
+                        onSettingsClick = { navController.navigate("settings") }
+                    )
+                }
+                composable("settings") {
+                    Text("Settings")
+                }
+            }
+        }
+
+        // Swipe right to advance to page 2 in RTL mode
+        composeTestRule.onNodeWithTag("reader_pager")
+            .performTouchInput { swipeRight() }
+        composeTestRule.waitForIdle()
+        assertEquals(1, lastPage)
+
+        // Show bars and verify we're at page 2
+        composeTestRule.onNodeWithTag("reader_pager").performClick()
+        advancePastDoubleTapTimeout()
+        composeTestRule.onNodeWithText("2 / 10").assertIsDisplayed()
+
+        // Open settings (NavHost saves state, destroys ReaderScreen)
+        composeTestRule.onNodeWithContentDescription("Reader settings").performClick()
+        composeTestRule.waitForIdle()
+
+        // Verify we're on settings screen
+        composeTestRule.onNodeWithText("Settings").assertIsDisplayed()
+
+        // Return from settings (NavHost restores state, recreates ReaderScreen)
+        composeTestRule.activityRule.scenario.onActivity { activity ->
+            activity.onBackPressedDispatcher.onBackPressed()
+        }
+        composeTestRule.waitForIdle()
+
+        // Verify we're still at page 2
+        composeTestRule.onNodeWithTag("reader_pager").performClick()
+        advancePastDoubleTapTimeout()
+        composeTestRule.onNodeWithText("2 / 10").assertIsDisplayed()
     }
 
     @Test
