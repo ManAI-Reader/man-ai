@@ -17,6 +17,7 @@
     <string name="reading_mode_rtl">右から左</string>
     <string name="tap_to_navigate">タップでページ移動</string>
     <string name="tap_to_navigate_description">左右の端をタップしてページを切り替え</string>
+    <string name="reading_mode_webtoon">Webtoon</string>
 
     <!-- Theme mode -->
     <string name="theme_mode">テーマ</string>

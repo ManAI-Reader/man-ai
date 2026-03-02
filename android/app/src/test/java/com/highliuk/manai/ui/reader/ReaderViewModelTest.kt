@@ -197,4 +197,16 @@ class ReaderViewModelTest {
             assertEquals(true, awaitItem())
         }
     }
+
+    @Test
+    fun `readingMode emits WEBTOON when set`() = runTest(testDispatcher) {
+        coEvery { repository.getMangaById(1L) } returns flowOf(null)
+        val viewModel = createViewModel(1L)
+
+        viewModel.readingMode.test {
+            assertEquals(ReadingMode.LTR, awaitItem())
+            readingModeFlow.value = ReadingMode.WEBTOON
+            assertEquals(ReadingMode.WEBTOON, awaitItem())
+        }
+    }
 }

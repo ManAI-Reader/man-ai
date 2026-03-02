@@ -122,6 +122,7 @@ fun SettingsScreen(
                 val label = when (mode) {
                     ReadingMode.LTR -> stringResource(R.string.reading_mode_ltr)
                     ReadingMode.RTL -> stringResource(R.string.reading_mode_rtl)
+                    ReadingMode.WEBTOON -> stringResource(R.string.reading_mode_webtoon)
                 }
                 Row(
                     modifier = Modifier

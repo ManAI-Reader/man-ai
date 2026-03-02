@@ -216,6 +216,52 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun displaysWebtoonReadingModeOption() {
+        composeTestRule.setContent {
+            SettingsScreen(
+                gridColumns = 2,
+                onGridColumnsChange = {},
+                readingMode = ReadingMode.LTR,
+                onReadingModeChange = {},
+                themeMode = ThemeMode.SYSTEM,
+                onThemeModeChange = {},
+                appLanguage = AppLanguage.SYSTEM,
+                onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
+                onBack = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("Webtoon").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun clickingWebtoonCallsCallbackWithWebtoon() {
+        var selectedMode: ReadingMode? = null
+
+        composeTestRule.setContent {
+            SettingsScreen(
+                gridColumns = 2,
+                onGridColumnsChange = {},
+                readingMode = ReadingMode.LTR,
+                onReadingModeChange = { selectedMode = it },
+                themeMode = ThemeMode.SYSTEM,
+                onThemeModeChange = {},
+                appLanguage = AppLanguage.SYSTEM,
+                onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
+                onBack = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("Webtoon").performScrollTo().performClick()
+
+        assertEquals(ReadingMode.WEBTOON, selectedMode)
+    }
+
+    @Test
     fun clickingItalianLanguageCallsCallback() {
         var selectedLanguage: AppLanguage? = null
 

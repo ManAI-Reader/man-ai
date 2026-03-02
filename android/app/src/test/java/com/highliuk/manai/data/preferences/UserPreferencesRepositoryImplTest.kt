@@ -148,6 +148,15 @@ class UserPreferencesRepositoryImplTest {
     }
 
     @Test
+    fun `setReadingMode persists WEBTOON value`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        repository.setReadingMode(ReadingMode.WEBTOON)
+
+        assertEquals(ReadingMode.WEBTOON, repository.readingMode.first())
+    }
+
+    @Test
     fun `appLanguage emits default value SYSTEM`() = runTest(testDispatcher) {
         val repository = createRepository()
 

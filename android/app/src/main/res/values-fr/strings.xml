@@ -18,6 +18,7 @@
     <string name="reading_mode_rtl">De droite à gauche</string>
     <string name="tap_to_navigate">Appuyer pour naviguer</string>
     <string name="tap_to_navigate_description">Appuyez sur le bord gauche ou droit pour changer de page</string>
+    <string name="reading_mode_webtoon">Webtoon</string>
 
     <!-- Theme mode -->
     <string name="theme_mode">Thème</string>
