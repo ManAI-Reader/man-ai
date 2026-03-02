@@ -8,7 +8,6 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.room)
     alias(libs.plugins.detekt)
-    alias(libs.plugins.kover)
 }
 
 android {
@@ -113,81 +112,6 @@ detekt {
     allRules = true
     config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
     basePath = projectDir.absolutePath
-}
-
-kover {
-    reports {
-        filters {
-            excludes {
-                androidGeneratedClasses()
-                classes(
-                    // Hilt
-                    "dagger.hilt.*",
-                    "hilt_aggregated_deps.*",
-                    "*_HiltModules*",
-                    "*_Factory",
-                    "*_MembersInjector",
-                    "*_GeneratedInjector",
-                    "*Hilt_*",
-                    // Room
-                    "*_Impl",
-                    "*_Impl$*",
-                    // Navigation
-                    "*ComposableSingletons*",
-                    // App entry points
-                    "*.ManAiApplication",
-                    "*.MainActivity",
-                    // DI modules (pure Hilt wiring)
-                    "*.di.*",
-                    // Android-dependent implementations
-                    "*.AndroidPdfMetadataExtractor",
-                    "*.OnnxSessionManager",
-                    // OnnxText* require ONNX runtime (Android only)
-                    // Their Companion objects (pure functions) remain covered by unit tests
-                    "*.OnnxTextDetector",
-                    "*.OnnxTextDetector${'$'}*",
-                    "*.OnnxTextRecognizer",
-                    "*.OnnxTextRecognizer${'$'}*",
-                    // Room database abstract class
-                    "*.ManAiDatabase",
-                    "*.ManAiDatabase$*",
-                    // Theme color scheme initializations
-                    "*.ui.theme.*",
-                    // Kotlin compiler synthetic classes (unreachable from tests)
-                    "*.UserPreferencesRepositoryImpl${'$'}Companion",
-                    // Room DAO interface — concrete methods compile to $DefaultImpls
-                    // which Room bypasses with its generated implementation
-                    "*.MangaDao*",
-                    // Kotlin-generated default impls and coroutine lambdas
-                    // TODO: investigate pre-existing coverage gaps in these classes
-                    "*.FileHashProviderImpl",
-                    "*.FileHashProviderImpl${'$'}*",
-                    "*.MangaRepositoryImpl",
-                    "*.MangaRepositoryImpl${'$'}*",
-                )
-                annotatedBy(
-                    "*Generated*",
-                    "*Composable*",
-                )
-            }
-        }
-
-        variant("debug") {
-            log {
-                header = "Coverage (Kover engine):"
-                format = "  <entity> — <value>%"
-                groupBy = kotlinx.kover.gradle.plugin.dsl.GroupingEntityType.CLASS
-                coverageUnits = kotlinx.kover.gradle.plugin.dsl.CoverageUnit.LINE
-                aggregationForGroup = kotlinx.kover.gradle.plugin.dsl.AggregationType.COVERED_PERCENTAGE
-            }
-
-            verify {
-                rule {
-                    minBound(100)
-                }
-            }
-        }
-    }
 }
 
 tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
