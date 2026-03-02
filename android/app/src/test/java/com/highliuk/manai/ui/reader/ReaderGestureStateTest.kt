@@ -293,6 +293,21 @@ class ReaderGestureStateTest {
     }
 
     @Test
+    fun `onDoubleTapWebtoon centers Y on tap position`() {
+        val state = ReaderGestureState()
+
+        val target = state.onDoubleTapWebtoon(
+            tapX = 100f,
+            tapY = 200f,
+            containerWidth = 400f,
+            containerHeight = 800f
+        )
+
+        // centerY=400, targetOffsetY = (400-200) = 200, maxOffsetY = 800*(2-1)/2 = 400
+        assertEquals(200f, target.offsetY)
+    }
+
+    @Test
     fun `applyZoomTarget updates scale and offsets`() {
         val state = ReaderGestureState()
         val target = ZoomTarget(2f, 100f, 200f)

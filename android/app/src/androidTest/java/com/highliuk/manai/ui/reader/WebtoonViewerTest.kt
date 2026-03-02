@@ -7,9 +7,11 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.swipeUp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -77,6 +79,28 @@ class WebtoonViewerTest {
         composeTestRule.mainClock.advanceTimeBy(500)
 
         assertTrue(gestureState.areBarsVisible)
+    }
+
+    @Test
+    fun doubleTapSetsNonZeroOffsetY() {
+        val gestureState = ReaderGestureState()
+
+        composeTestRule.setContent {
+            WebtoonViewer(
+                lazyListState = rememberLazyListState(),
+                uri = "content://test",
+                pageCount = 5,
+                gestureState = gestureState,
+            )
+        }
+
+        // Double-tap off-center to trigger zoom with Y offset
+        composeTestRule.onNodeWithTag("webtoon_viewer")
+            .performTouchInput { doubleClick(center.copy(y = center.y * 0.5f)) }
+        composeTestRule.mainClock.advanceTimeBy(500)
+
+        assertTrue("scale should be zoomed in", gestureState.scale > 1f)
+        assertNotEquals("offsetY should be non-zero after off-center double-tap", 0f, gestureState.offsetY)
     }
 
     @Test

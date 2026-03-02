@@ -45,11 +45,14 @@ fun WebtoonViewer(
                     onDoubleTap = { offset ->
                         val target = gestureState.onDoubleTapWebtoon(
                             tapX = offset.x,
-                            containerWidth = size.width.toFloat()
+                            tapY = offset.y,
+                            containerWidth = size.width.toFloat(),
+                            containerHeight = size.height.toFloat()
                         )
                         coroutineScope.launch {
                             val startScale = gestureState.scale
                             val startOffsetX = gestureState.offsetX
+                            val startOffsetY = gestureState.offsetY
                             val anim = Animatable(0f)
                             anim.animateTo(1f, tween(DOUBLE_TAP_ANIM_DURATION)) {
                                 val progress = value
@@ -57,7 +60,7 @@ fun WebtoonViewer(
                                     ZoomTarget(
                                         scale = startScale + (target.scale - startScale) * progress,
                                         offsetX = startOffsetX + (target.offsetX - startOffsetX) * progress,
-                                        offsetY = 0f
+                                        offsetY = startOffsetY + (target.offsetY - startOffsetY) * progress
                                     )
                                 )
                             }
@@ -88,6 +91,7 @@ fun WebtoonViewer(
                 scaleX = gestureState.scale
                 scaleY = gestureState.scale
                 translationX = gestureState.offsetX
+                translationY = gestureState.offsetY
             },
     ) {
         items(pageCount) { pageIndex ->

@@ -68,13 +68,21 @@ class ReaderGestureState {
         offsetX = (offsetX + panX).coerceIn(-maxOffsetX, maxOffsetX)
     }
 
-    fun onDoubleTapWebtoon(tapX: Float, containerWidth: Float): ZoomTarget {
+    fun onDoubleTapWebtoon(
+        tapX: Float,
+        tapY: Float = 0f,
+        containerWidth: Float,
+        containerHeight: Float = 0f,
+    ): ZoomTarget {
         return if (!isZoomed) {
             val targetScale = DOUBLE_TAP_SCALE
             val maxOffsetX = containerWidth * (targetScale - 1f) / 2f
             val centerX = containerWidth / 2f
             val targetOffsetX = (centerX - tapX).coerceIn(-maxOffsetX, maxOffsetX)
-            ZoomTarget(targetScale, targetOffsetX, 0f)
+            val maxOffsetY = containerHeight * (targetScale - 1f) / 2f
+            val centerY = containerHeight / 2f
+            val targetOffsetY = (centerY - tapY).coerceIn(-maxOffsetY, maxOffsetY)
+            ZoomTarget(targetScale, targetOffsetX, targetOffsetY)
         } else {
             ZoomTarget(MIN_SCALE, 0f, 0f)
         }
