@@ -5,6 +5,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -88,5 +90,49 @@ class ReaderBottomBarTest {
             )
         }
         composeTestRule.onNodeWithTag("page_slider_rtl").assertIsDisplayed()
+    }
+
+    @Test
+    fun draggingSlider_callsOnPageSelectedWithNewPage() {
+        var selectedPage = -1
+        composeTestRule.setContent {
+            ReaderBottomBar(
+                currentPage = 0,
+                pageCount = 10,
+                onPageSelected = { selectedPage = it }
+            )
+        }
+
+        composeTestRule.onNodeWithTag("page_slider").performTouchInput {
+            down(centerLeft)
+            moveTo(center)
+            up()
+        }
+        composeTestRule.waitForIdle()
+
+        assertTrue("onPageSelected should be called with a page > 0", selectedPage > 0)
+    }
+
+    @Test
+    fun draggingSlider_showsDragPreviewPage() {
+        composeTestRule.setContent {
+            ReaderBottomBar(
+                currentPage = 0,
+                pageCount = 10,
+                onPageSelected = {}
+            )
+        }
+
+        composeTestRule.onNodeWithTag("page_slider").performTouchInput {
+            down(centerLeft)
+            moveTo(centerRight)
+        }
+
+        // While dragging, page indicator should show the dragged position
+        composeTestRule.onNodeWithText("1 / 10").assertDoesNotExist()
+
+        composeTestRule.onNodeWithTag("page_slider").performTouchInput {
+            up()
+        }
     }
 }
