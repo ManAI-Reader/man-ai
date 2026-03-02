@@ -33,6 +33,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.intl.LocaleList as ComposeLocaleList
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.PageRegion
 
@@ -40,6 +41,7 @@ import com.highliuk.manai.domain.model.PageRegion
 @Composable
 fun OcrBottomSheet(
     region: PageRegion,
+    fontScale: Float = 1.5f,
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -71,6 +73,8 @@ fun OcrBottomSheet(
                         }
                     },
                     style = MaterialTheme.typography.bodyLarge,
+                    fontSize = MaterialTheme.typography.bodyLarge.fontSize * fontScale,
+                    lineHeight = 1.5.em,
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("ocr_text"),

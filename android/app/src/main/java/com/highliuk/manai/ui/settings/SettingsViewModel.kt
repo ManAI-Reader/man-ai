@@ -53,4 +53,13 @@ class SettingsViewModel @Inject constructor(
             userPreferencesRepository.setAppLanguage(language)
         }
     }
+
+    val ocrFontScale: StateFlow<Float> = userPreferencesRepository.ocrFontScale
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 1.5f)
+
+    fun setOcrFontScale(scale: Float) {
+        viewModelScope.launch {
+            userPreferencesRepository.setOcrFontScale(scale)
+        }
+    }
 }

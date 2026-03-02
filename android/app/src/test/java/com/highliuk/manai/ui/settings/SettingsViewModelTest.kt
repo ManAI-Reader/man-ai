@@ -29,6 +29,7 @@ class SettingsViewModelTest {
     private val readingModeFlow = MutableStateFlow(ReadingMode.LTR)
     private val themeModeFlow = MutableStateFlow(ThemeMode.SYSTEM)
     private val appLanguageFlow = MutableStateFlow(AppLanguage.SYSTEM)
+    private val ocrFontScaleFlow = MutableStateFlow(1.5f)
 
     @Before
     fun setUp() {
@@ -37,6 +38,7 @@ class SettingsViewModelTest {
         every { userPreferencesRepository.readingMode } returns readingModeFlow
         every { userPreferencesRepository.themeMode } returns themeModeFlow
         every { userPreferencesRepository.appLanguage } returns appLanguageFlow
+        every { userPreferencesRepository.ocrFontScale } returns ocrFontScaleFlow
     }
 
     @After
@@ -128,5 +130,26 @@ class SettingsViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         coVerify { userPreferencesRepository.setAppLanguage(AppLanguage.ITALIAN) }
+    }
+
+    @Test
+    fun `ocrFontScale emits current preference value`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.ocrFontScale.test {
+            assertEquals(1.5f, awaitItem())
+            ocrFontScaleFlow.value = 3.0f
+            assertEquals(3.0f, awaitItem())
+        }
+    }
+
+    @Test
+    fun `setOcrFontScale updates preference`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.setOcrFontScale(3.0f)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify { userPreferencesRepository.setOcrFontScale(3.0f) }
     }
 }

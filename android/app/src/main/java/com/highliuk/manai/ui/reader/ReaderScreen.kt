@@ -70,6 +70,7 @@ fun ReaderScreen(
     selectedRegion: PageRegion? = null,
     onPageChanged: (Int) -> Unit,
     onRegionTapped: (PageRegion) -> Unit = {},
+    ocrFontScale: Float = 1.5f,
     onDismissBottomSheet: () -> Unit = {},
     onBack: () -> Unit,
     onSettingsClick: () -> Unit,
@@ -264,7 +265,7 @@ fun ReaderScreen(
         if (selectedRegion != null) {
             val liveRegion = regions.find { it.regionIndex == selectedRegion.regionIndex }
                 ?: selectedRegion
-            OcrBottomSheet(region = liveRegion, onDismiss = onDismissBottomSheet)
+            OcrBottomSheet(region = liveRegion, fontScale = ocrFontScale, onDismiss = onDismissBottomSheet)
         }
 
         if (showGoToPageDialog) {

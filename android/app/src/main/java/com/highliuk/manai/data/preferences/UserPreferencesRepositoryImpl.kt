@@ -3,6 +3,7 @@ package com.highliuk.manai.data.preferences
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.highliuk.manai.domain.model.AppLanguage
@@ -31,6 +32,11 @@ class UserPreferencesRepositoryImpl @Inject constructor(
 
         val APP_LANGUAGE = stringPreferencesKey("app_language")
         val DEFAULT_APP_LANGUAGE = AppLanguage.SYSTEM
+
+        val OCR_FONT_SCALE = floatPreferencesKey("ocr_font_scale")
+        const val DEFAULT_OCR_FONT_SCALE = 1.5f
+        const val MIN_OCR_FONT_SCALE = 1.0f
+        const val MAX_OCR_FONT_SCALE = 3.0f
     }
 
     override val gridColumns: Flow<Int> = dataStore.data.map { preferences ->
@@ -98,6 +104,17 @@ class UserPreferencesRepositoryImpl @Inject constructor(
     override suspend fun setAppLanguage(language: AppLanguage) {
         dataStore.edit { preferences ->
             preferences[APP_LANGUAGE] = language.name
+        }
+    }
+
+    override val ocrFontScale: Flow<Float> = dataStore.data.map { preferences ->
+        preferences[OCR_FONT_SCALE] ?: DEFAULT_OCR_FONT_SCALE
+    }
+
+    override suspend fun setOcrFontScale(scale: Float) {
+        val clamped = scale.coerceIn(MIN_OCR_FONT_SCALE, MAX_OCR_FONT_SCALE)
+        dataStore.edit { preferences ->
+            preferences[OCR_FONT_SCALE] = clamped
         }
     }
 }

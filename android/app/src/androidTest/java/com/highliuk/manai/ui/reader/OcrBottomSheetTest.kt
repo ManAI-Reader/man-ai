@@ -86,4 +86,16 @@ class OcrBottomSheetTest {
 
         composeTestRule.onNodeWithTag("ocr_sheet_content").assertIsDisplayed()
     }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Test
+    fun ocrTextRespectsFontScale() {
+        val region = PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "\u30c6\u30b9\u30c8")
+
+        composeTestRule.setContent {
+            OcrBottomSheet(region = region, fontScale = 3.0f, onDismiss = {})
+        }
+
+        composeTestRule.onNodeWithTag("ocr_text").assertIsDisplayed()
+    }
 }

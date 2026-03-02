@@ -156,6 +156,7 @@ fun ManAiNavHost(
                         val readingMode by viewModel.readingMode.collectAsState()
                         val regions by viewModel.currentPageRegions.collectAsState()
                         val selectedRegion by viewModel.selectedRegion.collectAsState()
+                        val ocrFontScale by viewModel.ocrFontScale.collectAsState()
 
                         val view = LocalView.current
                         val window = (view.context as Activity).window
@@ -168,6 +169,7 @@ fun ManAiNavHost(
                                 readingMode = readingMode,
                                 regions = regions,
                                 selectedRegion = selectedRegion,
+                                ocrFontScale = ocrFontScale,
                                 onPageChanged = viewModel::onPageChanged,
                                 onRegionTapped = viewModel::onRegionTapped,
                                 onDismissBottomSheet = viewModel::dismissBottomSheet,
@@ -222,6 +224,7 @@ fun ManAiNavHost(
                     val readingMode by viewModel.readingMode.collectAsState()
                     val themeMode by viewModel.themeMode.collectAsState()
                     val appLanguage by viewModel.appLanguage.collectAsState()
+                    val ocrFontScale by viewModel.ocrFontScale.collectAsState()
 
                     SettingsScreen(
                         gridColumns = gridColumns,
@@ -231,6 +234,8 @@ fun ManAiNavHost(
                         themeMode = themeMode,
                         onThemeModeChange = { viewModel.setThemeMode(it) },
                         appLanguage = appLanguage,
+                        comicTextScale = ocrFontScale,
+                        onComicTextScaleChange = { viewModel.setOcrFontScale(it) },
                         onAppLanguageChange = { language ->
                             viewModel.setAppLanguage(language)
                             val locales = if (language.tag != null) {

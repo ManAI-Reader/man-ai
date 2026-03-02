@@ -26,6 +26,10 @@
     <string name="language_english">English</string>
     <string name="language_italian">Italiano</string>
 
+    <!-- OCR -->
+    <string name="comic_text_size">Dimensione testo fumetto</string>
+    <string name="comic_text_preview">漫画のテキスト</string>
+
     <!-- Reader screen -->
     <string name="reader_settings">Impostazioni lettore</string>
     <string name="page_content">Pagina %d</string>
