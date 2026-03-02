@@ -55,8 +55,8 @@ jobs:
       - name: Run instrumented tests
         run: ./gradlew ciDeviceIsolatedAndroidTest
 
-      - name: Verify coverage
-        run: ./gradlew koverHtmlReportDebug koverVerifyDebug
+      - name: Generate coverage report
+        run: ./gradlew jacocoMergedReport jacocoPrintCoverage
 
       - name: Upload test results
         if: always()
@@ -70,4 +70,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: android/app/build/reports/kover/
+          path: android/app/build/reports/jacoco/
