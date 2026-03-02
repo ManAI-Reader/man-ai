@@ -135,6 +135,7 @@ tasks.register<JacocoReport>("jacocoMergedReport") {
     description = "Generates merged JaCoCo coverage report for unit + instrumented tests."
 
     dependsOn("testIsolatedUnitTest")
+    mustRunAfter("connectedIsolatedAndroidTest")
 
     reports {
         html.required.set(true)
