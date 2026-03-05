@@ -44,9 +44,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import com.highliuk.manai.BuildConfig
 import com.highliuk.manai.R
 import androidx.compose.runtime.mutableIntStateOf
 import com.highliuk.manai.domain.model.Manga
+import com.highliuk.manai.domain.model.PagePipelineState
 import com.highliuk.manai.domain.model.PageRegion
 import com.highliuk.manai.domain.model.ReadingMode
 import com.highliuk.manai.ui.navigation.LocalAnimatedVisibilityScope
@@ -75,6 +77,7 @@ fun ReaderScreen(
     onBack: () -> Unit,
     onSettingsClick: () -> Unit,
     onImmersiveModeChange: (Boolean) -> Unit = {},
+    debugPipelineStates: Map<Int, PagePipelineState> = emptyMap(),
 ) {
     val isRtl = readingMode == ReadingMode.RTL
     val pagerState = rememberPagerState(initialPage = currentPage) { manga.pageCount }
@@ -129,88 +132,99 @@ fun ReaderScreen(
                 .fillMaxSize()
                 .testTag("reader_pager")
         ) { pageIndex ->
-            PdfPage(
-                uri = manga.uri,
-                pageIndex = pageIndex,
-                onBitmapLoaded = { w, h ->
-                    gestureState.setContentSize(w.toFloat(), h.toFloat())
-                    bitmapWidth = w
-                    bitmapHeight = h
-                },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .testTag("reader_zoom_container")
-                    .pointerInput(Unit) {
-                        detectTapGestures(
-                            onTap = { offset ->
-                                if (bitmapWidth > 0 && bitmapHeight > 0) {
-                                    val hit = RegionHitTester.hitTest(
-                                        offset.x, offset.y, regions,
-                                        size.width.toFloat(), size.height.toFloat(),
-                                        bitmapWidth, bitmapHeight,
-                                        gestureState.scale, gestureState.offsetX, gestureState.offsetY,
-                                    )
-                                    if (hit != null) onRegionTapped(hit) else gestureState.toggleBars()
-                                } else {
-                                    gestureState.toggleBars()
-                                }
-                            },
-                            onDoubleTap = { offset ->
-                                val target = gestureState.onDoubleTap(
-                                    tapX = offset.x,
-                                    tapY = offset.y,
-                                    containerWidth = size.width.toFloat(),
-                                    containerHeight = size.height.toFloat()
-                                )
-                                coroutineScope.launch {
-                                    val startScale = gestureState.scale
-                                    val startOffsetX = gestureState.offsetX
-                                    val startOffsetY = gestureState.offsetY
-                                    val anim = Animatable(0f)
-                                    anim.animateTo(1f, tween(DOUBLE_TAP_ANIM_DURATION)) {
-                                        val progress = value
-                                        gestureState.applyZoomTarget(
-                                            ZoomTarget(
-                                                scale = startScale + (target.scale - startScale) * progress,
-                                                offsetX = startOffsetX + (target.offsetX - startOffsetX) * progress,
-                                                offsetY = startOffsetY + (target.offsetY - startOffsetY) * progress
-                                            )
+            Box(modifier = Modifier.fillMaxSize()) {
+                PdfPage(
+                    uri = manga.uri,
+                    pageIndex = pageIndex,
+                    onBitmapLoaded = { w, h ->
+                        gestureState.setContentSize(w.toFloat(), h.toFloat())
+                        bitmapWidth = w
+                        bitmapHeight = h
+                    },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .testTag("reader_zoom_container")
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onTap = { offset ->
+                                    if (bitmapWidth > 0 && bitmapHeight > 0) {
+                                        val hit = RegionHitTester.hitTest(
+                                            offset.x, offset.y, regions,
+                                            size.width.toFloat(), size.height.toFloat(),
+                                            bitmapWidth, bitmapHeight,
+                                            gestureState.scale, gestureState.offsetX, gestureState.offsetY,
                                         )
+                                        if (hit != null) onRegionTapped(hit) else gestureState.toggleBars()
+                                    } else {
+                                        gestureState.toggleBars()
+                                    }
+                                },
+                                onDoubleTap = { offset ->
+                                    val target = gestureState.onDoubleTap(
+                                        tapX = offset.x,
+                                        tapY = offset.y,
+                                        containerWidth = size.width.toFloat(),
+                                        containerHeight = size.height.toFloat()
+                                    )
+                                    coroutineScope.launch {
+                                        val startScale = gestureState.scale
+                                        val startOffsetX = gestureState.offsetX
+                                        val startOffsetY = gestureState.offsetY
+                                        val anim = Animatable(0f)
+                                        anim.animateTo(1f, tween(DOUBLE_TAP_ANIM_DURATION)) {
+                                            val progress = value
+                                            gestureState.applyZoomTarget(
+                                                ZoomTarget(
+                                                    scale = startScale + (target.scale - startScale) * progress,
+                                                    offsetX = startOffsetX + (target.offsetX - startOffsetX) * progress,
+                                                    offsetY = startOffsetY + (target.offsetY - startOffsetY) * progress
+                                                )
+                                            )
+                                        }
                                     }
                                 }
-                            }
-                        )
-                    }
-                    .pointerInput(Unit) {
-                        awaitEachGesture {
-                            awaitFirstDown(requireUnconsumed = false)
-                            do {
-                                val event = awaitPointerEvent()
-                                val zoomChange = event.calculateZoom()
-                                val panChange = event.calculatePan()
-
-                                if (zoomChange != 1f) {
-                                    gestureState.onZoom(zoomChange)
-                                    event.changes.forEach { if (it.positionChanged()) it.consume() }
-                                }
-
-                                if (gestureState.isZoomed && panChange != Offset.Zero) {
-                                    gestureState.onPan(
-                                        panChange.x, panChange.y,
-                                        size.width.toFloat(), size.height.toFloat()
-                                    )
-                                    event.changes.forEach { if (it.positionChanged()) it.consume() }
-                                }
-                            } while (event.changes.any { it.pressed })
+                            )
                         }
-                    }
-                    .graphicsLayer {
-                        scaleX = gestureState.scale
-                        scaleY = gestureState.scale
-                        translationX = gestureState.offsetX
-                        translationY = gestureState.offsetY
-                    }
-            )
+                        .pointerInput(Unit) {
+                            awaitEachGesture {
+                                awaitFirstDown(requireUnconsumed = false)
+                                do {
+                                    val event = awaitPointerEvent()
+                                    val zoomChange = event.calculateZoom()
+                                    val panChange = event.calculatePan()
+
+                                    if (zoomChange != 1f) {
+                                        gestureState.onZoom(zoomChange)
+                                        event.changes.forEach { if (it.positionChanged()) it.consume() }
+                                    }
+
+                                    if (gestureState.isZoomed && panChange != Offset.Zero) {
+                                        gestureState.onPan(
+                                            panChange.x, panChange.y,
+                                            size.width.toFloat(), size.height.toFloat()
+                                        )
+                                        event.changes.forEach { if (it.positionChanged()) it.consume() }
+                                    }
+                                } while (event.changes.any { it.pressed })
+                            }
+                        }
+                        .graphicsLayer {
+                            scaleX = gestureState.scale
+                            scaleY = gestureState.scale
+                            translationX = gestureState.offsetX
+                            translationY = gestureState.offsetY
+                        }
+                )
+
+                if (BuildConfig.DEBUG_ML) {
+                    DebugMlOverlay(
+                        pageState = debugPipelineStates[pageIndex],
+                        regions = if (pageIndex == currentPage) regions else emptyList(),
+                        bitmapWidth = bitmapWidth,
+                        bitmapHeight = bitmapHeight,
+                    )
+                }
+            }
         }
 
         AnimatedVisibility(

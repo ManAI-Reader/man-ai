@@ -40,6 +40,9 @@ import androidx.navigation.navArgument
 import com.highliuk.manai.ui.home.DeleteMangaDialog
 import com.highliuk.manai.ui.home.HomeScreen
 import com.highliuk.manai.ui.home.HomeViewModel
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import com.highliuk.manai.BuildConfig
 import com.highliuk.manai.ui.reader.ReaderScreen
 import com.highliuk.manai.ui.reader.ReaderViewModel
 import com.highliuk.manai.ui.settings.SettingsScreen
@@ -157,6 +160,17 @@ fun ManAiNavHost(
                         val regions by viewModel.currentPageRegions.collectAsState()
                         val selectedRegion by viewModel.selectedRegion.collectAsState()
                         val ocrFontScale by viewModel.ocrFontScale.collectAsState()
+                        val debugPipelineStates by viewModel.debugPipelineStates.collectAsState()
+
+                        if (BuildConfig.DEBUG_ML) {
+                            val context = LocalContext.current
+                            LaunchedEffect(Unit) {
+                                viewModel.debugEvents.collect { event ->
+                                    Toast.makeText(context, event.toastMessage, Toast.LENGTH_SHORT)
+                                        .show()
+                                }
+                            }
+                        }
 
                         val view = LocalView.current
                         val window = (view.context as Activity).window
@@ -187,7 +201,8 @@ fun ManAiNavHost(
                                     } else {
                                         insetsController.show(WindowInsetsCompat.Type.statusBars())
                                     }
-                                }
+                                },
+                                debugPipelineStates = debugPipelineStates,
                             )
                         }
                     }

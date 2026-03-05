@@ -21,6 +21,8 @@ android {
         versionName = "0.5.0"
 
         testInstrumentationRunner = "com.highliuk.manai.HiltTestRunner"
+
+        buildConfigField("Boolean", "DEBUG_ML", (System.getenv("DEBUG_ML") ?: "false"))
     }
 
     signingConfigs {
@@ -62,6 +64,7 @@ android {
     }
 
     buildFeatures {
+        buildConfig = true
         compose = true
     }
 
@@ -117,6 +120,7 @@ kover {
                     "hilt_aggregated_deps.*",
                     "*_HiltModules*",
                     "*_Factory",
+                    "*_Factory$*",
                     "*_MembersInjector",
                     "*_GeneratedInjector",
                     "*Hilt_*",

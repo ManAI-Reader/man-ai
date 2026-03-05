@@ -15,14 +15,16 @@ class OcrCacheRepositoryImpl @Inject constructor(
 
     override fun observeRegions(mangaId: Long, pageIndex: Int): Flow<List<PageRegion>> =
         dao.getByPage(mangaId, pageIndex).map { entities ->
-            entities.map { it.toPageRegion() }
+            entities.filter { it.regionIndex >= 0 }.map { it.toPageRegion() }
         }
 
     override suspend fun hasDetectionResults(mangaId: Long, pageIndex: Int): Boolean =
         dao.hasDetectionResults(mangaId, pageIndex)
 
     override suspend fun getRegions(mangaId: Long, pageIndex: Int): List<PageRegion> =
-        dao.getByPageOnce(mangaId, pageIndex).map { it.toPageRegion() }
+        dao.getByPageOnce(mangaId, pageIndex)
+            .filter { it.regionIndex >= 0 }
+            .map { it.toPageRegion() }
 
     override suspend fun saveDetectionResults(
         mangaId: Long,
@@ -31,18 +33,31 @@ class OcrCacheRepositoryImpl @Inject constructor(
         bitmapWidth: Int,
         bitmapHeight: Int,
     ) {
-        val entities = regions.mapIndexed { index, region ->
-            PageOcrResultEntity(
-                mangaId = mangaId,
-                pageIndex = pageIndex,
-                regionIndex = index,
-                normX1 = region.x1 / bitmapWidth,
-                normY1 = region.y1 / bitmapHeight,
-                normX2 = region.x2 / bitmapWidth,
-                normY2 = region.y2 / bitmapHeight,
-                confidence = region.confidence,
-                ocrText = null,
+        val entities = if (regions.isEmpty()) {
+            listOf(
+                PageOcrResultEntity(
+                    mangaId = mangaId,
+                    pageIndex = pageIndex,
+                    regionIndex = SENTINEL_REGION_INDEX,
+                    normX1 = 0f, normY1 = 0f, normX2 = 0f, normY2 = 0f,
+                    confidence = 0f,
+                    ocrText = null,
+                )
             )
+        } else {
+            regions.mapIndexed { index, region ->
+                PageOcrResultEntity(
+                    mangaId = mangaId,
+                    pageIndex = pageIndex,
+                    regionIndex = index,
+                    normX1 = region.x1 / bitmapWidth,
+                    normY1 = region.y1 / bitmapHeight,
+                    normX2 = region.x2 / bitmapWidth,
+                    normY2 = region.y2 / bitmapHeight,
+                    confidence = region.confidence,
+                    ocrText = null,
+                )
+            }
         }
         dao.insertAll(entities)
     }
@@ -65,4 +80,8 @@ class OcrCacheRepositoryImpl @Inject constructor(
         confidence = confidence,
         ocrText = ocrText,
     )
+
+    companion object {
+        internal const val SENTINEL_REGION_INDEX = -1
+    }
 }

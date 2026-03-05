@@ -4,7 +4,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.highliuk.manai.data.pdf.PdfPageRenderer
+import com.highliuk.manai.domain.debug.DebugMlEvent
+import com.highliuk.manai.domain.debug.DebugMlEventHolder
+import com.highliuk.manai.domain.debug.PipelineDebugStateHolder
 import com.highliuk.manai.domain.model.Manga
+import com.highliuk.manai.domain.model.PagePipelineState
 import com.highliuk.manai.domain.model.PageRegion
 import com.highliuk.manai.domain.model.ReadingMode
 import com.highliuk.manai.domain.repository.MangaRepository
@@ -13,6 +17,7 @@ import com.highliuk.manai.domain.repository.UserPreferencesRepository
 import com.highliuk.manai.domain.usecase.ProcessPageUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -37,7 +42,12 @@ class ReaderViewModel @Inject constructor(
     private val processPageUseCase: ProcessPageUseCase,
     private val ocrCache: OcrCacheRepository,
     private val pdfPageRenderer: PdfPageRenderer,
+    debugStateHolder: PipelineDebugStateHolder,
+    debugEventHolder: DebugMlEventHolder,
 ) : ViewModel() {
+
+    val debugPipelineStates: StateFlow<Map<Int, PagePipelineState>> = debugStateHolder.states
+    val debugEvents: Flow<DebugMlEvent> = debugEventHolder.events
 
     private val mangaId: Long = savedStateHandle["mangaId"] ?: 0L
 
@@ -63,12 +73,13 @@ class ReaderViewModel @Inject constructor(
     private val _isProcessing = MutableStateFlow(false)
     val isProcessing: StateFlow<Boolean> = _isProcessing.asStateFlow()
 
-    private var pipelineJob: Job? = null
+    private val pipelineJobs = mutableMapOf<Int, Job>()
 
     init {
         viewModelScope.launch {
             val loadedManga = manga.filterNotNull().first()
             _currentPage.value = loadedManga.lastReadPage
+            launchPipeline(loadedManga.lastReadPage)
         }
 
         viewModelScope.launch {
@@ -79,18 +90,11 @@ class ReaderViewModel @Inject constructor(
                     repository.updateLastReadPage(mangaId, page)
                 }
         }
-
-        viewModelScope.launch {
-            _currentPage
-                .debounce(300L)
-                .collect { page ->
-                    launchPipeline(page)
-                }
-        }
     }
 
     fun onPageChanged(page: Int) {
         _currentPage.value = page
+        launchPipeline(page)
     }
 
     fun onRegionTapped(region: PageRegion) {
@@ -105,26 +109,18 @@ class ReaderViewModel @Inject constructor(
     }
 
     internal fun launchPipeline(pageIndex: Int, priorityRegionIndex: Int? = null) {
-        pipelineJob?.cancel()
-        pipelineJob = viewModelScope.launch {
+        if (priorityRegionIndex == null && pipelineJobs[pageIndex]?.isActive == true) return
+        pipelineJobs[pageIndex]?.cancel()
+        pipelineJobs[pageIndex] = viewModelScope.launch {
             val uri = manga.value?.uri ?: return@launch
             _isProcessing.value = true
             try {
                 val bitmap = pdfPageRenderer.render(uri, pageIndex) ?: return@launch
                 processPageUseCase.execute(mangaId, pageIndex, bitmap,
                     priorityRegionIndex = priorityRegionIndex)
-
-                val nextPage = pageIndex + 1
-                val pageCount = manga.value?.pageCount ?: 0
-                if (nextPage < pageCount) {
-                    val nextBitmap = pdfPageRenderer.render(uri, nextPage)
-                    if (nextBitmap != null) {
-                        processPageUseCase.execute(mangaId, nextPage, nextBitmap,
-                            detectionOnly = true)
-                    }
-                }
             } finally {
-                _isProcessing.value = false
+                pipelineJobs.remove(pageIndex)
+                _isProcessing.value = pipelineJobs.any { it.value.isActive }
             }
         }
     }
