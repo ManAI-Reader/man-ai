@@ -36,7 +36,7 @@ class ReaderScreenTest {
     @get:Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-    private val testManga = Manga(id = 1, uri = "content://test", title = "One Piece", pageCount = 10)
+    private val testManga = Manga(id = 1, uri = "content://test", title = "Manga 1", pageCount = 10)
 
     /**
      * When onDoubleTap is registered, Compose delays onTap by doubleTapTimeoutMillis (~300ms).
@@ -74,7 +74,7 @@ class ReaderScreenTest {
     @Test
     fun topBar_isHiddenByDefault() {
         setUpReaderScreen()
-        composeTestRule.onNodeWithText("One Piece").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Manga 1").assertDoesNotExist()
     }
 
     @Test
@@ -82,7 +82,7 @@ class ReaderScreenTest {
         setUpReaderScreen()
         composeTestRule.onNodeWithTag("reader_pager").performClick()
         advancePastDoubleTapTimeout()
-        composeTestRule.onNodeWithText("One Piece").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Manga 1").assertIsDisplayed()
     }
 
     @Test
@@ -91,11 +91,11 @@ class ReaderScreenTest {
         // First tap: show
         composeTestRule.onNodeWithTag("reader_pager").performClick()
         advancePastDoubleTapTimeout()
-        composeTestRule.onNodeWithText("One Piece").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Manga 1").assertIsDisplayed()
         // Second tap: hide
         composeTestRule.onNodeWithTag("reader_pager").performClick()
         advancePastDoubleTapTimeout()
-        composeTestRule.onNodeWithText("One Piece").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Manga 1").assertDoesNotExist()
     }
 
     @Test
@@ -340,7 +340,7 @@ class ReaderScreenTest {
 
         composeTestRule.onNodeWithTag("webtoon_viewer").performClick()
         advancePastDoubleTapTimeout()
-        composeTestRule.onNodeWithText("One Piece").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Manga 1").assertIsDisplayed()
     }
 
     @Test
@@ -644,7 +644,7 @@ class ReaderScreenTest {
         }
         advancePastDoubleTapTimeout()
 
-        composeTestRule.onNodeWithText("One Piece").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Manga 1").assertIsDisplayed()
     }
 
     @Test
@@ -703,6 +703,6 @@ class ReaderScreenTest {
         }
         advancePastDoubleTapTimeout()
 
-        composeTestRule.onNodeWithText("One Piece").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Manga 1").assertIsDisplayed()
     }
 }

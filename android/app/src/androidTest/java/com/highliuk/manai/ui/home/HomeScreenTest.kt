@@ -34,8 +34,8 @@ class HomeScreenTest {
     @Test
     fun withMangaItems_showsTitlesAndPageCounts() {
         val mangas = listOf(
-            Manga(id = 1, uri = "uri1", title = "One Piece", pageCount = 200),
-            Manga(id = 2, uri = "uri2", title = "Naruto", pageCount = 150)
+            Manga(id = 1, uri = "uri1", title = "Manga 1", pageCount = 200),
+            Manga(id = 2, uri = "uri2", title = "Manga 2", pageCount = 150)
         )
 
         composeTestRule.setContent {
@@ -46,8 +46,8 @@ class HomeScreenTest {
             )
         }
 
-        composeTestRule.onNodeWithText("One Piece").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Naruto").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Manga 1").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Manga 2").assertIsDisplayed()
     }
 
     @Test
@@ -68,7 +68,7 @@ class HomeScreenTest {
 
     @Test
     fun tappingMangaGridItem_callsOnMangaClick() {
-        val manga = Manga(id = 1, uri = "uri1", title = "One Piece", pageCount = 200)
+        val manga = Manga(id = 1, uri = "uri1", title = "Manga 1", pageCount = 200)
         var clickedManga: Manga? = null
 
         composeTestRule.setContent {
@@ -80,7 +80,7 @@ class HomeScreenTest {
             )
         }
 
-        composeTestRule.onNodeWithText("One Piece").performClick()
+        composeTestRule.onNodeWithText("Manga 1").performClick()
         assertEquals(manga, clickedManga)
     }
 
@@ -102,7 +102,7 @@ class HomeScreenTest {
 
     @Test
     fun selectionMode_showsDeleteButton() {
-        val manga = Manga(id = 1, uri = "uri1", title = "One Piece", pageCount = 200)
+        val manga = Manga(id = 1, uri = "uri1", title = "Manga 1", pageCount = 200)
         composeTestRule.setContent {
             HomeScreen(
                 mangaList = listOf(manga),

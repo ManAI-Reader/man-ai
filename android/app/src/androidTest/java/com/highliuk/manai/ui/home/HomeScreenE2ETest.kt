@@ -15,9 +15,9 @@ class HomeScreenE2ETest {
     @Test
     fun homepageDisplaysMangaInGridLayout() {
         val mangas = listOf(
-            Manga(id = 1, uri = "uri1", title = "Frieren Vol 1", pageCount = 200),
-            Manga(id = 2, uri = "uri2", title = "Spy x Family Vol 1", pageCount = 150),
-            Manga(id = 3, uri = "uri3", title = "Jujutsu Kaisen Vol 1", pageCount = 180)
+            Manga(id = 1, uri = "uri1", title = "Manga 1", pageCount = 200),
+            Manga(id = 2, uri = "uri2", title = "Manga 2", pageCount = 150),
+            Manga(id = 3, uri = "uri3", title = "Manga 3", pageCount = 180)
         )
 
         composeTestRule.setContent {
@@ -29,8 +29,8 @@ class HomeScreenE2ETest {
             )
         }
 
-        composeTestRule.onNodeWithText("Frieren Vol 1").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Spy x Family Vol 1").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Manga 1").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Manga 2").assertIsDisplayed()
         // Page count should NOT be displayed in grid view
         composeTestRule.onNodeWithText("200 pages").assertDoesNotExist()
         composeTestRule.onNodeWithText("150 pages").assertDoesNotExist()

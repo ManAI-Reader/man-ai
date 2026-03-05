@@ -52,7 +52,7 @@ class ReaderViewModelTest {
 
     @Test
     fun `manga emits value from repository`() = runTest(testDispatcher) {
-        val manga = Manga(id = 1, uri = "uri1", title = "One Piece", pageCount = 200)
+        val manga = Manga(id = 1, uri = "uri1", title = "Manga 1", pageCount = 200)
         coEvery { repository.getMangaById(1L) } returns flowOf(manga)
 
         val viewModel = createViewModel(1L)

@@ -99,11 +99,11 @@ class HomeViewModelTest {
         coEvery { pdfExtractor.extractPageCount("content://file.pdf") } returns 10
         val viewModel = createViewModel()
 
-        viewModel.importManga("content://file.pdf", "One Piece Vol.1.pdf")
+        viewModel.importManga("content://file.pdf", "Manga Vol.1.pdf")
         testDispatcher.scheduler.advanceUntilIdle()
 
         coVerify {
-            repository.upsertManga(match { it.title == "One Piece Vol.1" })
+            repository.upsertManga(match { it.title == "Manga Vol.1" })
         }
     }
 
