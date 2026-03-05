@@ -14,6 +14,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.filters.SdkSuppress
 import com.highliuk.manai.MainActivity
+import com.highliuk.manai.data.local.ManAiDatabase
 import com.highliuk.manai.data.local.dao.MangaDao
 import com.highliuk.manai.data.local.entity.MangaEntity
 import com.highliuk.manai.ui.home.HomeViewModel
@@ -39,9 +40,13 @@ class ManAiNavHostTest {
     @Inject
     lateinit var mangaDao: MangaDao
 
+    @Inject
+    lateinit var database: ManAiDatabase
+
     @Before
     fun setUp() {
         hiltRule.inject()
+        database.clearAllTables()
     }
 
     @SdkSuppress(minSdkVersion = 30) // Immersive mode tap-to-show unreliable on API < 30
