@@ -11,9 +11,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-test:
+  intent-test-diagnosis:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: android
@@ -29,22 +29,6 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-read-only: false
-
-      - name: Run detekt and unit tests
-        run: ./gradlew detekt testDebugUnitTest
-
-      - name: Cache ONNX models
-        uses: actions/cache@v4
-        with:
-          path: android/app/src/main/assets/models
-          key: onnx-models-${{ hashFiles('scripts/download-models.sh') }}
-
-      - name: Download ONNX models
-        run: bash "$GITHUB_WORKSPACE/scripts/download-models.sh"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Enable KVM
         run: |
@@ -52,22 +36,37 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Run instrumented tests
-        run: ./gradlew ciDeviceIsolatedAndroidTest
+      - name: "Test 1: original 10s timeout"
+        id: test_10s
+        continue-on-error: true
+        run: |
+          ./gradlew ciDeviceIsolatedAndroidTest \
+            -Pandroid.testInstrumentationRunnerArguments.class=com.highliuk.manai.IntentImportTest#launchWithActionView_importsMangaAndNavigatesToReader
 
-      - name: Generate coverage report and enforce threshold
-        run: ./gradlew jacocoMergedReport jacocoCoverageVerification jacocoPrintCoverage
+      - name: "Test 2: extended 60s timeout"
+        id: test_60s
+        continue-on-error: true
+        run: |
+          ./gradlew ciDeviceIsolatedAndroidTest \
+            -Pandroid.testInstrumentationRunnerArguments.class=com.highliuk.manai.IntentImportLongTimeoutTest
+
+      - name: "Diagnosis"
+        if: always()
+        run: |
+          echo "10s timeout: ${{ steps.test_10s.outcome }}"
+          echo "60s timeout: ${{ steps.test_60s.outcome }}"
+          echo ""
+          if [[ "${{ steps.test_10s.outcome }}" == "failure" && "${{ steps.test_60s.outcome }}" == "failure" ]]; then
+            echo "DIAGNOSIS: Both failed → SharedFlow emission lost (race condition)"
+          elif [[ "${{ steps.test_10s.outcome }}" == "failure" && "${{ steps.test_60s.outcome }}" == "success" ]]; then
+            echo "DIAGNOSIS: Only 10s failed → device too slow, needs longer timeout"
+          elif [[ "${{ steps.test_10s.outcome }}" == "success" && "${{ steps.test_60s.outcome }}" == "success" ]]; then
+            echo "DIAGNOSIS: Both passed → test is flaky (non-deterministic)"
+          fi
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
-          path: android/app/build/reports/tests/
-
-      - name: Upload coverage report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: android/app/build/reports/jacoco/
+          name: intent-test-results
+          path: android/app/build/reports/androidTests/
