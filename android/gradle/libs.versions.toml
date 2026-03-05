@@ -19,7 +19,6 @@ appcompat = "1.7.0"
 datastore = "1.1.1"
 onnxruntime = "1.18.0"
 detekt = "1.23.8"
-kover = "0.9.4"
 
 [libraries]
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
@@ -67,4 +66,3 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 room = { id = "androidx.room", version.ref = "room" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }

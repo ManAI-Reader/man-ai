@@ -8,7 +8,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.room)
     alias(libs.plugins.detekt)
-    alias(libs.plugins.kover)
+    jacoco
 }
 
 android {
@@ -56,6 +56,8 @@ android {
         create("isolated") {
             initWith(getByName("debug"))
             applicationIdSuffix = ".isolated"
+            enableUnitTestCoverage = true
+            enableAndroidTestCoverage = true
         }
     }
 
@@ -115,76 +117,117 @@ detekt {
     basePath = projectDir.absolutePath
 }
 
-kover {
+val jacocoExcludes = listOf(
+    // Android generated
+    "**/R.class", "**/R$*.class", "**/BuildConfig.*", "**/Manifest*.*",
+    // Hilt generated
+    "dagger/hilt/**", "hilt_aggregated_deps/**",
+    "**/*_HiltModules*.*", "**/*_Factory.*", "**/*_MembersInjector.*",
+    "**/*_GeneratedInjector.*", "**/*Hilt_*.*",
+    // Room generated
+    "**/*_Impl.*", "**/*_Impl$*.*",
+    // Kotlin compiler synthetic
+    "**/*ComposableSingletons*.*",
+)
+
+tasks.register<JacocoReport>("jacocoMergedReport") {
+    group = "verification"
+    description = "Generates merged JaCoCo coverage report for unit + instrumented tests."
+
+    dependsOn("testIsolatedUnitTest")
+    mustRunAfter("connectedIsolatedAndroidTest")
+
     reports {
-        filters {
-            excludes {
-                androidGeneratedClasses()
-                classes(
-                    // Hilt
-                    "dagger.hilt.*",
-                    "hilt_aggregated_deps.*",
-                    "*_HiltModules*",
-                    "*_Factory",
-                    "*_MembersInjector",
-                    "*_GeneratedInjector",
-                    "*Hilt_*",
-                    // Room
-                    "*_Impl",
-                    "*_Impl$*",
-                    // Navigation
-                    "*ComposableSingletons*",
-                    // App entry points
-                    "*.ManAiApplication",
-                    "*.MainActivity",
-                    // DI modules (pure Hilt wiring)
-                    "*.di.*",
-                    // Android-dependent implementations
-                    "*.AndroidPdfMetadataExtractor",
-                    "*.OnnxSessionManager",
-                    // OnnxText* require ONNX runtime (Android only)
-                    // Their Companion objects (pure functions) remain covered by unit tests
-                    "*.OnnxTextDetector",
-                    "*.OnnxTextDetector${'$'}*",
-                    "*.OnnxTextRecognizer",
-                    "*.OnnxTextRecognizer${'$'}*",
-                    // Room database abstract class
-                    "*.ManAiDatabase",
-                    "*.ManAiDatabase$*",
-                    // Theme color scheme initializations
-                    "*.ui.theme.*",
-                    // Kotlin compiler synthetic classes (unreachable from tests)
-                    "*.UserPreferencesRepositoryImpl${'$'}Companion",
-                    // Room DAO interface — concrete methods compile to $DefaultImpls
-                    // which Room bypasses with its generated implementation
-                    "*.MangaDao*",
-                    // Kotlin-generated default impls and coroutine lambdas
-                    // TODO: investigate pre-existing coverage gaps in these classes
-                    "*.FileHashProviderImpl",
-                    "*.FileHashProviderImpl${'$'}*",
-                    "*.MangaRepositoryImpl",
-                    "*.MangaRepositoryImpl${'$'}*",
-                )
-                annotatedBy(
-                    "*Generated*",
-                    "*Composable*",
-                )
+        html.required.set(true)
+        xml.required.set(true)
+        csv.required.set(false)
+    }
+
+    val kotlinClasses = fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/isolated") {
+        exclude(jacocoExcludes)
+    }
+    val javaClasses = fileTree("${layout.buildDirectory.get()}/intermediates/javac/isolated/classes") {
+        exclude(jacocoExcludes)
+    }
+    classDirectories.setFrom(kotlinClasses, javaClasses)
+
+    sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
+
+    executionData.setFrom(fileTree(layout.buildDirectory) {
+        include(
+            // Unit test execution data
+            "outputs/unit_test_code_coverage/isolatedUnitTest/testIsolatedUnitTest.exec",
+            "jacoco/testIsolatedUnitTest.exec",
+            // Instrumented test execution data
+            "outputs/code_coverage/isolatedAndroidTest/connected/**/*.ec",
+            "outputs/managed_device_code_coverage/isolated/ciDevice/**/*.ec",
+        )
+    })
+}
+
+tasks.register<JacocoCoverageVerification>("jacocoCoverageVerification") {
+    group = "verification"
+    description = "Enforces minimum line coverage threshold."
+
+    dependsOn("jacocoMergedReport")
+
+    val kotlinClasses = fileTree(
+        "${layout.buildDirectory.get()}/tmp/kotlin-classes/isolated"
+    ) { exclude(jacocoExcludes) }
+    val javaClasses = fileTree(
+        "${layout.buildDirectory.get()}/intermediates/javac/isolated/classes"
+    ) { exclude(jacocoExcludes) }
+    classDirectories.setFrom(kotlinClasses, javaClasses)
+
+    sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
+
+    executionData.setFrom(fileTree(layout.buildDirectory) {
+        include(
+            "outputs/unit_test_code_coverage/isolatedUnitTest/testIsolatedUnitTest.exec",
+            "jacoco/testIsolatedUnitTest.exec",
+            "outputs/code_coverage/isolatedAndroidTest/connected/**/*.ec",
+            "outputs/managed_device_code_coverage/isolated/ciDevice/**/*.ec",
+        )
+    })
+
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "0.90".toBigDecimal()
             }
         }
+    }
+}
 
-        variant("debug") {
-            log {
-                header = "Coverage (Kover engine):"
-                format = "  <entity> — <value>%"
-                groupBy = kotlinx.kover.gradle.plugin.dsl.GroupingEntityType.CLASS
-                coverageUnits = kotlinx.kover.gradle.plugin.dsl.CoverageUnit.LINE
-                aggregationForGroup = kotlinx.kover.gradle.plugin.dsl.AggregationType.COVERED_PERCENTAGE
-            }
+tasks.register("jacocoPrintCoverage") {
+    group = "verification"
+    description = "Prints line coverage percentage from JaCoCo XML report."
 
-            verify {
-                rule {
-                    minBound(100)
-                }
+    dependsOn("jacocoMergedReport")
+
+    doLast {
+        val xmlReport = file("${layout.buildDirectory.get()}/reports/jacoco/jacocoMergedReport/jacocoMergedReport.xml")
+        if (!xmlReport.exists()) {
+            logger.warn("JaCoCo XML report not found at: $xmlReport")
+            return@doLast
+        }
+        val factory = javax.xml.parsers.DocumentBuilderFactory.newInstance().apply {
+            setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
+        }
+        val doc = factory.newDocumentBuilder().parse(xmlReport)
+        val counters = doc.getElementsByTagName("counter")
+        for (i in 0 until counters.length) {
+            val node = counters.item(i)
+            if (node.parentNode.nodeName == "report" &&
+                node.attributes.getNamedItem("type").nodeValue == "LINE"
+            ) {
+                val missed = node.attributes.getNamedItem("missed").nodeValue.toInt()
+                val covered = node.attributes.getNamedItem("covered").nodeValue.toInt()
+                val total = missed + covered
+                val pct = if (total > 0) covered * 100.0 / total else 0.0
+                println("Coverage (JaCoCo): %.2f%% (%d/%d lines)".format(pct, covered, total))
             }
         }
     }

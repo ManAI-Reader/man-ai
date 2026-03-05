@@ -75,4 +75,90 @@ class TapHandlerTest {
         )
         assertEquals(8, navigatedTo)
     }
+
+    @Test
+    fun `tap while zoomed always toggles bars regardless of position`() {
+        var barsToggled = false
+        var navigatedTo: Int? = null
+        val handler = TapHandler(
+            tapToNavigate = true, isZoomed = true, isRtl = false,
+            currentPage = 5, pageCount = 10
+        )
+        handler.handle(
+            offset = Offset(50f, 500f),
+            containerWidth = 900f,
+            toggleBars = { barsToggled = true },
+            navigateToPage = { navigatedTo = it }
+        )
+        assertTrue(barsToggled)
+        assertNull(navigatedTo)
+    }
+
+    @Test
+    fun `tap with tapToNavigate disabled always toggles bars`() {
+        var barsToggled = false
+        var navigatedTo: Int? = null
+        val handler = TapHandler(
+            tapToNavigate = false, isZoomed = false, isRtl = false,
+            currentPage = 5, pageCount = 10
+        )
+        handler.handle(
+            offset = Offset(850f, 500f),
+            containerWidth = 900f,
+            toggleBars = { barsToggled = true },
+            navigateToPage = { navigatedTo = it }
+        )
+        assertTrue(barsToggled)
+        assertNull(navigatedTo)
+    }
+
+    @Test
+    fun `center tap toggles bars`() {
+        var barsToggled = false
+        var navigatedTo: Int? = null
+        val handler = TapHandler(
+            tapToNavigate = true, isZoomed = false, isRtl = false,
+            currentPage = 5, pageCount = 10
+        )
+        handler.handle(
+            offset = Offset(450f, 500f),
+            containerWidth = 900f,
+            toggleBars = { barsToggled = true },
+            navigateToPage = { navigatedTo = it }
+        )
+        assertTrue(barsToggled)
+        assertNull(navigatedTo)
+    }
+
+    @Test
+    fun `LTR right tap on middle page navigates forward`() {
+        var navigatedTo: Int? = null
+        val handler = TapHandler(
+            tapToNavigate = true, isZoomed = false, isRtl = false,
+            currentPage = 5, pageCount = 10
+        )
+        handler.handle(
+            offset = Offset(850f, 500f),
+            containerWidth = 900f,
+            toggleBars = {},
+            navigateToPage = { navigatedTo = it }
+        )
+        assertEquals(6, navigatedTo)
+    }
+
+    @Test
+    fun `LTR left tap on middle page navigates backward`() {
+        var navigatedTo: Int? = null
+        val handler = TapHandler(
+            tapToNavigate = true, isZoomed = false, isRtl = false,
+            currentPage = 5, pageCount = 10
+        )
+        handler.handle(
+            offset = Offset(50f, 500f),
+            containerWidth = 900f,
+            toggleBars = {},
+            navigateToPage = { navigatedTo = it }
+        )
+        assertEquals(4, navigatedTo)
+    }
 }
