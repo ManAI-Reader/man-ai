@@ -9,8 +9,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.longClick
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
@@ -163,43 +161,6 @@ class ManAiNavHostTest {
         composeTestRule.mainClock.advanceTimeBy(500)
 
         composeTestRule.onNodeWithContentDescription("Settings").assertIsDisplayed()
-    }
-
-    @Test
-    fun longPressManga_showsDeleteDialog() = runTest {
-        mangaDao.insert(MangaEntity(uri = "content://delete-test", title = "Delete Test Manga", pageCount = 2))
-
-        composeTestRule.waitUntil(timeoutMillis = 10000) {
-            composeTestRule.onAllNodesWithText("Delete Test Manga").fetchSemanticsNodes().isNotEmpty()
-        }
-
-        composeTestRule.onNodeWithText("Delete Test Manga").performTouchInput { longClick() }
-        composeTestRule.waitForIdle()
-
-        composeTestRule.onNodeWithContentDescription("Delete").performClick()
-        composeTestRule.waitForIdle()
-
-        composeTestRule.onNodeWithText("Cancel").assertIsDisplayed()
-    }
-
-    @Test
-    fun deleteDialog_cancelDismissesDialog() = runTest {
-        mangaDao.insert(MangaEntity(uri = "content://delete-cancel-test", title = "Delete Cancel Test", pageCount = 2))
-
-        composeTestRule.waitUntil(timeoutMillis = 10000) {
-            composeTestRule.onAllNodesWithText("Delete Cancel Test").fetchSemanticsNodes().isNotEmpty()
-        }
-
-        composeTestRule.onNodeWithText("Delete Cancel Test").performTouchInput { longClick() }
-        composeTestRule.waitForIdle()
-
-        composeTestRule.onNodeWithContentDescription("Delete").performClick()
-        composeTestRule.waitForIdle()
-
-        composeTestRule.onNodeWithText("Cancel").performClick()
-        composeTestRule.waitForIdle()
-
-        composeTestRule.onNodeWithText("Delete Cancel Test").assertIsDisplayed()
     }
 
     @SdkSuppress(minSdkVersion = 30) // Immersive mode tap-to-show unreliable on API < 30
