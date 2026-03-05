@@ -165,6 +165,42 @@ tasks.register<JacocoReport>("jacocoMergedReport") {
     })
 }
 
+tasks.register<JacocoCoverageVerification>("jacocoCoverageVerification") {
+    group = "verification"
+    description = "Enforces minimum line coverage threshold."
+
+    dependsOn("jacocoMergedReport")
+
+    val kotlinClasses = fileTree(
+        "${layout.buildDirectory.get()}/tmp/kotlin-classes/isolated"
+    ) { exclude(jacocoExcludes) }
+    val javaClasses = fileTree(
+        "${layout.buildDirectory.get()}/intermediates/javac/isolated/classes"
+    ) { exclude(jacocoExcludes) }
+    classDirectories.setFrom(kotlinClasses, javaClasses)
+
+    sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
+
+    executionData.setFrom(fileTree(layout.buildDirectory) {
+        include(
+            "outputs/unit_test_code_coverage/isolatedUnitTest/testIsolatedUnitTest.exec",
+            "jacoco/testIsolatedUnitTest.exec",
+            "outputs/code_coverage/isolatedAndroidTest/connected/**/*.ec",
+            "outputs/managed_device_code_coverage/isolated/ciDevice/**/*.ec",
+        )
+    })
+
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "0.90".toBigDecimal()
+            }
+        }
+    }
+}
+
 tasks.register("jacocoPrintCoverage") {
     group = "verification"
     description = "Prints line coverage percentage from JaCoCo XML report."
