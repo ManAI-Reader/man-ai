@@ -3,7 +3,10 @@ package com.highliuk.manai.ui.reader
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.highliuk.manai.data.pdf.PdfPageRenderer
+import com.highliuk.manai.domain.debug.DebugMlEventHolder
+import com.highliuk.manai.domain.debug.PipelineDebugStateHolder
 import com.highliuk.manai.domain.model.Manga
+import com.highliuk.manai.domain.model.PagePipelineState
 import com.highliuk.manai.domain.model.PageRegion
 import com.highliuk.manai.domain.model.ReadingMode
 import com.highliuk.manai.domain.repository.MangaRepository
@@ -41,6 +44,8 @@ class ReaderViewModelTest {
     private val processPageUseCase = mockk<ProcessPageUseCase>(relaxed = true)
     private val ocrCache = mockk<OcrCacheRepository>(relaxed = true)
     private val pdfPageRenderer = mockk<PdfPageRenderer>(relaxed = true)
+    private val debugStateHolder = PipelineDebugStateHolder()
+    private val debugEventHolder = DebugMlEventHolder()
     private val readingModeFlow = MutableStateFlow(ReadingMode.LTR)
 
     @Before
@@ -59,6 +64,7 @@ class ReaderViewModelTest {
         return ReaderViewModel(
             savedStateHandle, repository, userPreferencesRepository,
             processPageUseCase, ocrCache, pdfPageRenderer,
+            debugStateHolder, debugEventHolder,
         )
     }
 
@@ -348,5 +354,27 @@ class ReaderViewModelTest {
 
         coVerify { processPageUseCase.execute(1L, 0, any(), any(), any()) }
         coVerify(exactly = 0) { processPageUseCase.execute(1L, 1, any(), any(), any()) }
+    }
+
+    @Test
+    fun `debugPipelineStates exposes state holder states`() = runTest(testDispatcher) {
+        coEvery { repository.getMangaById(1L) } returns flowOf(null)
+        every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+
+        val viewModel = createViewModel(1L)
+
+        viewModel.debugPipelineStates.test {
+            assertEquals(emptyMap<Int, PagePipelineState>(), awaitItem())
+        }
+    }
+
+    @Test
+    fun `debugEvents exposes event holder events`() = runTest(testDispatcher) {
+        coEvery { repository.getMangaById(1L) } returns flowOf(null)
+        every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+
+        val viewModel = createViewModel(1L)
+
+        org.junit.Assert.assertNotNull(viewModel.debugEvents)
     }
 }

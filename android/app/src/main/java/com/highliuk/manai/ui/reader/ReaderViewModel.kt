@@ -4,7 +4,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.highliuk.manai.data.pdf.PdfPageRenderer
+import com.highliuk.manai.domain.debug.DebugMlEvent
+import com.highliuk.manai.domain.debug.DebugMlEventHolder
+import com.highliuk.manai.domain.debug.PipelineDebugStateHolder
 import com.highliuk.manai.domain.model.Manga
+import com.highliuk.manai.domain.model.PagePipelineState
 import com.highliuk.manai.domain.model.PageRegion
 import com.highliuk.manai.domain.model.ReadingMode
 import com.highliuk.manai.domain.repository.MangaRepository
@@ -13,6 +17,7 @@ import com.highliuk.manai.domain.repository.UserPreferencesRepository
 import com.highliuk.manai.domain.usecase.ProcessPageUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -27,6 +32,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @OptIn(FlowPreview::class, kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class ReaderViewModel @Inject constructor(
@@ -36,7 +42,12 @@ class ReaderViewModel @Inject constructor(
     private val processPageUseCase: ProcessPageUseCase,
     private val ocrCache: OcrCacheRepository,
     private val pdfPageRenderer: PdfPageRenderer,
+    debugStateHolder: PipelineDebugStateHolder,
+    debugEventHolder: DebugMlEventHolder,
 ) : ViewModel() {
+
+    val debugPipelineStates: StateFlow<Map<Int, PagePipelineState>> = debugStateHolder.states
+    val debugEvents: Flow<DebugMlEvent> = debugEventHolder.events
 
     private val mangaId: Long = savedStateHandle["mangaId"] ?: 0L
 
