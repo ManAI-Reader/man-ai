@@ -27,7 +27,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
 @OptIn(FlowPreview::class, kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class ReaderViewModel @Inject constructor(
@@ -63,12 +62,13 @@ class ReaderViewModel @Inject constructor(
     private val _isProcessing = MutableStateFlow(false)
     val isProcessing: StateFlow<Boolean> = _isProcessing.asStateFlow()
 
-    private var pipelineJob: Job? = null
+    private val pipelineJobs = mutableMapOf<Int, Job>()
 
     init {
         viewModelScope.launch {
             val loadedManga = manga.filterNotNull().first()
             _currentPage.value = loadedManga.lastReadPage
+            launchPipeline(loadedManga.lastReadPage)
         }
 
         viewModelScope.launch {
@@ -79,18 +79,11 @@ class ReaderViewModel @Inject constructor(
                     repository.updateLastReadPage(mangaId, page)
                 }
         }
-
-        viewModelScope.launch {
-            _currentPage
-                .debounce(300L)
-                .collect { page ->
-                    launchPipeline(page)
-                }
-        }
     }
 
     fun onPageChanged(page: Int) {
         _currentPage.value = page
+        launchPipeline(page)
     }
 
     fun onRegionTapped(region: PageRegion) {
@@ -105,26 +98,18 @@ class ReaderViewModel @Inject constructor(
     }
 
     internal fun launchPipeline(pageIndex: Int, priorityRegionIndex: Int? = null) {
-        pipelineJob?.cancel()
-        pipelineJob = viewModelScope.launch {
+        if (priorityRegionIndex == null && pipelineJobs[pageIndex]?.isActive == true) return
+        pipelineJobs[pageIndex]?.cancel()
+        pipelineJobs[pageIndex] = viewModelScope.launch {
             val uri = manga.value?.uri ?: return@launch
             _isProcessing.value = true
             try {
                 val bitmap = pdfPageRenderer.render(uri, pageIndex) ?: return@launch
                 processPageUseCase.execute(mangaId, pageIndex, bitmap,
                     priorityRegionIndex = priorityRegionIndex)
-
-                val nextPage = pageIndex + 1
-                val pageCount = manga.value?.pageCount ?: 0
-                if (nextPage < pageCount) {
-                    val nextBitmap = pdfPageRenderer.render(uri, nextPage)
-                    if (nextBitmap != null) {
-                        processPageUseCase.execute(mangaId, nextPage, nextBitmap,
-                            detectionOnly = true)
-                    }
-                }
             } finally {
-                _isProcessing.value = false
+                pipelineJobs.remove(pageIndex)
+                _isProcessing.value = pipelineJobs.any { it.value.isActive }
             }
         }
     }

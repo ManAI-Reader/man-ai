@@ -105,6 +105,47 @@ class OcrCacheRepositoryImplTest {
     }
 
     @Test
+    fun `saveDetectionResults inserts sentinel row when regions empty`() = runTest {
+        val entitiesSlot = slot<List<PageOcrResultEntity>>()
+        coEvery { dao.insertAll(capture(entitiesSlot)) } returns Unit
+
+        repository.saveDetectionResults(
+            mangaId = 1L, pageIndex = 0,
+            regions = emptyList(), bitmapWidth = 100, bitmapHeight = 100
+        )
+
+        val saved = entitiesSlot.captured
+        assertEquals(1, saved.size)
+        assertEquals(-1, saved[0].regionIndex)
+    }
+
+    @Test
+    fun `getRegions filters out sentinel rows`() = runTest {
+        coEvery { dao.getByPageOnce(1L, 0) } returns listOf(
+            PageOcrResultEntity(1L, 0, -1, 0f, 0f, 0f, 0f, 0f, null),
+            PageOcrResultEntity(1L, 0, 0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "text"),
+        )
+
+        val result = repository.getRegions(1L, 0)
+
+        assertEquals(1, result.size)
+        assertEquals(0, result[0].regionIndex)
+    }
+
+    @Test
+    fun `observeRegions filters out sentinel rows`() = runTest {
+        coEvery { dao.getByPage(1L, 0) } returns flowOf(listOf(
+            PageOcrResultEntity(1L, 0, -1, 0f, 0f, 0f, 0f, 0f, null),
+            PageOcrResultEntity(1L, 0, 0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "hello"),
+        ))
+
+        val result = repository.observeRegions(1L, 0).first()
+
+        assertEquals(1, result.size)
+        assertEquals(0, result[0].regionIndex)
+    }
+
+    @Test
     fun `saveOcrResult delegates to dao`() = runTest {
         repository.saveOcrResult(1L, 0, 2, "recognized text")
 

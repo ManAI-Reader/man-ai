@@ -257,7 +257,7 @@ class ReaderViewModelTest {
     }
 
     @Test
-    fun `slow pipeline is cancelled when new page arrives`() = runTest(testDispatcher) {
+    fun `pipeline for previous page continues when navigating to new page`() = runTest(testDispatcher) {
         val manga = Manga(id = 1, uri = "content://test", title = "Test", pageCount = 10)
         coEvery { repository.getMangaById(1L) } returns flowOf(manga)
         every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
@@ -283,7 +283,10 @@ class ReaderViewModelTest {
         advanceTimeBy(400)
         testScheduler.advanceUntilIdle()
 
-        assertTrue("Page 0 pipeline should have been cancelled", page0Cancelled.get())
+        org.junit.Assert.assertFalse(
+            "Page 0 pipeline should NOT be cancelled when navigating away",
+            page0Cancelled.get()
+        )
     }
 
     @Test
@@ -312,4 +315,38 @@ class ReaderViewModelTest {
             }
         }
 
+    @Test
+    fun `pipeline processes all visited pages not just debounced last`() = runTest(testDispatcher) {
+        val manga = Manga(id = 1, uri = "content://test", title = "Test", pageCount = 10)
+        coEvery { repository.getMangaById(1L) } returns flowOf(manga)
+        every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+        coEvery { pdfPageRenderer.render(any(), any()) } returns mockk(relaxed = true)
+
+        val viewModel = createViewModel(1L)
+        testScheduler.advanceUntilIdle()
+
+        viewModel.onPageChanged(1)
+        viewModel.onPageChanged(2)
+        viewModel.onPageChanged(3)
+        testScheduler.advanceUntilIdle()
+
+        coVerify { processPageUseCase.execute(1L, 0, any(), any(), any()) }
+        coVerify { processPageUseCase.execute(1L, 1, any(), any(), any()) }
+        coVerify { processPageUseCase.execute(1L, 2, any(), any(), any()) }
+        coVerify { processPageUseCase.execute(1L, 3, any(), any(), any()) }
+    }
+
+    @Test
+    fun `pipeline does not process unvisited pages`() = runTest(testDispatcher) {
+        val manga = Manga(id = 1, uri = "content://test", title = "Test", pageCount = 10)
+        coEvery { repository.getMangaById(1L) } returns flowOf(manga)
+        every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+        coEvery { pdfPageRenderer.render(any(), any()) } returns mockk(relaxed = true)
+
+        val viewModel = createViewModel(1L)
+        testScheduler.advanceUntilIdle()
+
+        coVerify { processPageUseCase.execute(1L, 0, any(), any(), any()) }
+        coVerify(exactly = 0) { processPageUseCase.execute(1L, 1, any(), any(), any()) }
+    }
 }
