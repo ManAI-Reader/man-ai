@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0] - 2026-03-06
+
+### Added
+
+- Webtoon continuous vertical scroll reading mode
+- Tap-to-navigate option for reader
+- 11 new languages bringing total to 13
+- Downgrade migrations to preserve data on app version rollback
+
+### Changed
+
+- Migrate from Kover to JaCoCo with 90% coverage threshold
+
+### Fixed
+
+- Redundant file copy on duplicate manga import
+
 ## [0.5.0] - 2026-02-22
 
 ### Added
