@@ -120,7 +120,7 @@ If multiple tasks share files, stash ALL changes since the last clean commit and
 ```bash
 cd android && ./gradlew testDebugUnitTest
 # AND if instrumented tests exist:
-cd android && ./gradlew connectedStagingAndroidTest
+cd android && ./gradlew connectedIsolatedAndroidTest
 ```
 
 All tests must pass. If they don't, fix the baseline first — you can't prove RED against a broken baseline.
@@ -138,7 +138,7 @@ All tests must pass. If they don't, fix the baseline first — you can't prove R
 ```bash
 cd android && ./gradlew testDebugUnitTest
 # OR for instrumented:
-cd android && ./gradlew connectedStagingAndroidTest
+cd android && ./gradlew connectedIsolatedAndroidTest
 ```
 
 You MUST see the test fail. The failure must be because the production code is missing (not a typo, not a setup error). Read the failure message and confirm it's the RIGHT failure.
@@ -154,7 +154,7 @@ git stash pop
 ```bash
 cd android && ./gradlew testDebugUnitTest
 # AND if instrumented:
-cd android && ./gradlew connectedStagingAndroidTest
+cd android && ./gradlew connectedIsolatedAndroidTest
 ```
 
 All tests must pass. If they don't, fix until green.

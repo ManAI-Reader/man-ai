@@ -161,6 +161,7 @@ fun ManAiNavHost(
                         val selectedRegion by viewModel.selectedRegion.collectAsState()
                         val ocrFontScale by viewModel.ocrFontScale.collectAsState()
                         val debugPipelineStates by viewModel.debugPipelineStates.collectAsState()
+                        val tapToNavigate by viewModel.tapToNavigate.collectAsState()
 
                         if (BuildConfig.DEBUG_ML) {
                             val context = LocalContext.current
@@ -184,6 +185,7 @@ fun ManAiNavHost(
                                 regions = regions,
                                 selectedRegion = selectedRegion,
                                 ocrFontScale = ocrFontScale,
+                                tapToNavigate = tapToNavigate,
                                 onPageChanged = viewModel::onPageChanged,
                                 onRegionTapped = viewModel::onRegionTapped,
                                 onDismissBottomSheet = viewModel::dismissBottomSheet,
@@ -240,6 +242,7 @@ fun ManAiNavHost(
                     val themeMode by viewModel.themeMode.collectAsState()
                     val appLanguage by viewModel.appLanguage.collectAsState()
                     val ocrFontScale by viewModel.ocrFontScale.collectAsState()
+                    val tapToNavigate by viewModel.tapToNavigate.collectAsState()
 
                     SettingsScreen(
                         gridColumns = gridColumns,
@@ -260,6 +263,8 @@ fun ManAiNavHost(
                             }
                             AppCompatDelegate.setApplicationLocales(locales)
                         },
+                        tapToNavigate = tapToNavigate,
+                        onTapToNavigateChange = { viewModel.setTapToNavigate(it) },
                         onBack = { navController.popBackStack() }
                     )
                 }

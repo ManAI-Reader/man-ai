@@ -1,8 +1,18 @@
 package com.highliuk.manai.ui.reader
 
+import androidx.activity.ComponentActivity
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material3.Text
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.doubleClick
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -11,10 +21,13 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
+import androidx.compose.ui.test.swipeUp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.highliuk.manai.domain.model.Manga
 import com.highliuk.manai.domain.model.PageRegion
 import com.highliuk.manai.domain.model.ReadingMode
-import androidx.compose.runtime.mutableStateOf
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -22,9 +35,9 @@ import org.junit.Test
 class ReaderScreenTest {
 
     @get:Rule
-    val composeTestRule = createComposeRule()
+    val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-    private val testManga = Manga(id = 1, uri = "content://test", title = "One Piece", pageCount = 10)
+    private val testManga = Manga(id = 1, uri = "content://test", title = "Manga 1", pageCount = 10)
 
     /**
      * When onDoubleTap is registered, Compose delays onTap by doubleTapTimeoutMillis (~300ms).
@@ -36,17 +49,21 @@ class ReaderScreenTest {
 
     private var lastPage = 0
 
+    @Suppress("LongParameterList")
     private fun setUpReaderScreen(
         onBack: () -> Unit = {},
         onSettingsClick: () -> Unit = {},
         onPageChanged: (Int) -> Unit = { lastPage = it },
-        onImmersiveModeChange: (Boolean) -> Unit = {}
+        onImmersiveModeChange: (Boolean) -> Unit = {},
+        tapToNavigate: Boolean = false,
+        initialPage: Int = 0
     ) {
-        lastPage = 0
+        lastPage = initialPage
         composeTestRule.setContent {
             ReaderScreen(
                 manga = testManga,
-                currentPage = 0,
+                currentPage = initialPage,
+                tapToNavigate = tapToNavigate,
                 onPageChanged = onPageChanged,
                 onBack = onBack,
                 onSettingsClick = onSettingsClick,
@@ -58,7 +75,7 @@ class ReaderScreenTest {
     @Test
     fun topBar_isHiddenByDefault() {
         setUpReaderScreen()
-        composeTestRule.onNodeWithText("One Piece").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Manga 1").assertDoesNotExist()
     }
 
     @Test
@@ -66,7 +83,7 @@ class ReaderScreenTest {
         setUpReaderScreen()
         composeTestRule.onNodeWithTag("reader_pager").performClick()
         advancePastDoubleTapTimeout()
-        composeTestRule.onNodeWithText("One Piece").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Manga 1").assertIsDisplayed()
     }
 
     @Test
@@ -75,11 +92,11 @@ class ReaderScreenTest {
         // First tap: show
         composeTestRule.onNodeWithTag("reader_pager").performClick()
         advancePastDoubleTapTimeout()
-        composeTestRule.onNodeWithText("One Piece").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Manga 1").assertIsDisplayed()
         // Second tap: hide
         composeTestRule.onNodeWithTag("reader_pager").performClick()
         advancePastDoubleTapTimeout()
-        composeTestRule.onNodeWithText("One Piece").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Manga 1").assertDoesNotExist()
     }
 
     @Test
@@ -106,7 +123,7 @@ class ReaderScreenTest {
     @Test
     fun pdfPage_hasZoomContainer() {
         setUpReaderScreen()
-        composeTestRule.onNodeWithTag("reader_zoom_container").assertIsDisplayed()
+        composeTestRule.onAllNodesWithTag("reader_zoom_container")[0].assertIsDisplayed()
     }
 
     @Test
@@ -157,7 +174,7 @@ class ReaderScreenTest {
     @Test
     fun doubleTap_blocksSwipe_becauseZoomed() {
         setUpReaderScreen()
-        composeTestRule.onNodeWithTag("reader_zoom_container")
+        composeTestRule.onAllNodesWithTag("reader_zoom_container")[0]
             .performTouchInput { doubleClick() }
         composeTestRule.waitForIdle()
         // Now zoomed — swipe should be blocked
@@ -171,11 +188,11 @@ class ReaderScreenTest {
     fun doubleTapTwice_allowsSwipe_becauseBackTo1x() {
         setUpReaderScreen()
         // First double-tap: zoom in
-        composeTestRule.onNodeWithTag("reader_zoom_container")
+        composeTestRule.onAllNodesWithTag("reader_zoom_container")[0]
             .performTouchInput { doubleClick() }
         composeTestRule.waitForIdle()
         // Second double-tap: zoom out
-        composeTestRule.onNodeWithTag("reader_zoom_container")
+        composeTestRule.onAllNodesWithTag("reader_zoom_container")[0]
             .performTouchInput { doubleClick() }
         composeTestRule.waitForIdle()
         // Back to 1x — swipe should work
@@ -338,6 +355,289 @@ class ReaderScreenTest {
     }
 
     @Test
+    fun webtoonMode_showsWebtoonViewer() {
+        lastPage = 0
+        composeTestRule.setContent {
+            ReaderScreen(
+                manga = testManga,
+                currentPage = 0,
+                readingMode = ReadingMode.WEBTOON,
+                onPageChanged = { lastPage = it },
+                onBack = {},
+                onSettingsClick = {}
+            )
+        }
+
+        composeTestRule.onNodeWithTag("webtoon_viewer").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("reader_pager").assertDoesNotExist()
+    }
+
+    @Test
+    fun webtoonMode_tapTogglesBars() {
+        composeTestRule.setContent {
+            ReaderScreen(
+                manga = testManga,
+                currentPage = 0,
+                readingMode = ReadingMode.WEBTOON,
+                onPageChanged = {},
+                onBack = {},
+                onSettingsClick = {}
+            )
+        }
+
+        composeTestRule.onNodeWithTag("webtoon_viewer").performClick()
+        advancePastDoubleTapTimeout()
+        composeTestRule.onNodeWithText("Manga 1").assertIsDisplayed()
+    }
+
+    @Test
+    fun webtoonMode_resumesAtCorrectPage() {
+        composeTestRule.setContent {
+            ReaderScreen(
+                manga = testManga,
+                currentPage = 5,
+                readingMode = ReadingMode.WEBTOON,
+                onPageChanged = {},
+                onBack = {},
+                onSettingsClick = {}
+            )
+        }
+        composeTestRule.waitForIdle()
+
+        // Show bars to see page indicator
+        composeTestRule.onNodeWithTag("webtoon_viewer").performClick()
+        advancePastDoubleTapTimeout()
+
+        composeTestRule.onNodeWithText("6 / 10").assertIsDisplayed()
+    }
+
+    @Test
+    fun webtoonMode_goToPageNavigatesCorrectly() {
+        var lastPage = 0
+        composeTestRule.setContent {
+            ReaderScreen(
+                manga = testManga,
+                currentPage = 0,
+                readingMode = ReadingMode.WEBTOON,
+                onPageChanged = { lastPage = it },
+                onBack = {},
+                onSettingsClick = {}
+            )
+        }
+
+        // Show bars
+        composeTestRule.onNodeWithTag("webtoon_viewer").performClick()
+        advancePastDoubleTapTimeout()
+
+        // Open GoToPage dialog and navigate to page 5
+        composeTestRule.onNodeWithTag("page_indicator").performClick()
+        composeTestRule.onNodeWithTag("go_to_page_input").performTextInput("5")
+        composeTestRule.onNodeWithText("OK").performClick()
+        composeTestRule.waitForIdle()
+
+        assertEquals(4, lastPage)
+    }
+
+    @Test
+    fun webtoonMode_scrollUpdatesPageIndicator() {
+        composeTestRule.setContent {
+            ReaderScreen(
+                manga = testManga,
+                currentPage = 0,
+                readingMode = ReadingMode.WEBTOON,
+                onPageChanged = {},
+                onBack = {},
+                onSettingsClick = {}
+            )
+        }
+
+        // Show bars, verify starts at page 1
+        composeTestRule.onNodeWithTag("webtoon_viewer").performClick()
+        advancePastDoubleTapTimeout()
+        composeTestRule.onNodeWithText("1 / 10").assertIsDisplayed()
+
+        // Hide bars (to avoid hitting bottom bar during scroll)
+        composeTestRule.onNodeWithTag("webtoon_viewer").performClick()
+        advancePastDoubleTapTimeout()
+
+        // Scroll down
+        composeTestRule.onNodeWithTag("webtoon_viewer")
+            .performTouchInput { swipeUp() }
+        composeTestRule.waitForIdle()
+
+        // Show bars again — page should have changed
+        composeTestRule.onNodeWithTag("webtoon_viewer").performClick()
+        advancePastDoubleTapTimeout()
+
+        composeTestRule.onNodeWithText("1 / 10").assertDoesNotExist()
+    }
+
+    @Test
+    fun rtlMode_openSettingsAndReturn_preservesCurrentPage() {
+        lastPage = 0
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            NavHost(navController = navController, startDestination = "reader") {
+                composable("reader") {
+                    ReaderScreen(
+                        manga = testManga,
+                        currentPage = lastPage,
+                        readingMode = ReadingMode.RTL,
+                        onPageChanged = { lastPage = it },
+                        onBack = {},
+                        onSettingsClick = { navController.navigate("settings") }
+                    )
+                }
+                composable("settings") {
+                    Text("Settings")
+                }
+            }
+        }
+
+        // Swipe right to advance to page 2 in RTL mode
+        composeTestRule.onNodeWithTag("reader_pager")
+            .performTouchInput { swipeRight() }
+        composeTestRule.waitForIdle()
+        assertEquals(1, lastPage)
+
+        // Show bars and verify we're at page 2
+        composeTestRule.onNodeWithTag("reader_pager").performClick()
+        advancePastDoubleTapTimeout()
+        composeTestRule.onNodeWithText("2 / 10").assertIsDisplayed()
+
+        // Open settings (NavHost saves state, destroys ReaderScreen)
+        composeTestRule.onNodeWithContentDescription("Reader settings").performClick()
+        composeTestRule.waitForIdle()
+
+        // Verify we're on settings screen
+        composeTestRule.onNodeWithText("Settings").assertIsDisplayed()
+
+        // Return from settings (NavHost restores state, recreates ReaderScreen)
+        composeTestRule.activityRule.scenario.onActivity { activity ->
+            activity.onBackPressedDispatcher.onBackPressed()
+        }
+        composeTestRule.waitForIdle()
+
+        // Verify we're still at page 2
+        composeTestRule.onNodeWithTag("reader_pager").performClick()
+        advancePastDoubleTapTimeout()
+        composeTestRule.onNodeWithText("2 / 10").assertIsDisplayed()
+    }
+
+    @Test
+    fun ltrMode_switchToWebtoon_preservesCurrentPage() {
+        lastPage = 0
+        val readingMode = mutableStateOf(ReadingMode.LTR)
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            NavHost(navController = navController, startDestination = "reader") {
+                composable("reader") {
+                    ReaderScreen(
+                        manga = testManga,
+                        currentPage = lastPage,
+                        readingMode = readingMode.value,
+                        onPageChanged = { lastPage = it },
+                        onBack = {},
+                        onSettingsClick = { navController.navigate("settings") }
+                    )
+                }
+                composable("settings") {
+                    Text("Settings")
+                }
+            }
+        }
+
+        // Swipe left to advance to page 2 in LTR mode
+        composeTestRule.onNodeWithTag("reader_pager")
+            .performTouchInput { swipeLeft() }
+        composeTestRule.waitForIdle()
+        assertEquals(1, lastPage)
+
+        // Show bars and verify we're at page 2
+        composeTestRule.onNodeWithTag("reader_pager").performClick()
+        advancePastDoubleTapTimeout()
+        composeTestRule.onNodeWithText("2 / 10").assertIsDisplayed()
+
+        // Open settings
+        composeTestRule.onNodeWithContentDescription("Reader settings").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Settings").assertIsDisplayed()
+
+        // Switch reading mode to WEBTOON (simulates settings change)
+        readingMode.value = ReadingMode.WEBTOON
+
+        // Return from settings
+        composeTestRule.activityRule.scenario.onActivity { activity ->
+            activity.onBackPressedDispatcher.onBackPressed()
+        }
+        composeTestRule.waitForIdle()
+
+        // Verify webtoon viewer is shown
+        composeTestRule.onNodeWithTag("webtoon_viewer").assertIsDisplayed()
+
+        // Show bars and verify we're still at page 2
+        composeTestRule.onNodeWithTag("webtoon_viewer").performClick()
+        advancePastDoubleTapTimeout()
+        composeTestRule.onNodeWithText("2 / 10").assertIsDisplayed()
+    }
+
+    @Test
+    fun webtoonMode_switchToLtr_preservesCurrentPage() {
+        lastPage = 0
+        val readingMode = mutableStateOf(ReadingMode.WEBTOON)
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            NavHost(navController = navController, startDestination = "reader") {
+                composable("reader") {
+                    ReaderScreen(
+                        manga = testManga,
+                        currentPage = lastPage,
+                        readingMode = readingMode.value,
+                        onPageChanged = { lastPage = it },
+                        onBack = {},
+                        onSettingsClick = { navController.navigate("settings") }
+                    )
+                }
+                composable("settings") {
+                    Text("Settings")
+                }
+            }
+        }
+
+        // Scroll down in webtoon mode to advance pages
+        composeTestRule.onNodeWithTag("webtoon_viewer")
+            .performTouchInput { swipeUp() }
+        composeTestRule.waitForIdle()
+
+        // Show bars and note current page
+        composeTestRule.onNodeWithTag("webtoon_viewer").performClick()
+        advancePastDoubleTapTimeout()
+        val webtoonPage = lastPage
+
+        // Open settings
+        composeTestRule.onNodeWithContentDescription("Reader settings").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Settings").assertIsDisplayed()
+
+        // Switch reading mode to LTR
+        readingMode.value = ReadingMode.LTR
+
+        // Return from settings
+        composeTestRule.activityRule.scenario.onActivity { activity ->
+            activity.onBackPressedDispatcher.onBackPressed()
+        }
+        composeTestRule.waitForIdle()
+
+        // Verify pager is shown
+        composeTestRule.onNodeWithTag("reader_pager").assertIsDisplayed()
+
+        // Show bars and verify we're at the same page
+        composeTestRule.onNodeWithTag("reader_pager").performClick()
+        advancePastDoubleTapTimeout()
+        composeTestRule.onNodeWithText("${webtoonPage + 1} / 10").assertIsDisplayed()
+    }
+
+    @Test
     fun swipeLeft_doesNotAdvancePage_inRtlMode() {
         lastPage = 0
         composeTestRule.setContent {
@@ -354,5 +654,102 @@ class ReaderScreenTest {
             .performTouchInput { swipeLeft() }
         composeTestRule.waitForIdle()
         assertEquals(0, lastPage)
+    }
+
+    @Test
+    fun tapLeftZone_navigatesToPreviousPage_whenTapToNavigateEnabled() {
+        setUpReaderScreen(tapToNavigate = true, initialPage = 5)
+
+        composeTestRule.onNodeWithTag("reader_pager").performTouchInput {
+            click(position = Offset(x = width * 0.1f, y = height * 0.5f))
+        }
+        advancePastDoubleTapTimeout()
+        composeTestRule.waitForIdle()
+
+        assertEquals(4, lastPage)
+    }
+
+    @Test
+    fun tapRightZone_navigatesToNextPage_whenTapToNavigateEnabled() {
+        setUpReaderScreen(tapToNavigate = true)
+
+        composeTestRule.onNodeWithTag("reader_pager").performTouchInput {
+            click(position = Offset(x = width * 0.9f, y = height * 0.5f))
+        }
+        advancePastDoubleTapTimeout()
+        composeTestRule.waitForIdle()
+
+        assertEquals(1, lastPage)
+    }
+
+    @Test
+    fun tapCenterZone_togglesBars_whenTapToNavigateEnabled() {
+        setUpReaderScreen(tapToNavigate = true)
+
+        composeTestRule.onNodeWithTag("reader_pager").performTouchInput {
+            click(position = Offset(x = width * 0.5f, y = height * 0.5f))
+        }
+        advancePastDoubleTapTimeout()
+
+        composeTestRule.onNodeWithText("Manga 1").assertIsDisplayed()
+    }
+
+    @Test
+    fun pager_preComposesAdjacentPages() {
+        setUpReaderScreen()
+        composeTestRule.waitForIdle()
+        composeTestRule.onAllNodesWithTag("reader_zoom_container")
+            .assertCountEquals(2)
+    }
+
+    @Test
+    fun doubleTapZoom_doesNotLeakToAdjacentPage() {
+        setUpReaderScreen()
+        // Double-tap to zoom on the current page
+        composeTestRule.onAllNodesWithTag("reader_zoom_container")[0]
+            .performTouchInput { doubleClick() }
+        composeTestRule.waitForIdle()
+        // The adjacent pre-composed page must NOT be zoomed
+        composeTestRule.onAllNodesWithTag("reader_zoom_container")[1]
+            .assert(SemanticsMatcher.expectValue(ZoomScaleKey, 1.0f))
+    }
+
+    @Test
+    fun rapidTapRight_navigatesTwoPages_whenTapToNavigateEnabled() {
+        setUpReaderScreen(tapToNavigate = true)
+        composeTestRule.mainClock.autoAdvance = false
+
+        // First tap: right zone → page 1
+        composeTestRule.onNodeWithTag("reader_pager").performTouchInput {
+            click(position = Offset(x = width * 0.9f, y = height * 0.5f))
+        }
+        // Fire onTap (past double-tap timeout) + let animation coroutine dispatch
+        composeTestRule.mainClock.advanceTimeBy(500)
+        composeTestRule.mainClock.advanceTimeByFrame()
+
+        // Second tap while animation is in flight — tests that intendedPage
+        // tracks the target immediately (not waiting for pagerState.currentPage)
+        composeTestRule.onNodeWithTag("reader_pager").performTouchInput {
+            click(position = Offset(x = width * 0.9f, y = height * 0.5f))
+        }
+        composeTestRule.mainClock.advanceTimeBy(500)
+
+        // Let everything settle
+        composeTestRule.mainClock.autoAdvance = true
+        composeTestRule.waitForIdle()
+
+        assertEquals(2, lastPage)
+    }
+
+    @Test
+    fun tapLeftZone_togglesBars_whenTapToNavigateDisabled() {
+        setUpReaderScreen(tapToNavigate = false)
+
+        composeTestRule.onNodeWithTag("reader_pager").performTouchInput {
+            click(position = Offset(x = width * 0.1f, y = height * 0.5f))
+        }
+        advancePastDoubleTapTimeout()
+
+        composeTestRule.onNodeWithText("Manga 1").assertIsDisplayed()
     }
 }

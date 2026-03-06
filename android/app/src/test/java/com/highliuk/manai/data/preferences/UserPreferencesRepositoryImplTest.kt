@@ -148,6 +148,15 @@ class UserPreferencesRepositoryImplTest {
     }
 
     @Test
+    fun `setReadingMode persists WEBTOON value`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        repository.setReadingMode(ReadingMode.WEBTOON)
+
+        assertEquals(ReadingMode.WEBTOON, repository.readingMode.first())
+    }
+
+    @Test
     fun `appLanguage emits default value SYSTEM`() = runTest(testDispatcher) {
         val repository = createRepository()
 
@@ -174,5 +183,33 @@ class UserPreferencesRepositoryImplTest {
         val repository = UserPreferencesRepositoryImpl(dataStore)
 
         assertEquals(AppLanguage.SYSTEM, repository.appLanguage.first())
+    }
+
+    @Test
+    fun `tapToNavigate emits default value false`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        val result = repository.tapToNavigate.first()
+
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun `setTapToNavigate persists true`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        repository.setTapToNavigate(true)
+
+        assertEquals(true, repository.tapToNavigate.first())
+    }
+
+    @Test
+    fun `setTapToNavigate persists false after true`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        repository.setTapToNavigate(true)
+        repository.setTapToNavigate(false)
+
+        assertEquals(false, repository.tapToNavigate.first())
     }
 }

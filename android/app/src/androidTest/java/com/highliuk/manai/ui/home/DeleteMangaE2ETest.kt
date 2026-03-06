@@ -27,8 +27,8 @@ class DeleteMangaE2ETest {
     fun longPress_selectManga_delete_removesFromList() {
         var mangaList by mutableStateOf(
             listOf(
-                Manga(id = 1, uri = "uri1", title = "One Piece", pageCount = 200),
-                Manga(id = 2, uri = "uri2", title = "Naruto", pageCount = 150)
+                Manga(id = 1, uri = "uri1", title = "Manga 1", pageCount = 200),
+                Manga(id = 2, uri = "uri2", title = "Manga 2", pageCount = 150)
             )
         )
         var selectedIds by mutableStateOf(emptySet<Long>())
@@ -66,11 +66,11 @@ class DeleteMangaE2ETest {
         }
 
         // Verify both manga are displayed
-        composeTestRule.onNodeWithText("One Piece").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Naruto").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Manga 1").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Manga 2").assertIsDisplayed()
 
-        // Long press on "One Piece" to enter selection mode
-        composeTestRule.onNodeWithText("One Piece").performTouchInput { longClick() }
+        // Long press to enter selection mode
+        composeTestRule.onNodeWithText("Manga 1").performTouchInput { longClick() }
         assertEquals(setOf(1L), selectedIds)
 
         // Trash icon should appear
@@ -84,8 +84,8 @@ class DeleteMangaE2ETest {
         composeTestRule.onNodeWithText("Delete").performClick()
         assertTrue(deleted)
 
-        // "One Piece" should be gone, "Naruto" should remain
-        composeTestRule.onNodeWithText("One Piece").assertDoesNotExist()
-        composeTestRule.onNodeWithText("Naruto").assertIsDisplayed()
+        // First manga should be gone, second should remain
+        composeTestRule.onNodeWithText("Manga 1").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Manga 2").assertIsDisplayed()
     }
 }

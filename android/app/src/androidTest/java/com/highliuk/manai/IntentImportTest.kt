@@ -12,6 +12,7 @@ import androidx.compose.ui.test.performClick
 import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
+import com.highliuk.manai.data.local.ManAiDatabase
 import com.highliuk.manai.data.local.dao.MangaDao
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -36,9 +37,13 @@ class IntentImportTest {
     @Inject
     lateinit var mangaDao: MangaDao
 
+    @Inject
+    lateinit var database: ManAiDatabase
+
     @Before
     fun setUp() {
         hiltRule.inject()
+        database.clearAllTables()
     }
 
     @Test

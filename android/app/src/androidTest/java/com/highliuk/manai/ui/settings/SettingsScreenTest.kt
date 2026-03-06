@@ -33,6 +33,8 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
                 onBack = {}
             )
         }
@@ -56,6 +58,8 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
                 onBack = {}
             )
         }
@@ -79,6 +83,8 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
                 onBack = { backCalled = true }
             )
         }
@@ -101,13 +107,15 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
                 onBack = {}
             )
         }
 
         composeTestRule.onNodeWithText("Reading Mode").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Left to Right (LTR)").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Right to Left (RTL)").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Left to Right").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Right to Left").assertIsDisplayed()
     }
 
     @Test
@@ -124,11 +132,13 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
                 onBack = {}
             )
         }
 
-        composeTestRule.onNodeWithText("Right to Left (RTL)").performClick()
+        composeTestRule.onNodeWithText("Right to Left").performClick()
 
         assertEquals(ReadingMode.RTL, selectedMode)
     }
@@ -145,6 +155,8 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
                 onBack = {}
             )
         }
@@ -169,6 +181,8 @@ class SettingsScreenTest {
                 onThemeModeChange = { selectedTheme = it },
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
                 onBack = {}
             )
         }
@@ -190,6 +204,8 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
                 onBack = {}
             )
         }
@@ -198,6 +214,52 @@ class SettingsScreenTest {
         composeTestRule.onNodeWithText("System default").performScrollTo().assertIsDisplayed()
         composeTestRule.onNodeWithText("English").performScrollTo().assertIsDisplayed()
         composeTestRule.onNodeWithText("Italiano").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun displaysWebtoonReadingModeOption() {
+        composeTestRule.setContent {
+            SettingsScreen(
+                gridColumns = 2,
+                onGridColumnsChange = {},
+                readingMode = ReadingMode.LTR,
+                onReadingModeChange = {},
+                themeMode = ThemeMode.SYSTEM,
+                onThemeModeChange = {},
+                appLanguage = AppLanguage.SYSTEM,
+                onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
+                onBack = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("Webtoon").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun clickingWebtoonCallsCallbackWithWebtoon() {
+        var selectedMode: ReadingMode? = null
+
+        composeTestRule.setContent {
+            SettingsScreen(
+                gridColumns = 2,
+                onGridColumnsChange = {},
+                readingMode = ReadingMode.LTR,
+                onReadingModeChange = { selectedMode = it },
+                themeMode = ThemeMode.SYSTEM,
+                onThemeModeChange = {},
+                appLanguage = AppLanguage.SYSTEM,
+                onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
+                onBack = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("Webtoon").performScrollTo().performClick()
+
+        assertEquals(ReadingMode.WEBTOON, selectedMode)
     }
 
     @Test
@@ -214,6 +276,8 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = { selectedLanguage = it },
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
                 onBack = {}
             )
         }
@@ -237,10 +301,60 @@ class SettingsScreenTest {
                 onAppLanguageChange = {},
                 comicTextScale = 1.5f,
                 onComicTextScaleChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
                 onBack = {},
             )
         }
 
         composeTestRule.onNodeWithTag("comic_text_scale_slider").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun displaysTapToNavigateSwitch() {
+        composeTestRule.setContent {
+            SettingsScreen(
+                gridColumns = 2,
+                onGridColumnsChange = {},
+                readingMode = ReadingMode.LTR,
+                onReadingModeChange = {},
+                themeMode = ThemeMode.SYSTEM,
+                onThemeModeChange = {},
+                appLanguage = AppLanguage.SYSTEM,
+                onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
+                onBack = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("Tap to navigate").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Tap left or right edge to change page")
+            .performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun tappingSwitchCallsCallback() {
+        var toggled = false
+
+        composeTestRule.setContent {
+            SettingsScreen(
+                gridColumns = 2,
+                onGridColumnsChange = {},
+                readingMode = ReadingMode.LTR,
+                onReadingModeChange = {},
+                themeMode = ThemeMode.SYSTEM,
+                onThemeModeChange = {},
+                appLanguage = AppLanguage.SYSTEM,
+                onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = { toggled = true },
+                onBack = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("Tap to navigate").performScrollTo().performClick()
+
+        assert(toggled)
     }
 }

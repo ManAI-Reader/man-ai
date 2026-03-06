@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Man AI</string>
+
+    <!-- Home screen -->
+    <string name="settings">Pengaturan</string>
+    <string name="import_pdf">Impor PDF</string>
+
+    <!-- Settings screen -->
+    <string name="back">Kembali</string>
+    <string name="grid_columns">Kolom grid</string>
+    <plurals name="n_columns">
+        <item quantity="other">%d kolom</item>
+    </plurals>
+    <string name="reading_mode">Mode baca</string>
+    <string name="reading_mode_ltr">Kiri ke kanan</string>
+    <string name="reading_mode_rtl">Kanan ke kiri</string>
+    <string name="tap_to_navigate">Ketuk untuk navigasi</string>
+    <string name="tap_to_navigate_description">Ketuk tepi kiri atau kanan untuk mengganti halaman</string>
+    <string name="reading_mode_webtoon">Webtoon</string>
+
+    <!-- Theme mode -->
+    <string name="theme_mode">Tema</string>
+    <string name="theme_mode_light">Terang</string>
+    <string name="theme_mode_dark">Gelap</string>
+    <string name="theme_mode_system">Sistem</string>
+
+    <!-- Language -->
+    <string name="language">Bahasa</string>
+    <string name="language_system">Bawaan sistem</string>
+    <string name="language_english">English</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_japanese">日本語</string>
+    <string name="language_spanish">Español</string>
+    <string name="language_portuguese_br">Português (Brasil)</string>
+    <string name="language_french">Français</string>
+    <string name="language_chinese_simplified">简体中文</string>
+    <string name="language_korean">한국어</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_russian">Русский</string>
+    <string name="language_indonesian">Bahasa Indonesia</string>
+    <string name="language_thai">ไทย</string>
+    <string name="language_polish">Polski</string>
+
+    <!-- Reader screen -->
+    <string name="reader_settings">Pengaturan pembaca</string>
+    <string name="page_content">Halaman %d</string>
+    <string name="page_indicator">%1$d / %2$d</string>
+    <string name="page_slider_description">Penggeser progres halaman</string>
+    <string name="go_to_page">Ke halaman</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Batal</string>
+
+    <!-- Delete manga -->
+    <string name="delete">Hapus</string>
+    <plurals name="n_selected">
+        <item quantity="other">%d dipilih</item>
+    </plurals>
+    <plurals name="delete_manga_confirm">
+        <item quantity="other">Hapus %d manga?</item>
+    </plurals>
+
+    <!-- OCR -->
+    <string name="comic_text_size">Ukuran teks komik</string>
+    <string name="comic_text_preview">漫画のテキスト</string>
+
+    <string name="ocr_loading">Mengenali teks…</string>
+    <string name="copy_text">Salin teks</string>
+    <string name="share_text">Bagikan teks</string>
+    <string name="text_copied">Teks disalin</string>
+
+    <!-- PDF thumbnail -->
+    <string name="pdf_thumbnail">Thumbnail PDF</string>
+    <string name="pdf_placeholder">Placeholder PDF</string>
+</resources>

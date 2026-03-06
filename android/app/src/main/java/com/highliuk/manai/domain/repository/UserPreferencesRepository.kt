@@ -20,4 +20,7 @@ interface UserPreferencesRepository {
 
     val ocrFontScale: Flow<Float>
     suspend fun setOcrFontScale(scale: Float)
+
+    val tapToNavigate: Flow<Boolean>
+    suspend fun setTapToNavigate(enabled: Boolean)
 }

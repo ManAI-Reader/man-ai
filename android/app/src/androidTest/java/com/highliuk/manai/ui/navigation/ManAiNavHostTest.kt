@@ -8,11 +8,13 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.filters.SdkSuppress
 import com.highliuk.manai.MainActivity
+import com.highliuk.manai.data.local.ManAiDatabase
 import com.highliuk.manai.data.local.dao.MangaDao
 import com.highliuk.manai.data.local.entity.MangaEntity
 import com.highliuk.manai.ui.home.HomeViewModel
@@ -38,9 +40,13 @@ class ManAiNavHostTest {
     @Inject
     lateinit var mangaDao: MangaDao
 
+    @Inject
+    lateinit var database: ManAiDatabase
+
     @Before
     fun setUp() {
         hiltRule.inject()
+        database.clearAllTables()
     }
 
     @SdkSuppress(minSdkVersion = 30) // Immersive mode tap-to-show unreliable on API < 30
@@ -145,6 +151,131 @@ class ManAiNavHostTest {
         }
         // Reader opens without crash — verifies NavHost passes the new params
         composeTestRule.onNodeWithTag("reader_pager").assertIsDisplayed()
+    }
+
+    @Test
+    fun tappingSettings_navigatesToSettingsScreen() {
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithContentDescription("Settings").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(500)
+
+        composeTestRule.onNodeWithText("Settings").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Grid Columns").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Reading Mode").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Theme").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Language").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun settings_backReturnsToHomeScreen() {
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithContentDescription("Settings").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(500)
+        composeTestRule.onNodeWithText("Settings").assertIsDisplayed()
+
+        composeTestRule.onNodeWithContentDescription("Back").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(500)
+
+        composeTestRule.onNodeWithContentDescription("Settings").assertIsDisplayed()
+    }
+
+    @Test
+    fun settings_changingGridColumnsTo3_persistsSelection() {
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithContentDescription("Settings").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(500)
+
+        composeTestRule.onNodeWithText("3 columns").performScrollTo().performClick()
+        composeTestRule.waitForIdle()
+
+        // Go back and return to settings to verify persistence
+        composeTestRule.onNodeWithContentDescription("Back").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(500)
+        composeTestRule.onNodeWithContentDescription("Settings").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(500)
+
+        composeTestRule.onNodeWithText("3 columns")
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun settings_changingReadingModeToRtl_persistsSelection() {
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithContentDescription("Settings").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(500)
+
+        composeTestRule.onNodeWithText("Right to Left").performScrollTo().performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithContentDescription("Back").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(500)
+        composeTestRule.onNodeWithContentDescription("Settings").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(500)
+
+        composeTestRule.onNodeWithText("Right to Left").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun settings_changingThemeToDark_persistsSelection() {
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithContentDescription("Settings").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(500)
+
+        composeTestRule.onNodeWithText("Dark").performScrollTo().performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithContentDescription("Back").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(500)
+        composeTestRule.onNodeWithContentDescription("Settings").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(500)
+
+        composeTestRule.onNodeWithText("Dark").performScrollTo().assertIsDisplayed()
+    }
+
+    @SdkSuppress(minSdkVersion = 30) // Immersive mode tap-to-show unreliable on API < 30
+    @Test
+    fun readerSettings_navigatesToSettingsFromReader() = runTest {
+        mangaDao.insert(
+            MangaEntity(
+                uri = "content://reader-settings-test",
+                title = "Reader Settings Test",
+                pageCount = 3
+            )
+        )
+
+        composeTestRule.waitUntil(timeoutMillis = 10000) {
+            composeTestRule.onAllNodesWithText("Reader Settings Test").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithText("Reader Settings Test").performClick()
+        composeTestRule.waitUntil(timeoutMillis = 10000) {
+            composeTestRule.onAllNodesWithTag("reader_pager").fetchSemanticsNodes().isNotEmpty()
+        }
+        // Show top bar
+        composeTestRule.onNodeWithTag("reader_pager").performClick()
+        composeTestRule.mainClock.advanceTimeBy(500)
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithContentDescription("Reader settings").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(500)
+
+        composeTestRule.onNodeWithText("Settings").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Grid Columns").performScrollTo().assertIsDisplayed()
     }
 
     @SdkSuppress(minSdkVersion = 30) // Immersive mode tap-to-show unreliable on API < 30

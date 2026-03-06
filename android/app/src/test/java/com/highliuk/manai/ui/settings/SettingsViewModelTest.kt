@@ -30,6 +30,7 @@ class SettingsViewModelTest {
     private val themeModeFlow = MutableStateFlow(ThemeMode.SYSTEM)
     private val appLanguageFlow = MutableStateFlow(AppLanguage.SYSTEM)
     private val ocrFontScaleFlow = MutableStateFlow(1.5f)
+    private val tapToNavigateFlow = MutableStateFlow(false)
 
     @Before
     fun setUp() {
@@ -39,6 +40,7 @@ class SettingsViewModelTest {
         every { userPreferencesRepository.themeMode } returns themeModeFlow
         every { userPreferencesRepository.appLanguage } returns appLanguageFlow
         every { userPreferencesRepository.ocrFontScale } returns ocrFontScaleFlow
+        every { userPreferencesRepository.tapToNavigate } returns tapToNavigateFlow
     }
 
     @After
@@ -151,5 +153,26 @@ class SettingsViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         coVerify { userPreferencesRepository.setOcrFontScale(3.0f) }
+    }
+
+    @Test
+    fun `tapToNavigate emits current preference value`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.tapToNavigate.test {
+            assertEquals(false, awaitItem())
+            tapToNavigateFlow.value = true
+            assertEquals(true, awaitItem())
+        }
+    }
+
+    @Test
+    fun `setTapToNavigate updates preference`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.setTapToNavigate(true)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify { userPreferencesRepository.setTapToNavigate(true) }
     }
 }

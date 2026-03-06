@@ -3,6 +3,7 @@ package com.highliuk.manai.data.preferences
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -37,6 +38,9 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         const val DEFAULT_OCR_FONT_SCALE = 1.5f
         const val MIN_OCR_FONT_SCALE = 1.0f
         const val MAX_OCR_FONT_SCALE = 3.0f
+
+        val TAP_TO_NAVIGATE = booleanPreferencesKey("tap_to_navigate")
+        const val DEFAULT_TAP_TO_NAVIGATE = false
     }
 
     override val gridColumns: Flow<Int> = dataStore.data.map { preferences ->
@@ -115,6 +119,16 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         val clamped = scale.coerceIn(MIN_OCR_FONT_SCALE, MAX_OCR_FONT_SCALE)
         dataStore.edit { preferences ->
             preferences[OCR_FONT_SCALE] = clamped
+        }
+    }
+
+    override val tapToNavigate: Flow<Boolean> = dataStore.data.map { preferences ->
+        preferences[TAP_TO_NAVIGATE] ?: DEFAULT_TAP_TO_NAVIGATE
+    }
+
+    override suspend fun setTapToNavigate(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[TAP_TO_NAVIGATE] = enabled
         }
     }
 }

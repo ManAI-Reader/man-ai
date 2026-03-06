@@ -17,12 +17,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -34,6 +37,27 @@ import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.AppLanguage
 import com.highliuk.manai.domain.model.ReadingMode
 import com.highliuk.manai.domain.model.ThemeMode
+
+private val languageLabelRes: Map<AppLanguage, Int> = mapOf(
+    AppLanguage.SYSTEM to R.string.language_system,
+    AppLanguage.ENGLISH to R.string.language_english,
+    AppLanguage.ITALIAN to R.string.language_italian,
+    AppLanguage.JAPANESE to R.string.language_japanese,
+    AppLanguage.SPANISH to R.string.language_spanish,
+    AppLanguage.PORTUGUESE_BR to R.string.language_portuguese_br,
+    AppLanguage.FRENCH to R.string.language_french,
+    AppLanguage.CHINESE_SIMPLIFIED to R.string.language_chinese_simplified,
+    AppLanguage.KOREAN to R.string.language_korean,
+    AppLanguage.GERMAN to R.string.language_german,
+    AppLanguage.RUSSIAN to R.string.language_russian,
+    AppLanguage.INDONESIAN to R.string.language_indonesian,
+    AppLanguage.THAI to R.string.language_thai,
+    AppLanguage.POLISH to R.string.language_polish,
+)
+
+@StringRes
+internal fun AppLanguage.labelRes(): Int =
+    languageLabelRes[this] ?: error("Missing label resource for $this")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,6 +72,8 @@ fun SettingsScreen(
     onAppLanguageChange: (AppLanguage) -> Unit,
     comicTextScale: Float = 1.5f,
     onComicTextScaleChange: (Float) -> Unit = {},
+    tapToNavigate: Boolean,
+    onTapToNavigateChange: (Boolean) -> Unit,
     onBack: () -> Unit
 ) {
     Scaffold(
@@ -90,7 +116,7 @@ fun SettingsScreen(
                         onClick = { onGridColumnsChange(columns) }
                     )
                     Text(
-                        text = stringResource(R.string.n_columns, columns),
+                        text = pluralStringResource(R.plurals.n_columns, columns, columns),
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }
@@ -105,6 +131,7 @@ fun SettingsScreen(
                 val label = when (mode) {
                     ReadingMode.LTR -> stringResource(R.string.reading_mode_ltr)
                     ReadingMode.RTL -> stringResource(R.string.reading_mode_rtl)
+                    ReadingMode.WEBTOON -> stringResource(R.string.reading_mode_webtoon)
                 }
                 Row(
                     modifier = Modifier
@@ -122,6 +149,30 @@ fun SettingsScreen(
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onTapToNavigateChange(!tapToNavigate) }
+                    .padding(vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.tap_to_navigate),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = stringResource(R.string.tap_to_navigate_description),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = tapToNavigate,
+                    onCheckedChange = onTapToNavigateChange
+                )
             }
 
             Text(
@@ -159,11 +210,6 @@ fun SettingsScreen(
                 modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
             )
             AppLanguage.entries.forEach { language ->
-                val languageLabel = when (language) {
-                    AppLanguage.SYSTEM -> stringResource(R.string.language_system)
-                    AppLanguage.ENGLISH -> stringResource(R.string.language_english)
-                    AppLanguage.ITALIAN -> stringResource(R.string.language_italian)
-                }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -176,7 +222,7 @@ fun SettingsScreen(
                         onClick = { onAppLanguageChange(language) }
                     )
                     Text(
-                        text = languageLabel,
+                        text = stringResource(language.labelRes()),
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }

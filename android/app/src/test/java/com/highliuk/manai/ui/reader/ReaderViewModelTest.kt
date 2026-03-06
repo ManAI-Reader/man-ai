@@ -47,11 +47,14 @@ class ReaderViewModelTest {
     private val debugStateHolder = PipelineDebugStateHolder()
     private val debugEventHolder = DebugMlEventHolder()
     private val readingModeFlow = MutableStateFlow(ReadingMode.LTR)
+    private val tapToNavigateFlow = MutableStateFlow(false)
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         every { userPreferencesRepository.readingMode } returns readingModeFlow
+        every { userPreferencesRepository.ocrFontScale } returns MutableStateFlow(1.5f)
+        every { userPreferencesRepository.tapToNavigate } returns tapToNavigateFlow
     }
 
     @After
@@ -70,7 +73,7 @@ class ReaderViewModelTest {
 
     @Test
     fun `manga emits value from repository`() = runTest(testDispatcher) {
-        val manga = Manga(id = 1, uri = "uri1", title = "One Piece", pageCount = 200)
+        val manga = Manga(id = 1, uri = "uri1", title = "Manga 1", pageCount = 200)
         coEvery { repository.getMangaById(1L) } returns flowOf(manga)
 
         val viewModel = createViewModel(1L)
@@ -217,6 +220,21 @@ class ReaderViewModelTest {
         viewModel.currentPageRegions.test {
             assertEquals(emptyList<PageRegion>(), awaitItem())
             assertEquals(regions, awaitItem())
+        }
+    }
+
+    @Test
+    fun `tapToNavigate emits value from preferences`() = runTest(testDispatcher) {
+        coEvery { repository.getMangaById(1L) } returns flowOf(
+            Manga(id = 1, uri = "uri1", title = "Test", pageCount = 10)
+        )
+
+        val viewModel = createViewModel(1L)
+
+        viewModel.tapToNavigate.test {
+            assertEquals(false, awaitItem())
+            tapToNavigateFlow.value = true
+            assertEquals(true, awaitItem())
         }
     }
 
@@ -376,5 +394,17 @@ class ReaderViewModelTest {
         val viewModel = createViewModel(1L)
 
         org.junit.Assert.assertNotNull(viewModel.debugEvents)
+    }
+
+    @Test
+    fun `readingMode emits WEBTOON when set`() = runTest(testDispatcher) {
+        coEvery { repository.getMangaById(1L) } returns flowOf(null)
+        val viewModel = createViewModel(1L)
+
+        viewModel.readingMode.test {
+            assertEquals(ReadingMode.LTR, awaitItem())
+            readingModeFlow.value = ReadingMode.WEBTOON
+            assertEquals(ReadingMode.WEBTOON, awaitItem())
+        }
     }
 }

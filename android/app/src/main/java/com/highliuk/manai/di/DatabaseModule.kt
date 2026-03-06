@@ -24,6 +24,8 @@ object DatabaseModule {
                 ManAiDatabase.MIGRATION_1_2,
                 ManAiDatabase.MIGRATION_2_3,
                 ManAiDatabase.MIGRATION_3_4,
+                ManAiDatabase.MIGRATION_3_2,
+                ManAiDatabase.MIGRATION_2_1
             )
             .build()
 

@@ -9,10 +9,16 @@
     <!-- Settings screen -->
     <string name="back">Back</string>
     <string name="grid_columns">Grid Columns</string>
-    <string name="n_columns">%d columns</string>
+    <plurals name="n_columns">
+        <item quantity="one">%d column</item>
+        <item quantity="other">%d columns</item>
+    </plurals>
     <string name="reading_mode">Reading Mode</string>
-    <string name="reading_mode_ltr">Left to Right (LTR)</string>
-    <string name="reading_mode_rtl">Right to Left (RTL)</string>
+    <string name="reading_mode_ltr">Left to Right</string>
+    <string name="reading_mode_rtl">Right to Left</string>
+    <string name="reading_mode_webtoon">Webtoon</string>
+    <string name="tap_to_navigate">Tap to navigate</string>
+    <string name="tap_to_navigate_description">Tap left or right edge to change page</string>
 
     <!-- Theme mode -->
     <string name="theme_mode">Theme</string>
@@ -25,6 +31,17 @@
     <string name="language_system">System default</string>
     <string name="language_english">English</string>
     <string name="language_italian">Italiano</string>
+    <string name="language_japanese">日本語</string>
+    <string name="language_spanish">Español</string>
+    <string name="language_portuguese_br">Português (Brasil)</string>
+    <string name="language_french">Français</string>
+    <string name="language_chinese_simplified">简体中文</string>
+    <string name="language_korean">한국어</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_russian">Русский</string>
+    <string name="language_indonesian">Bahasa Indonesia</string>
+    <string name="language_thai">ไทย</string>
+    <string name="language_polish">Polski</string>
 
     <!-- OCR -->
     <string name="comic_text_size">Comic Text Size</string>

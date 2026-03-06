@@ -68,6 +68,11 @@ class HomeViewModel @Inject constructor(
     fun importManga(uri: String, fileName: String) {
         viewModelScope.launch {
             try {
+                val contentHash = fileHashProvider.computeHash(uri)
+                val existing = repository.getMangaByContentHash(contentHash)
+                if (existing != null && existing.uri.startsWith("file://")) {
+                    pdfFileCopier.deleteLocalCopy(existing.uri)
+                }
                 val id = performImport(uri, fileName)
                 _navigateToReader.emit(id)
             } catch (_: Exception) {
@@ -99,6 +104,12 @@ class HomeViewModel @Inject constructor(
     fun importMangaFromIntent(uri: String, fileName: String) {
         viewModelScope.launch {
             try {
+                val contentHash = fileHashProvider.computeHash(uri)
+                val existing = repository.getMangaByContentHash(contentHash)
+                if (existing != null) {
+                    _navigateToReader.emit(existing.id)
+                    return@launch
+                }
                 val localUri = pdfFileCopier.copyToLocalStorage(uri)
                 val id = performImport(localUri, fileName)
                 _navigateToReader.emit(id)

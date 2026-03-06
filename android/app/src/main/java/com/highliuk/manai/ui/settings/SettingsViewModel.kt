@@ -62,4 +62,13 @@ class SettingsViewModel @Inject constructor(
             userPreferencesRepository.setOcrFontScale(scale)
         }
     }
+
+    val tapToNavigate: StateFlow<Boolean> = userPreferencesRepository.tapToNavigate
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun setTapToNavigate(enabled: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.setTapToNavigate(enabled)
+        }
+    }
 }

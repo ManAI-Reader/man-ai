@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Man AI</string>
+
+    <!-- Home screen -->
+    <string name="settings">설정</string>
+    <string name="import_pdf">PDF 가져오기</string>
+
+    <!-- Settings screen -->
+    <string name="back">뒤로</string>
+    <string name="grid_columns">그리드 열 수</string>
+    <plurals name="n_columns">
+        <item quantity="other">%d열</item>
+    </plurals>
+    <string name="reading_mode">읽기 방향</string>
+    <string name="reading_mode_ltr">왼쪽에서 오른쪽</string>
+    <string name="reading_mode_rtl">오른쪽에서 왼쪽</string>
+    <string name="tap_to_navigate">탭하여 페이지 이동</string>
+    <string name="tap_to_navigate_description">왼쪽 또는 오른쪽 가장자리를 탭하여 페이지 전환</string>
+    <string name="reading_mode_webtoon">Webtoon</string>
+
+    <!-- Theme mode -->
+    <string name="theme_mode">테마</string>
+    <string name="theme_mode_light">라이트</string>
+    <string name="theme_mode_dark">다크</string>
+    <string name="theme_mode_system">시스템</string>
+
+    <!-- Language -->
+    <string name="language">언어</string>
+    <string name="language_system">시스템 기본값</string>
+    <string name="language_english">English</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_japanese">日本語</string>
+    <string name="language_spanish">Español</string>
+    <string name="language_portuguese_br">Português (Brasil)</string>
+    <string name="language_french">Français</string>
+    <string name="language_chinese_simplified">简体中文</string>
+    <string name="language_korean">한국어</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_russian">Русский</string>
+    <string name="language_indonesian">Bahasa Indonesia</string>
+    <string name="language_thai">ไทย</string>
+    <string name="language_polish">Polski</string>
+
+    <!-- Reader screen -->
+    <string name="reader_settings">리더 설정</string>
+    <string name="page_content">%d페이지</string>
+    <string name="page_indicator">%1$d / %2$d</string>
+    <string name="page_slider_description">페이지 진행률 슬라이더</string>
+    <string name="go_to_page">페이지로 이동</string>
+    <string name="ok">확인</string>
+    <string name="cancel">취소</string>
+
+    <!-- Delete manga -->
+    <string name="delete">삭제</string>
+    <plurals name="n_selected">
+        <item quantity="other">%d개 선택됨</item>
+    </plurals>
+    <plurals name="delete_manga_confirm">
+        <item quantity="other">만화 %d개를 삭제하시겠습니까?</item>
+    </plurals>
+
+    <!-- OCR -->
+    <string name="comic_text_size">만화 텍스트 크기</string>
+    <string name="comic_text_preview">漫画のテキスト</string>
+
+    <string name="ocr_loading">텍스트 인식 중…</string>
+    <string name="copy_text">텍스트 복사</string>
+    <string name="share_text">텍스트 공유</string>
+    <string name="text_copied">텍스트 복사됨</string>
+
+    <!-- PDF thumbnail -->
+    <string name="pdf_thumbnail">PDF 썸네일</string>
+    <string name="pdf_placeholder">PDF 자리표시자</string>
+</resources>

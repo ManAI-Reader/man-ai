@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Man AI</string>
+
+    <!-- Home screen -->
+    <string name="settings">Ustawienia</string>
+    <string name="import_pdf">Importuj PDF</string>
+
+    <!-- Settings screen -->
+    <string name="back">Wstecz</string>
+    <string name="grid_columns">Kolumny siatki</string>
+    <plurals name="n_columns">
+        <item quantity="one">%d kolumna</item>
+        <item quantity="few">%d kolumny</item>
+        <item quantity="many">%d kolumn</item>
+        <item quantity="other">%d kolumn</item>
+    </plurals>
+    <string name="reading_mode">Tryb czytania</string>
+    <string name="reading_mode_ltr">Od lewej do prawej</string>
+    <string name="reading_mode_rtl">Od prawej do lewej</string>
+    <string name="tap_to_navigate">Dotknij, aby nawigować</string>
+    <string name="tap_to_navigate_description">Dotknij lewej lub prawej krawędzi, aby zmienić stronę</string>
+    <string name="reading_mode_webtoon">Webtoon</string>
+
+    <!-- Theme mode -->
+    <string name="theme_mode">Motyw</string>
+    <string name="theme_mode_light">Jasny</string>
+    <string name="theme_mode_dark">Ciemny</string>
+    <string name="theme_mode_system">Systemowy</string>
+
+    <!-- Language -->
+    <string name="language">Język</string>
+    <string name="language_system">Domyślny systemowy</string>
+    <string name="language_english">English</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_japanese">日本語</string>
+    <string name="language_spanish">Español</string>
+    <string name="language_portuguese_br">Português (Brasil)</string>
+    <string name="language_french">Français</string>
+    <string name="language_chinese_simplified">简体中文</string>
+    <string name="language_korean">한국어</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_russian">Русский</string>
+    <string name="language_indonesian">Bahasa Indonesia</string>
+    <string name="language_thai">ไทย</string>
+    <string name="language_polish">Polski</string>
+
+    <!-- Reader screen -->
+    <string name="reader_settings">Ustawienia czytnika</string>
+    <string name="page_content">Strona %d</string>
+    <string name="page_indicator">%1$d / %2$d</string>
+    <string name="page_slider_description">Suwak postępu strony</string>
+    <string name="go_to_page">Przejdź do strony</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Anuluj</string>
+
+    <!-- Delete manga -->
+    <string name="delete">Usuń</string>
+    <plurals name="n_selected">
+        <item quantity="one">%d wybrany</item>
+        <item quantity="few">%d wybrane</item>
+        <item quantity="many">%d wybranych</item>
+        <item quantity="other">%d wybranych</item>
+    </plurals>
+    <plurals name="delete_manga_confirm">
+        <item quantity="one">Usunąć %d mangę?</item>
+        <item quantity="few">Usunąć %d mangi?</item>
+        <item quantity="many">Usunąć %d mang?</item>
+        <item quantity="other">Usunąć %d mang?</item>
+    </plurals>
+
+    <!-- OCR -->
+    <string name="comic_text_size">Rozmiar tekstu</string>
+    <string name="comic_text_preview">漫画のテキスト</string>
+
+    <string name="ocr_loading">Rozpoznawanie tekstu…</string>
+    <string name="copy_text">Kopiuj tekst</string>
+    <string name="share_text">Udostępnij tekst</string>
+    <string name="text_copied">Tekst skopiowany</string>
+
+    <!-- PDF thumbnail -->
+    <string name="pdf_thumbnail">Miniatura PDF</string>
+    <string name="pdf_placeholder">Symbol zastępczy PDF</string>
+</resources>

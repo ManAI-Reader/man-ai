@@ -15,16 +15,16 @@ class MangaGridItemTest {
     @Test
     fun displaysTitle() {
         composeTestRule.setContent {
-            MangaGridItem(manga = Manga(id = 1, uri = "uri1", title = "Frieren", pageCount = 200))
+            MangaGridItem(manga = Manga(id = 1, uri = "uri1", title = "Manga 1", pageCount = 200))
         }
 
-        composeTestRule.onNodeWithText("Frieren").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Manga 1").assertIsDisplayed()
     }
 
     @Test
     fun doesNotDisplayPageCount() {
         composeTestRule.setContent {
-            MangaGridItem(manga = Manga(id = 1, uri = "uri1", title = "Frieren", pageCount = 200))
+            MangaGridItem(manga = Manga(id = 1, uri = "uri1", title = "Manga 1", pageCount = 200))
         }
 
         composeTestRule.onNodeWithText("200 pages").assertDoesNotExist()
