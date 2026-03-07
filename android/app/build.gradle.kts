@@ -65,6 +65,11 @@ android {
 
     testBuildType = "isolated"
 
+    @Suppress("UnstableApiUsage")
+    testCoverage {
+        jacocoVersion = "0.8.12"
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -111,6 +116,17 @@ android {
             )
         }
     }
+}
+
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+configurations.matching { it.name.startsWith("jacoco") }.configureEach {
+    resolutionStrategy.force("org.jacoco:org.jacoco.agent:0.8.12")
+    resolutionStrategy.force("org.jacoco:org.jacoco.ant:0.8.12")
+    resolutionStrategy.force("org.jacoco:org.jacoco.core:0.8.12")
+    resolutionStrategy.force("org.jacoco:org.jacoco.report:0.8.12")
 }
 
 detekt {
