@@ -9,6 +9,7 @@
     <!-- Settings screen -->
     <string name="back">戻る</string>
     <string name="grid_columns">グリッド列数</string>
+    <string name="grid_columns_landscape">グリッド列数（横向き）</string>
     <plurals name="n_columns">
         <item quantity="other">%d列</item>
     </plurals>

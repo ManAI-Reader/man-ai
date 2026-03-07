@@ -9,6 +9,7 @@
     <!-- Settings screen -->
     <string name="back">Retour</string>
     <string name="grid_columns">Colonnes de la grille</string>
+    <string name="grid_columns_landscape">Colonnes de la grille (Paysage)</string>
     <plurals name="n_columns">
         <item quantity="one">%d colonne</item>
         <item quantity="other">%d colonnes</item>

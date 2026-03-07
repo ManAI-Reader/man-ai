@@ -212,4 +212,40 @@ class UserPreferencesRepositoryImplTest {
 
         assertEquals(false, repository.tapToNavigate.first())
     }
+
+    @Test
+    fun `gridColumnsLandscape emits default value 5`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        val result = repository.gridColumnsLandscape.first()
+
+        assertEquals(5, result)
+    }
+
+    @Test
+    fun `setGridColumnsLandscape persists value`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        repository.setGridColumnsLandscape(6)
+
+        assertEquals(6, repository.gridColumnsLandscape.first())
+    }
+
+    @Test
+    fun `setGridColumnsLandscape clamps value below minimum to 4`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        repository.setGridColumnsLandscape(2)
+
+        assertEquals(4, repository.gridColumnsLandscape.first())
+    }
+
+    @Test
+    fun `setGridColumnsLandscape clamps value above maximum to 6`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        repository.setGridColumnsLandscape(10)
+
+        assertEquals(6, repository.gridColumnsLandscape.first())
+    }
 }

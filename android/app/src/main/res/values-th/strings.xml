@@ -9,6 +9,7 @@
     <!-- Settings screen -->
     <string name="back">ย้อนกลับ</string>
     <string name="grid_columns">คอลัมน์กริด</string>
+    <string name="grid_columns_landscape">คอลัมน์กริด (แนวนอน)</string>
     <plurals name="n_columns">
         <item quantity="other">%d คอลัมน์</item>
     </plurals>

@@ -9,6 +9,7 @@
     <!-- Settings screen -->
     <string name="back">Atrás</string>
     <string name="grid_columns">Columnas de cuadrícula</string>
+    <string name="grid_columns_landscape">Columnas de cuadrícula (Horizontal)</string>
     <plurals name="n_columns">
         <item quantity="one">%d columna</item>
         <item quantity="other">%d columnas</item>

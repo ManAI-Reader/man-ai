@@ -9,6 +9,7 @@
     <!-- Settings screen -->
     <string name="back">Назад</string>
     <string name="grid_columns">Столбцы сетки</string>
+    <string name="grid_columns_landscape">Столбцы сетки (Альбомная)</string>
     <plurals name="n_columns">
         <item quantity="one">%d столбец</item>
         <item quantity="few">%d столбца</item>

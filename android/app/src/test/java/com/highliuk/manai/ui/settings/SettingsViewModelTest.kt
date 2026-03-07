@@ -30,11 +30,13 @@ class SettingsViewModelTest {
     private val themeModeFlow = MutableStateFlow(ThemeMode.SYSTEM)
     private val appLanguageFlow = MutableStateFlow(AppLanguage.SYSTEM)
     private val tapToNavigateFlow = MutableStateFlow(false)
+    private val gridColumnsLandscapeFlow = MutableStateFlow(5)
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         every { userPreferencesRepository.gridColumns } returns gridColumnsFlow
+        every { userPreferencesRepository.gridColumnsLandscape } returns gridColumnsLandscapeFlow
         every { userPreferencesRepository.readingMode } returns readingModeFlow
         every { userPreferencesRepository.themeMode } returns themeModeFlow
         every { userPreferencesRepository.appLanguage } returns appLanguageFlow
@@ -151,5 +153,26 @@ class SettingsViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         coVerify { userPreferencesRepository.setTapToNavigate(true) }
+    }
+
+    @Test
+    fun `gridColumnsLandscape emits current preference value`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.gridColumnsLandscape.test {
+            assertEquals(5, awaitItem())
+            gridColumnsLandscapeFlow.value = 6
+            assertEquals(6, awaitItem())
+        }
+    }
+
+    @Test
+    fun `setGridColumnsLandscape updates preference`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.setGridColumnsLandscape(4)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify { userPreferencesRepository.setGridColumnsLandscape(4) }
     }
 }

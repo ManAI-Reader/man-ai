@@ -37,6 +37,9 @@ class HomeViewModel @Inject constructor(
     val gridColumns: StateFlow<Int> = userPreferencesRepository.gridColumns
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 2)
 
+    val gridColumnsLandscape: StateFlow<Int> = userPreferencesRepository.gridColumnsLandscape
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 5)
+
     private val _selectedMangaIds = MutableStateFlow<Set<Long>>(emptySet())
     val selectedMangaIds: StateFlow<Set<Long>> = _selectedMangaIds.asStateFlow()
     val isSelectionMode: StateFlow<Boolean> = _selectedMangaIds

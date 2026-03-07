@@ -1,6 +1,7 @@
 package com.highliuk.manai.ui.navigation
 
 import android.app.Activity
+import android.content.res.Configuration
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -24,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.appcompat.app.AppCompatDelegate
@@ -115,13 +117,16 @@ fun ManAiNavHost(
                         val viewModel: HomeViewModel = hiltViewModel()
                         val mangaList by viewModel.mangaList.collectAsState()
                         val gridColumns by viewModel.gridColumns.collectAsState()
+                        val gridColumnsLandscape by viewModel.gridColumnsLandscape.collectAsState()
+                        val configuration = LocalConfiguration.current
+                        val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
                         val selectedMangaIds by viewModel.selectedMangaIds.collectAsState()
                         val isSelectionMode by viewModel.isSelectionMode.collectAsState()
                         val showDeleteDialog by viewModel.showDeleteDialog.collectAsState()
 
                         HomeScreen(
                             mangaList = mangaList,
-                            gridColumns = gridColumns,
+                            gridColumns = if (isLandscape) gridColumnsLandscape else gridColumns,
                             selectedMangaIds = selectedMangaIds,
                             isSelectionMode = isSelectionMode,
                             onImportClick = onImportClick,
@@ -215,6 +220,7 @@ fun ManAiNavHost(
                 ) {
                     val viewModel: SettingsViewModel = hiltViewModel()
                     val gridColumns by viewModel.gridColumns.collectAsState()
+                    val gridColumnsLandscape by viewModel.gridColumnsLandscape.collectAsState()
                     val readingMode by viewModel.readingMode.collectAsState()
                     val themeMode by viewModel.themeMode.collectAsState()
                     val appLanguage by viewModel.appLanguage.collectAsState()
@@ -223,6 +229,8 @@ fun ManAiNavHost(
                     SettingsScreen(
                         gridColumns = gridColumns,
                         onGridColumnsChange = { viewModel.setGridColumns(it) },
+                        gridColumnsLandscape = gridColumnsLandscape,
+                        onGridColumnsLandscapeChange = { viewModel.setGridColumnsLandscape(it) },
                         readingMode = readingMode,
                         onReadingModeChange = { viewModel.setReadingMode(it) },
                         themeMode = themeMode,

@@ -9,6 +9,7 @@
     <!-- Settings screen -->
     <string name="back">Kembali</string>
     <string name="grid_columns">Kolom grid</string>
+    <string name="grid_columns_landscape">Kolom grid (Lanskap)</string>
     <plurals name="n_columns">
         <item quantity="other">%d kolom</item>
     </plurals>

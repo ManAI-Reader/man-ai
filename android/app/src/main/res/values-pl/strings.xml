@@ -9,6 +9,7 @@
     <!-- Settings screen -->
     <string name="back">Wstecz</string>
     <string name="grid_columns">Kolumny siatki</string>
+    <string name="grid_columns_landscape">Kolumny siatki (Poziomo)</string>
     <plurals name="n_columns">
         <item quantity="one">%d kolumna</item>
         <item quantity="few">%d kolumny</item>

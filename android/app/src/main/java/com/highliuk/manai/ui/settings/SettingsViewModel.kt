@@ -27,6 +27,15 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    val gridColumnsLandscape: StateFlow<Int> = userPreferencesRepository.gridColumnsLandscape
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 5)
+
+    fun setGridColumnsLandscape(columns: Int) {
+        viewModelScope.launch {
+            userPreferencesRepository.setGridColumnsLandscape(columns)
+        }
+    }
+
     val readingMode: StateFlow<ReadingMode> = userPreferencesRepository.readingMode
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ReadingMode.LTR)
 

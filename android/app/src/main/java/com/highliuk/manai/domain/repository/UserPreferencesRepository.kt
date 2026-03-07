@@ -9,6 +9,9 @@ interface UserPreferencesRepository {
     val gridColumns: Flow<Int>
     suspend fun setGridColumns(columns: Int)
 
+    val gridColumnsLandscape: Flow<Int>
+    suspend fun setGridColumnsLandscape(columns: Int)
+
     val readingMode: Flow<ReadingMode>
     suspend fun setReadingMode(mode: ReadingMode)
 

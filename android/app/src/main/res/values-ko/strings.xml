@@ -9,6 +9,7 @@
     <!-- Settings screen -->
     <string name="back">뒤로</string>
     <string name="grid_columns">그리드 열 수</string>
+    <string name="grid_columns_landscape">그리드 열 수 (가로)</string>
     <plurals name="n_columns">
         <item quantity="other">%d열</item>
     </plurals>

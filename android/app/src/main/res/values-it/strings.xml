@@ -9,6 +9,7 @@
     <!-- Settings screen -->
     <string name="back">Indietro</string>
     <string name="grid_columns">Colonne della griglia</string>
+    <string name="grid_columns_landscape">Colonne della griglia (Orizzontale)</string>
     <plurals name="n_columns">
         <item quantity="one">%d colonna</item>
         <item quantity="other">%d colonne</item>

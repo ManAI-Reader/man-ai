@@ -26,6 +26,8 @@ class SettingsScreenTest {
             SettingsScreen(
                 gridColumns = 2,
                 onGridColumnsChange = {},
+                gridColumnsLandscape = 5,
+                onGridColumnsLandscapeChange = {},
                 readingMode = ReadingMode.LTR,
                 onReadingModeChange = {},
                 themeMode = ThemeMode.SYSTEM,
@@ -51,6 +53,8 @@ class SettingsScreenTest {
             SettingsScreen(
                 gridColumns = 2,
                 onGridColumnsChange = { selectedColumns = it },
+                gridColumnsLandscape = 5,
+                onGridColumnsLandscapeChange = {},
                 readingMode = ReadingMode.LTR,
                 onReadingModeChange = {},
                 themeMode = ThemeMode.SYSTEM,
@@ -76,6 +80,8 @@ class SettingsScreenTest {
             SettingsScreen(
                 gridColumns = 2,
                 onGridColumnsChange = {},
+                gridColumnsLandscape = 5,
+                onGridColumnsLandscapeChange = {},
                 readingMode = ReadingMode.LTR,
                 onReadingModeChange = {},
                 themeMode = ThemeMode.SYSTEM,
@@ -100,6 +106,8 @@ class SettingsScreenTest {
             SettingsScreen(
                 gridColumns = 2,
                 onGridColumnsChange = {},
+                gridColumnsLandscape = 5,
+                onGridColumnsLandscapeChange = {},
                 readingMode = ReadingMode.LTR,
                 onReadingModeChange = {},
                 themeMode = ThemeMode.SYSTEM,
@@ -112,9 +120,9 @@ class SettingsScreenTest {
             )
         }
 
-        composeTestRule.onNodeWithText("Reading Mode").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Left to Right").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Right to Left").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Reading Mode").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Left to Right").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Right to Left").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -125,6 +133,8 @@ class SettingsScreenTest {
             SettingsScreen(
                 gridColumns = 2,
                 onGridColumnsChange = {},
+                gridColumnsLandscape = 5,
+                onGridColumnsLandscapeChange = {},
                 readingMode = ReadingMode.LTR,
                 onReadingModeChange = { selectedMode = it },
                 themeMode = ThemeMode.SYSTEM,
@@ -137,7 +147,7 @@ class SettingsScreenTest {
             )
         }
 
-        composeTestRule.onNodeWithText("Right to Left").performClick()
+        composeTestRule.onNodeWithText("Right to Left").performScrollTo().performClick()
 
         assertEquals(ReadingMode.RTL, selectedMode)
     }
@@ -148,6 +158,8 @@ class SettingsScreenTest {
             SettingsScreen(
                 gridColumns = 2,
                 onGridColumnsChange = {},
+                gridColumnsLandscape = 5,
+                onGridColumnsLandscapeChange = {},
                 readingMode = ReadingMode.LTR,
                 onReadingModeChange = {},
                 themeMode = ThemeMode.SYSTEM,
@@ -174,6 +186,8 @@ class SettingsScreenTest {
             SettingsScreen(
                 gridColumns = 2,
                 onGridColumnsChange = {},
+                gridColumnsLandscape = 5,
+                onGridColumnsLandscapeChange = {},
                 readingMode = ReadingMode.LTR,
                 onReadingModeChange = {},
                 themeMode = ThemeMode.SYSTEM,
@@ -197,6 +211,8 @@ class SettingsScreenTest {
             SettingsScreen(
                 gridColumns = 2,
                 onGridColumnsChange = {},
+                gridColumnsLandscape = 5,
+                onGridColumnsLandscapeChange = {},
                 readingMode = ReadingMode.LTR,
                 onReadingModeChange = {},
                 themeMode = ThemeMode.SYSTEM,
@@ -221,6 +237,8 @@ class SettingsScreenTest {
             SettingsScreen(
                 gridColumns = 2,
                 onGridColumnsChange = {},
+                gridColumnsLandscape = 5,
+                onGridColumnsLandscapeChange = {},
                 readingMode = ReadingMode.LTR,
                 onReadingModeChange = {},
                 themeMode = ThemeMode.SYSTEM,
@@ -244,6 +262,8 @@ class SettingsScreenTest {
             SettingsScreen(
                 gridColumns = 2,
                 onGridColumnsChange = {},
+                gridColumnsLandscape = 5,
+                onGridColumnsLandscapeChange = {},
                 readingMode = ReadingMode.LTR,
                 onReadingModeChange = { selectedMode = it },
                 themeMode = ThemeMode.SYSTEM,
@@ -269,6 +289,8 @@ class SettingsScreenTest {
             SettingsScreen(
                 gridColumns = 2,
                 onGridColumnsChange = {},
+                gridColumnsLandscape = 5,
+                onGridColumnsLandscapeChange = {},
                 readingMode = ReadingMode.LTR,
                 onReadingModeChange = {},
                 themeMode = ThemeMode.SYSTEM,
@@ -292,6 +314,8 @@ class SettingsScreenTest {
             SettingsScreen(
                 gridColumns = 2,
                 onGridColumnsChange = {},
+                gridColumnsLandscape = 5,
+                onGridColumnsLandscapeChange = {},
                 readingMode = ReadingMode.LTR,
                 onReadingModeChange = {},
                 themeMode = ThemeMode.SYSTEM,
@@ -317,6 +341,8 @@ class SettingsScreenTest {
             SettingsScreen(
                 gridColumns = 2,
                 onGridColumnsChange = {},
+                gridColumnsLandscape = 5,
+                onGridColumnsLandscapeChange = {},
                 readingMode = ReadingMode.LTR,
                 onReadingModeChange = {},
                 themeMode = ThemeMode.SYSTEM,
@@ -332,5 +358,58 @@ class SettingsScreenTest {
         composeTestRule.onNodeWithText("Tap to navigate").performScrollTo().performClick()
 
         assert(toggled)
+    }
+
+    @Test
+    fun displaysLandscapeGridColumnsSection() {
+        composeTestRule.setContent {
+            SettingsScreen(
+                gridColumns = 2,
+                onGridColumnsChange = {},
+                gridColumnsLandscape = 5,
+                onGridColumnsLandscapeChange = {},
+                readingMode = ReadingMode.LTR,
+                onReadingModeChange = {},
+                themeMode = ThemeMode.SYSTEM,
+                onThemeModeChange = {},
+                appLanguage = AppLanguage.SYSTEM,
+                onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
+                onBack = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("Grid Columns (Landscape)").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("4 columns").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("5 columns").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("6 columns").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun selectingLandscapeColumnCallsCallback() {
+        var selectedColumns = 0
+
+        composeTestRule.setContent {
+            SettingsScreen(
+                gridColumns = 2,
+                onGridColumnsChange = {},
+                gridColumnsLandscape = 5,
+                onGridColumnsLandscapeChange = { selectedColumns = it },
+                readingMode = ReadingMode.LTR,
+                onReadingModeChange = {},
+                themeMode = ThemeMode.SYSTEM,
+                onThemeModeChange = {},
+                appLanguage = AppLanguage.SYSTEM,
+                onAppLanguageChange = {},
+                tapToNavigate = false,
+                onTapToNavigateChange = {},
+                onBack = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("4 columns").performScrollTo().performClick()
+
+        assertEquals(4, selectedColumns)
     }
 }

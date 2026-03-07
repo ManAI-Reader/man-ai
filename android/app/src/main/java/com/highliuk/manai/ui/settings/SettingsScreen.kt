@@ -57,6 +57,8 @@ internal fun AppLanguage.labelRes(): Int =
 fun SettingsScreen(
     gridColumns: Int,
     onGridColumnsChange: (Int) -> Unit,
+    gridColumnsLandscape: Int,
+    onGridColumnsLandscapeChange: (Int) -> Unit,
     readingMode: ReadingMode,
     onReadingModeChange: (ReadingMode) -> Unit,
     themeMode: ThemeMode,
@@ -105,6 +107,30 @@ fun SettingsScreen(
                     RadioButton(
                         selected = gridColumns == columns,
                         onClick = { onGridColumnsChange(columns) }
+                    )
+                    Text(
+                        text = pluralStringResource(R.plurals.n_columns, columns, columns),
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+            }
+
+            Text(
+                text = stringResource(R.string.grid_columns_landscape),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
+            )
+            listOf(4, 5, 6).forEach { columns ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onGridColumnsLandscapeChange(columns) }
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = gridColumnsLandscape == columns,
+                        onClick = { onGridColumnsLandscapeChange(columns) }
                     )
                     Text(
                         text = pluralStringResource(R.plurals.n_columns, columns, columns),

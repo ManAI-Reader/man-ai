@@ -33,6 +33,11 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         val APP_LANGUAGE = stringPreferencesKey("app_language")
         val DEFAULT_APP_LANGUAGE = AppLanguage.SYSTEM
 
+        val GRID_COLUMNS_LANDSCAPE = intPreferencesKey("grid_columns_landscape")
+        const val DEFAULT_GRID_COLUMNS_LANDSCAPE = 5
+        const val MIN_GRID_COLUMNS_LANDSCAPE = 4
+        const val MAX_GRID_COLUMNS_LANDSCAPE = 6
+
         val TAP_TO_NAVIGATE = booleanPreferencesKey("tap_to_navigate")
         const val DEFAULT_TAP_TO_NAVIGATE = false
     }
@@ -45,6 +50,17 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         val clamped = columns.coerceIn(MIN_GRID_COLUMNS, MAX_GRID_COLUMNS)
         dataStore.edit { preferences ->
             preferences[GRID_COLUMNS] = clamped
+        }
+    }
+
+    override val gridColumnsLandscape: Flow<Int> = dataStore.data.map { preferences ->
+        preferences[GRID_COLUMNS_LANDSCAPE] ?: DEFAULT_GRID_COLUMNS_LANDSCAPE
+    }
+
+    override suspend fun setGridColumnsLandscape(columns: Int) {
+        val clamped = columns.coerceIn(MIN_GRID_COLUMNS_LANDSCAPE, MAX_GRID_COLUMNS_LANDSCAPE)
+        dataStore.edit { preferences ->
+            preferences[GRID_COLUMNS_LANDSCAPE] = clamped
         }
     }
 

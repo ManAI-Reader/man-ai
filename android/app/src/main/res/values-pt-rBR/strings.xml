@@ -9,6 +9,7 @@
     <!-- Settings screen -->
     <string name="back">Voltar</string>
     <string name="grid_columns">Colunas da grade</string>
+    <string name="grid_columns_landscape">Colunas da grade (Paisagem)</string>
     <plurals name="n_columns">
         <item quantity="one">%d coluna</item>
         <item quantity="other">%d colunas</item>

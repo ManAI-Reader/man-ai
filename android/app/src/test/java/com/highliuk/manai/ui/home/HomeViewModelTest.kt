@@ -34,12 +34,14 @@ class HomeViewModelTest {
     private val pdfFileCopier = mockk<PdfFileManager>(relaxed = true)
     private val mangaFlow = MutableStateFlow<List<Manga>>(emptyList())
     private val gridColumnsFlow = MutableStateFlow(2)
+    private val gridColumnsLandscapeFlow = MutableStateFlow(5)
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         coEvery { repository.getAllManga() } returns mangaFlow
         every { userPreferencesRepository.gridColumns } returns gridColumnsFlow
+        every { userPreferencesRepository.gridColumnsLandscape } returns gridColumnsLandscapeFlow
         coEvery { fileHashProvider.computeHash(uri = any()) } returns "defaulthash"
     }
 
@@ -328,6 +330,17 @@ class HomeViewModelTest {
         assertEquals(true, viewModel.showDeleteDialog.value)
         viewModel.dismissDelete()
         assertEquals(false, viewModel.showDeleteDialog.value)
+    }
+
+    @Test
+    fun `gridColumnsLandscape emits value from preferences repository`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.gridColumnsLandscape.test {
+            assertEquals(5, awaitItem())
+            gridColumnsLandscapeFlow.value = 4
+            assertEquals(4, awaitItem())
+        }
     }
 
     @Test

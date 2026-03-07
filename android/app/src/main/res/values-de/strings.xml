@@ -9,6 +9,7 @@
     <!-- Settings screen -->
     <string name="back">Zurück</string>
     <string name="grid_columns">Rasterspalten</string>
+    <string name="grid_columns_landscape">Rasterspalten (Querformat)</string>
     <plurals name="n_columns">
         <item quantity="one">%d Spalte</item>
         <item quantity="other">%d Spalten</item>
