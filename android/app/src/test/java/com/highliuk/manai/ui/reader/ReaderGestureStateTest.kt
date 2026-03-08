@@ -1,5 +1,6 @@
 package com.highliuk.manai.ui.reader
 
+import androidx.compose.runtime.snapshots.Snapshot
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -355,4 +356,37 @@ class ReaderGestureStateTest {
         assertEquals(540f, state.offsetY, 1f)
     }
 
+    @Test
+    fun `contentWidth is reactive Compose state so orientation changes trigger recomposition`() {
+        val state = ReaderGestureState()
+        state.setContentSize(1000f, 1500f)
+        var readTracked = false
+
+        val snapshot = Snapshot.takeMutableSnapshot(
+            readObserver = { readTracked = true }
+        )
+        snapshot.enter {
+            state.contentWidth
+        }
+        snapshot.dispose()
+
+        assertTrue("contentWidth should be tracked by snapshot system", readTracked)
+    }
+
+    @Test
+    fun `contentHeight is reactive Compose state so content scale updates on bitmap load`() {
+        val state = ReaderGestureState()
+        state.setContentSize(1000f, 1500f)
+        var readTracked = false
+
+        val snapshot = Snapshot.takeMutableSnapshot(
+            readObserver = { readTracked = true }
+        )
+        snapshot.enter {
+            state.contentHeight
+        }
+        snapshot.dispose()
+
+        assertTrue("contentHeight should be tracked by snapshot system", readTracked)
+    }
 }
