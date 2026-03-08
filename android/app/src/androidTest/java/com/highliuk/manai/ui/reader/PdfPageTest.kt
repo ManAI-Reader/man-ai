@@ -1,6 +1,7 @@
 package com.highliuk.manai.ui.reader
 
 import android.net.Uri
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -53,6 +54,22 @@ class PdfPageTest {
         assertTrue("onBitmapLoaded should be called", latch.await(5, TimeUnit.SECONDS))
         assertTrue("Bitmap width should be > 0", loadedWidth > 0)
         assertTrue("Bitmap height should be > 0", loadedHeight > 0)
+    }
+
+    @Test
+    fun rendersPageImage_whenContentScaleIsFillHeight() {
+        val latch = CountDownLatch(1)
+
+        composeTestRule.setContent {
+            PdfPage(
+                uri = testPdfUri,
+                pageIndex = 0,
+                contentScale = ContentScale.FillHeight,
+                onBitmapLoaded = { _, _ -> latch.countDown() }
+            )
+        }
+
+        assertTrue("onBitmapLoaded should be called", latch.await(5, TimeUnit.SECONDS))
     }
 
     @Test

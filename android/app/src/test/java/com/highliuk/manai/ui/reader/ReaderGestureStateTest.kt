@@ -55,10 +55,10 @@ class ReaderGestureStateTest {
     }
 
     @Test
-    fun `onZoom clamps scale at max 3f`() {
+    fun `onZoom clamps scale at max 5f`() {
         val state = ReaderGestureState()
         state.onZoom(10f)
-        assertEquals(3f, state.scale, 0.001f)
+        assertEquals(5f, state.scale, 0.001f)
     }
 
     @Test
@@ -315,5 +315,51 @@ class ReaderGestureStateTest {
         assertEquals(2f, state.scale, 0.001f)
         assertEquals(100f, state.offsetX, 0.001f)
         assertEquals(200f, state.offsetY, 0.001f)
+    }
+
+    @Test
+    fun `onPan clamps X offset to image edge when image is narrower than container`() {
+        val state = ReaderGestureState()
+        // Portrait image in landscape container (fit-to-height)
+        // Image 1000x1500, container 1920x1080
+        // Rendered: height fills 1080, width = 1080 * 1000/1500 = 720
+        // At scale 3: rendered width = 2160, maxOffsetX = max(0, 2160/2 - 1920/2) = 120
+        state.setContentSize(1000f, 1500f)
+        state.onZoom(3f)
+        state.onPan(9999f, 0f, 1920f, 1080f)
+        assertEquals(120f, state.offsetX, 1f)
+    }
+
+    @Test
+    fun `onPan locks X offset to 0 when fit-to-height image is narrower than container at current zoom`() {
+        val state = ReaderGestureState()
+        // Image 1000x1500, container 1920x1080
+        // Rendered at scale 2: width = 2*720 = 1440 < 1920 -> maxOffsetX = 0
+        state.setContentSize(1000f, 1500f)
+        state.onZoom(2f)
+        state.onPan(9999f, 0f, 1920f, 1080f)
+        assertEquals(0f, state.offsetX, 1f)
+    }
+
+    @Test
+    fun `onPan clamps Y offset when fit-to-height image fills container height`() {
+        val state = ReaderGestureState()
+        // Image 1000x1500, container 1920x1080
+        // Fit-to-height: rendered height = 1080
+        // At scale 2: maxOffsetY = max(0, 2*1080/2 - 1080/2) = 540
+        state.setContentSize(1000f, 1500f)
+        state.onZoom(2f)
+        state.onPan(0f, 9999f, 1920f, 1080f)
+        assertEquals(540f, state.offsetY, 1f)
+    }
+
+    @Test
+    fun `onDoubleTap clamps X offset for fit-to-height image`() {
+        val state = ReaderGestureState()
+        // Image 1000x1500 in container 1920x1080 -> fit-to-height
+        // Rendered width at 2x = 2 * 720 = 1440 < 1920 -> maxOffsetX = 0
+        state.setContentSize(1000f, 1500f)
+        val target = state.onDoubleTap(0f, 540f, 1920f, 1080f)
+        assertEquals(0f, target.offsetX, 1f)
     }
 }

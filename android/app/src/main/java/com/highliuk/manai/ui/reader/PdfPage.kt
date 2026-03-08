@@ -29,6 +29,7 @@ fun PdfPage(
     uri: String,
     pageIndex: Int,
     modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.FillWidth,
     onBitmapLoaded: ((width: Int, height: Int) -> Unit)? = null
 ) {
     val context = LocalContext.current
@@ -62,7 +63,7 @@ fun PdfPage(
             bitmap = bitmap.value!!.asImageBitmap(),
             contentDescription = stringResource(R.string.page_content, pageIndex + 1),
             modifier = modifier,
-            contentScale = ContentScale.FillWidth
+            contentScale = contentScale
         )
     } else {
         Box(

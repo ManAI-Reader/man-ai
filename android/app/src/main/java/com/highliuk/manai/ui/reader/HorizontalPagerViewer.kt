@@ -7,11 +7,13 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
@@ -61,87 +63,102 @@ fun HorizontalPagerViewer(
             .fillMaxSize()
             .testTag("reader_pager")
     ) { pageIndex ->
-        PdfPage(
-            uri = uri,
-            pageIndex = pageIndex,
-            onBitmapLoaded = { w, h ->
-                gestureState.setContentSize(w.toFloat(), h.toFloat())
-            },
-            modifier = Modifier
-                .fillMaxSize()
-                .testTag("reader_zoom_container")
-                .pointerInput(tapToNavigate) {
-                    detectTapGestures(
-                        onTap = { offset ->
-                            TapHandler(
-                                tapToNavigate = tapToNavigate,
-                                isZoomed = gestureState.isZoomed,
-                                isRtl = isRtl,
-                                currentPage = intendedPage,
-                                pageCount = pageCount,
-                            ).handle(
-                                offset = offset,
-                                containerWidth = size.width.toFloat(),
-                                toggleBars = gestureState::toggleBars,
-                                navigateToPage = { target ->
-                                    onIntendedPageChange(target)
-                                    onNavigateByTap(target)
-                                }
-                            )
-                        },
-                        onDoubleTap = { offset ->
-                            val target = gestureState.onDoubleTap(
-                                tapX = offset.x,
-                                tapY = offset.y,
-                                containerWidth = size.width.toFloat(),
-                                containerHeight = size.height.toFloat()
-                            )
-                            coroutineScope.launch {
-                                val startScale = gestureState.scale
-                                val startOffsetX = gestureState.offsetX
-                                val startOffsetY = gestureState.offsetY
-                                val anim = Animatable(0f)
-                                anim.animateTo(1f, tween(DOUBLE_TAP_ANIM_DURATION)) {
-                                    val progress = value
-                                    gestureState.applyZoomTarget(
-                                        ZoomTarget(
-                                            scale = startScale + (target.scale - startScale) * progress,
-                                            offsetX = startOffsetX + (target.offsetX - startOffsetX) * progress,
-                                            offsetY = startOffsetY + (target.offsetY - startOffsetY) * progress
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    )
-                }
-                .pointerInput(Unit) {
-                    awaitEachGesture {
-                        awaitFirstDown(requireUnconsumed = false)
-                        do {
-                            val event = awaitPointerEvent()
-                            val zoomChange = event.calculateZoom()
-                            val panChange = event.calculatePan()
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            val containerW = constraints.maxWidth.toFloat()
+            val containerH = constraints.maxHeight.toFloat()
+            val dynamicContentScale = chooseContentScale(
+                imageWidth = gestureState.contentWidth,
+                imageHeight = gestureState.contentHeight,
+                containerWidth = containerW,
+                containerHeight = containerH
+            )
 
-                            if (zoomChange != 1f) {
-                                gestureState.onZoom(zoomChange)
-                                event.changes.forEach { if (it.positionChanged()) it.consume() }
-                            }
-
-                            if (gestureState.isZoomed && panChange != Offset.Zero) {
-                                gestureState.onPan(
-                                    panChange.x, panChange.y,
-                                    size.width.toFloat(), size.height.toFloat()
+            PdfPage(
+                uri = uri,
+                pageIndex = pageIndex,
+                contentScale = dynamicContentScale,
+                onBitmapLoaded = { w, h ->
+                    gestureState.setContentSize(w.toFloat(), h.toFloat())
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag("reader_zoom_container")
+                    .pointerInput(tapToNavigate) {
+                        detectTapGestures(
+                            onTap = { offset ->
+                                TapHandler(
+                                    tapToNavigate = tapToNavigate,
+                                    isZoomed = gestureState.isZoomed,
+                                    isRtl = isRtl,
+                                    currentPage = intendedPage,
+                                    pageCount = pageCount,
+                                ).handle(
+                                    offset = offset,
+                                    containerWidth = size.width.toFloat(),
+                                    toggleBars = gestureState::toggleBars,
+                                    navigateToPage = { target ->
+                                        onIntendedPageChange(target)
+                                        onNavigateByTap(target)
+                                    }
                                 )
-                                event.changes.forEach { if (it.positionChanged()) it.consume() }
+                            },
+                            onDoubleTap = { offset ->
+                                val target = gestureState.onDoubleTap(
+                                    tapX = offset.x,
+                                    tapY = offset.y,
+                                    containerWidth = size.width.toFloat(),
+                                    containerHeight = size.height.toFloat()
+                                )
+                                coroutineScope.launch {
+                                    val startScale = gestureState.scale
+                                    val startOffsetX = gestureState.offsetX
+                                    val startOffsetY = gestureState.offsetY
+                                    val anim = Animatable(0f)
+                                    anim.animateTo(1f, tween(DOUBLE_TAP_ANIM_DURATION)) {
+                                        val progress = value
+                                        gestureState.applyZoomTarget(
+                                            ZoomTarget(
+                                                scale = startScale + (target.scale - startScale) * progress,
+                                                offsetX = startOffsetX + (target.offsetX - startOffsetX) * progress,
+                                                offsetY = startOffsetY + (target.offsetY - startOffsetY) * progress
+                                            )
+                                        )
+                                    }
+                                }
                             }
-                        } while (event.changes.any { it.pressed })
+                        )
                     }
-                }
-                .pageZoom(
-                    isCurrentPage = pageIndex == pagerState.currentPage,
-                    gestureState = gestureState,
-                )
-        )
+                    .pointerInput(Unit) {
+                        awaitEachGesture {
+                            awaitFirstDown(requireUnconsumed = false)
+                            do {
+                                val event = awaitPointerEvent()
+                                val zoomChange = event.calculateZoom()
+                                val panChange = event.calculatePan()
+
+                                if (zoomChange != 1f) {
+                                    gestureState.onZoom(zoomChange)
+                                    event.changes.forEach { if (it.positionChanged()) it.consume() }
+                                }
+
+                                if (gestureState.isZoomed && panChange != Offset.Zero) {
+                                    gestureState.onPan(
+                                        panChange.x, panChange.y,
+                                        size.width.toFloat(), size.height.toFloat()
+                                    )
+                                    event.changes.forEach { if (it.positionChanged()) it.consume() }
+                                }
+                            } while (event.changes.any { it.pressed })
+                        }
+                    }
+                    .pageZoom(
+                        isCurrentPage = pageIndex == pagerState.currentPage,
+                        gestureState = gestureState,
+                    )
+            )
+        }
     }
 }

@@ -18,8 +18,10 @@ class ReaderGestureState {
     var offsetY by mutableFloatStateOf(0f)
         private set
 
-    private var contentWidth = 0f
-    private var contentHeight = 0f
+    internal var contentWidth = 0f
+        private set
+    internal var contentHeight = 0f
+        private set
 
     val isZoomed: Boolean
         get() = scale > 1f
@@ -47,17 +49,37 @@ class ReaderGestureState {
         offsetY = 0f
     }
 
+    internal fun computeMaxOffsets(
+        scale: Float,
+        containerWidth: Float,
+        containerHeight: Float,
+    ): Pair<Float, Float> {
+        val hasValidDimensions = contentWidth > 0f && contentHeight > 0f &&
+            containerHeight > 0f && containerWidth > 0f
+        if (hasValidDimensions) {
+            val isPortraitContent = contentWidth <= contentHeight
+            val isPortraitContainer = containerWidth <= containerHeight
+            return if (isPortraitContent && isPortraitContainer) {
+                val renderedHeight = containerWidth * contentHeight / contentWidth
+                val maxX = containerWidth * (scale - 1f) / 2f
+                val maxY = (scale * renderedHeight / 2f - containerHeight / 2f).coerceAtLeast(0f)
+                maxX to maxY
+            } else {
+                val renderedWidth = containerHeight * contentWidth / contentHeight
+                val maxX = (scale * renderedWidth / 2f - containerWidth / 2f).coerceAtLeast(0f)
+                val maxY = containerHeight * (scale - 1f) / 2f
+                maxX to maxY
+            }
+        }
+        return Pair(
+            containerWidth * (scale - 1f) / 2f,
+            containerHeight * (scale - 1f) / 2f
+        )
+    }
+
     fun onPan(panX: Float, panY: Float, containerWidth: Float, containerHeight: Float) {
         if (!isZoomed) return
-        val maxOffsetX = containerWidth * (scale - 1f) / 2f
-
-        val maxOffsetY = if (contentWidth > 0f && contentHeight > 0f) {
-            val renderedImageHeight = containerWidth * contentHeight / contentWidth
-            (scale * renderedImageHeight / 2f - containerHeight / 2f).coerceAtLeast(0f)
-        } else {
-            containerHeight * (scale - 1f) / 2f
-        }
-
+        val (maxOffsetX, maxOffsetY) = computeMaxOffsets(scale, containerWidth, containerHeight)
         offsetX = (offsetX + panX).coerceIn(-maxOffsetX, maxOffsetX)
         offsetY = (offsetY + panY).coerceIn(-maxOffsetY, maxOffsetY)
     }
@@ -97,8 +119,7 @@ class ReaderGestureState {
     fun onDoubleTap(tapX: Float, tapY: Float, containerWidth: Float, containerHeight: Float): ZoomTarget {
         return if (!isZoomed) {
             val targetScale = DOUBLE_TAP_SCALE
-            val maxOffsetX = containerWidth * (targetScale - 1f) / 2f
-            val maxOffsetY = containerHeight * (targetScale - 1f) / 2f
+            val (maxOffsetX, maxOffsetY) = computeMaxOffsets(targetScale, containerWidth, containerHeight)
             val centerX = containerWidth / 2f
             val centerY = containerHeight / 2f
             val targetOffsetX = (centerX - tapX).coerceIn(-maxOffsetX, maxOffsetX)
@@ -111,7 +132,7 @@ class ReaderGestureState {
 
     companion object {
         const val MIN_SCALE = 1f
-        const val MAX_SCALE = 3f
+        const val MAX_SCALE = 5f
         const val DOUBLE_TAP_SCALE = 2f
     }
 }
