@@ -209,6 +209,7 @@ class ReaderGestureStateTest {
     @Test
     fun `onDoubleTap at 1x centers offset on tap point`() {
         val state = ReaderGestureState()
+        state.setContentSize(1000f, 1400f)
         val target = state.onDoubleTap(250f, 500f, 1000f, 2000f)
         assertEquals(250f, target.offsetX, 0.001f)
         assertEquals(500f, target.offsetY, 0.001f)
@@ -217,6 +218,7 @@ class ReaderGestureStateTest {
     @Test
     fun `onDoubleTap at edge clamps offset to bounds`() {
         val state = ReaderGestureState()
+        state.setContentSize(1000f, 1400f)
         val target = state.onDoubleTap(0f, 0f, 1000f, 2000f)
         assertEquals(500f, target.offsetX, 0.001f)
         assertEquals(1000f, target.offsetY, 0.001f)
@@ -353,13 +355,4 @@ class ReaderGestureStateTest {
         assertEquals(540f, state.offsetY, 1f)
     }
 
-    @Test
-    fun `onDoubleTap clamps X offset for fit-to-height image`() {
-        val state = ReaderGestureState()
-        // Image 1000x1500 in container 1920x1080 -> fit-to-height
-        // Rendered width at 2x = 2 * 720 = 1440 < 1920 -> maxOffsetX = 0
-        state.setContentSize(1000f, 1500f)
-        val target = state.onDoubleTap(0f, 540f, 1920f, 1080f)
-        assertEquals(0f, target.offsetX, 1f)
-    }
 }

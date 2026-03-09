@@ -119,7 +119,8 @@ class ReaderGestureState {
     fun onDoubleTap(tapX: Float, tapY: Float, containerWidth: Float, containerHeight: Float): ZoomTarget {
         return if (!isZoomed) {
             val targetScale = DOUBLE_TAP_SCALE
-            val (maxOffsetX, maxOffsetY) = computeMaxOffsets(targetScale, containerWidth, containerHeight)
+            val maxOffsetX = containerWidth * (targetScale - 1f) / 2f
+            val maxOffsetY = containerHeight * (targetScale - 1f) / 2f
             val centerX = containerWidth / 2f
             val centerY = containerHeight / 2f
             val targetOffsetX = (centerX - tapX).coerceIn(-maxOffsetX, maxOffsetX)
