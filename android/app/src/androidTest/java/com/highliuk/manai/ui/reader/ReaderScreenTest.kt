@@ -309,6 +309,34 @@ class ReaderScreenTest {
     }
 
     @Test
+    fun tappingOnScreen_withRegions_invokesOnRegionTapped() {
+        var tappedRegion: PageRegion? = null
+        val regions = listOf(
+            PageRegion(0, 0.0f, 0.0f, 1.0f, 1.0f, 0.9f, "\u5168\u753b\u9762")
+        )
+
+        composeTestRule.setContent {
+            ReaderScreen(
+                manga = Manga(id = 1, uri = "content://test", title = "Test", pageCount = 1),
+                currentPage = 0,
+                regions = regions,
+                onPageChanged = {},
+                onRegionTapped = { tappedRegion = it },
+                onBack = {},
+                onSettingsClick = {},
+            )
+        }
+
+        composeTestRule.onNodeWithTag("reader_pager").performTouchInput {
+            click(position = Offset(x = width * 0.5f, y = height * 0.5f))
+        }
+        advancePastDoubleTapTimeout()
+        composeTestRule.waitForIdle()
+
+        assertEquals(regions[0], tappedRegion)
+    }
+
+    @Test
     fun tappingOnScreen_withRegionsParam_compilesAndRuns() {
         var tappedRegion: PageRegion? = null
         val regions = listOf(

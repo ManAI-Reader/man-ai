@@ -204,7 +204,7 @@ fun ManAiNavHost(
                                         insetsController.show(WindowInsetsCompat.Type.statusBars())
                                     }
                                 },
-                                debugPipelineStates = debugPipelineStates,
+                                debugPipelineStates = if (BuildConfig.DEBUG_ML) debugPipelineStates else emptyMap(),
                             )
                         }
                     }

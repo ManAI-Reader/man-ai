@@ -34,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.res.stringResource
-import com.highliuk.manai.BuildConfig
 import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.semantics.SemanticsPropertyReceiver
 import com.highliuk.manai.R
@@ -223,6 +222,9 @@ fun ReaderScreen(
                     }
                 },
                 isNavigatingByTap = isNavigatingByTap,
+                regions = regions,
+                onRegionTapped = onRegionTapped,
+                debugPipelineStates = debugPipelineStates,
             )
         }
 
