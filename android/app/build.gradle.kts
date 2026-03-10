@@ -106,6 +106,10 @@ android {
         }
     }
 
+    androidResources {
+        noCompress += "onnx"
+    }
+
     packaging {
         jniLibs { pickFirsts += setOf("**/*.so") }
         resources {
@@ -139,9 +143,13 @@ detekt {
 val jacocoExcludes = listOf(
     // Android generated
     "**/R.class", "**/R$*.class", "**/BuildConfig.*", "**/Manifest*.*",
-    // Hilt generated
-    "dagger/hilt/**", "hilt_aggregated_deps/**",
-    "**/*_HiltModules*.*", "**/*_Factory.*", "**/*_MembersInjector.*",
+    // Hilt / Dagger generated
+    "dagger/**", "hilt_aggregated_deps/**",
+    "**/*_HiltModules*.*", "**/*_HiltComponents*.*",
+    "**/*_ComponentTreeDeps.*",
+    "**/Dagger*.*",
+    "**/*_Factory.*", "**/*_Factory$*.*",
+    "**/*_MembersInjector.*",
     "**/*_GeneratedInjector.*", "**/*Hilt_*.*",
     // Room generated
     "**/*_Impl.*", "**/*_Impl$*.*",
@@ -162,7 +170,7 @@ tasks.register<JacocoReport>("jacocoMergedReport") {
         csv.required.set(false)
     }
 
-    val kotlinClasses = fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/isolated") {
+    val kotlinClasses = fileTree("${layout.buildDirectory.get()}/intermediates/classes/isolated/transformIsolatedClassesWithAsm/dirs") {
         exclude(jacocoExcludes)
     }
     val javaClasses = fileTree("${layout.buildDirectory.get()}/intermediates/javac/isolated/classes") {
@@ -191,7 +199,7 @@ tasks.register<JacocoCoverageVerification>("jacocoCoverageVerification") {
     dependsOn("jacocoMergedReport")
 
     val kotlinClasses = fileTree(
-        "${layout.buildDirectory.get()}/tmp/kotlin-classes/isolated"
+        "${layout.buildDirectory.get()}/intermediates/classes/isolated/transformIsolatedClassesWithAsm/dirs"
     ) { exclude(jacocoExcludes) }
     val javaClasses = fileTree(
         "${layout.buildDirectory.get()}/intermediates/javac/isolated/classes"
