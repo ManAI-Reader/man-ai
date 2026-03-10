@@ -118,13 +118,14 @@ class ReaderGestureState {
 
     fun onDoubleTap(tapX: Float, tapY: Float, containerWidth: Float, containerHeight: Float): ZoomTarget {
         return if (!isZoomed) {
-            val targetScale = DOUBLE_TAP_SCALE
+            val isLandscape = containerWidth > containerHeight
+            val targetScale = if (isLandscape) DOUBLE_TAP_SCALE_LANDSCAPE else DOUBLE_TAP_SCALE
             val maxOffsetX = containerWidth * (targetScale - 1f) / 2f
             val maxOffsetY = containerHeight * (targetScale - 1f) / 2f
             val centerX = containerWidth / 2f
             val centerY = containerHeight / 2f
-            val targetOffsetX = (centerX - tapX).coerceIn(-maxOffsetX, maxOffsetX)
-            val targetOffsetY = (centerY - tapY).coerceIn(-maxOffsetY, maxOffsetY)
+            val targetOffsetX = ((centerX - tapX) * (targetScale - 1f)).coerceIn(-maxOffsetX, maxOffsetX)
+            val targetOffsetY = ((centerY - tapY) * (targetScale - 1f)).coerceIn(-maxOffsetY, maxOffsetY)
             ZoomTarget(targetScale, targetOffsetX, targetOffsetY)
         } else {
             ZoomTarget(MIN_SCALE, 0f, 0f)
@@ -135,6 +136,7 @@ class ReaderGestureState {
         const val MIN_SCALE = 1f
         const val MAX_SCALE = 5f
         const val DOUBLE_TAP_SCALE = 2f
+        const val DOUBLE_TAP_SCALE_LANDSCAPE = 3f
     }
 }
 

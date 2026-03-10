@@ -357,6 +357,32 @@ class ReaderGestureStateTest {
     }
 
     @Test
+    fun `onDoubleTap at 1x in landscape returns target scale 3f`() {
+        val state = ReaderGestureState()
+        state.setContentSize(1000f, 1500f)
+        val target = state.onDoubleTap(960f, 540f, 1920f, 1080f)
+        assertEquals(3f, target.scale, 0.001f)
+    }
+
+    @Test
+    fun `onDoubleTap at 1x in landscape centers offset on tap point`() {
+        val state = ReaderGestureState()
+        state.setContentSize(1000f, 1500f)
+        val target = state.onDoubleTap(480f, 270f, 1920f, 1080f)
+        assertEquals(960f, target.offsetX, 0.001f)
+        assertEquals(540f, target.offsetY, 0.001f)
+    }
+
+    @Test
+    fun `onDoubleTap at edge in landscape clamps offset to bounds`() {
+        val state = ReaderGestureState()
+        state.setContentSize(1000f, 1500f)
+        val target = state.onDoubleTap(0f, 0f, 1920f, 1080f)
+        assertEquals(1920f, target.offsetX, 0.001f)
+        assertEquals(1080f, target.offsetY, 0.001f)
+    }
+
+    @Test
     fun `contentWidth is reactive Compose state so orientation changes trigger recomposition`() {
         val state = ReaderGestureState()
         state.setContentSize(1000f, 1500f)
