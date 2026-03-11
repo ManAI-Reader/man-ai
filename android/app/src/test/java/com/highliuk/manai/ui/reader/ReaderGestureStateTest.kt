@@ -415,4 +415,118 @@ class ReaderGestureStateTest {
 
         assertTrue("contentHeight should be tracked by snapshot system", readTracked)
     }
+
+    // --- Ratchet clamp tests for onPan ---
+
+    @Test
+    fun `onPan does not snap offset when beyond normal bounds due to zoom`() {
+        val state = ReaderGestureState()
+        state.setContentSize(2000f, 2500f)
+        // container 2000x3000, FillWidth. renderedHeight=2500, at 2x: maxY=(2*2500/2-3000/2)=1000
+        state.applyZoomTarget(ZoomTarget(2f, 0f, 1200f))
+        // Pan with zero delta — offset must NOT snap to 1000
+        state.onPan(0f, 0f, 2000f, 3000f)
+        assertEquals(1200f, state.offsetY, 0.001f)
+    }
+
+    @Test
+    fun `onPan blocks pan away from image when offset beyond normal bounds`() {
+        val state = ReaderGestureState()
+        state.setContentSize(2000f, 2500f)
+        state.applyZoomTarget(ZoomTarget(2f, 0f, 1200f))
+        state.onPan(0f, 50f, 2000f, 3000f)
+        assertEquals(1200f, state.offsetY, 0.001f)
+    }
+
+    @Test
+    fun `onPan allows pan toward image when offset beyond normal bounds`() {
+        val state = ReaderGestureState()
+        state.setContentSize(2000f, 2500f)
+        state.applyZoomTarget(ZoomTarget(2f, 0f, 1200f))
+        state.onPan(0f, -50f, 2000f, 3000f)
+        assertEquals(1150f, state.offsetY, 0.001f)
+    }
+
+    @Test
+    fun `onPan ratchets - cannot reverse progress toward image`() {
+        val state = ReaderGestureState()
+        state.setContentSize(2000f, 2500f)
+        state.applyZoomTarget(ZoomTarget(2f, 0f, 1200f))
+        state.onPan(0f, -50f, 2000f, 3000f)
+        assertEquals(1150f, state.offsetY, 0.001f)
+        state.onPan(0f, 100f, 2000f, 3000f)
+        assertEquals(1150f, state.offsetY, 0.001f)
+    }
+
+    @Test
+    fun `onPan resumes normal behavior once offset within normal bounds`() {
+        val state = ReaderGestureState()
+        state.setContentSize(2000f, 2500f)
+        state.applyZoomTarget(ZoomTarget(2f, 0f, 1200f))
+        state.onPan(0f, -300f, 2000f, 3000f)
+        assertEquals(900f, state.offsetY, 0.001f)
+        state.onPan(0f, 200f, 2000f, 3000f)
+        assertEquals(1000f, state.offsetY, 0.001f)
+    }
+
+    @Test
+    fun `onPan ratchet works for negative Y offset beyond bounds`() {
+        val state = ReaderGestureState()
+        state.setContentSize(2000f, 2500f)
+        state.applyZoomTarget(ZoomTarget(2f, 0f, -1200f))
+        state.onPan(0f, -50f, 2000f, 3000f)
+        assertEquals(-1200f, state.offsetY, 0.001f)
+        state.onPan(0f, 50f, 2000f, 3000f)
+        assertEquals(-1150f, state.offsetY, 0.001f)
+    }
+
+    @Test
+    fun `onPan ratchet works for X axis beyond bounds`() {
+        val state = ReaderGestureState()
+        state.setContentSize(1000f, 1500f)
+        // landscape container: FillHeight. renderedWidth = 1080*1000/1500 = 720
+        // At 3x: maxX = max(0, 3*720/2 - 1920/2) = 120
+        state.applyZoomTarget(ZoomTarget(3f, 300f, 0f))
+        state.onPan(50f, 0f, 1920f, 1080f)
+        assertEquals(300f, state.offsetX, 1f)
+        state.onPan(-100f, 0f, 1920f, 1080f)
+        assertEquals(200f, state.offsetX, 1f)
+    }
+
+    // --- Ratchet clamp tests for onPanX ---
+
+    @Test
+    fun `onPanX does not snap offset when beyond normal bounds`() {
+        val state = ReaderGestureState()
+        // At 2x, containerWidth=400: maxOffsetX = 400*(2-1)/2 = 200
+        state.applyZoomTarget(ZoomTarget(2f, 350f, 0f))
+        state.onPanX(0f, 400f)
+        assertEquals(350f, state.offsetX, 0.001f)
+    }
+
+    @Test
+    fun `onPanX blocks pan away from image when beyond bounds`() {
+        val state = ReaderGestureState()
+        state.applyZoomTarget(ZoomTarget(2f, 350f, 0f))
+        state.onPanX(50f, 400f)
+        assertEquals(350f, state.offsetX, 0.001f)
+    }
+
+    @Test
+    fun `onPanX allows pan toward image when beyond bounds`() {
+        val state = ReaderGestureState()
+        state.applyZoomTarget(ZoomTarget(2f, 350f, 0f))
+        state.onPanX(-50f, 400f)
+        assertEquals(300f, state.offsetX, 0.001f)
+    }
+
+    @Test
+    fun `onPanX ratchet works for negative offset beyond bounds`() {
+        val state = ReaderGestureState()
+        state.applyZoomTarget(ZoomTarget(2f, -350f, 0f))
+        state.onPanX(-50f, 400f)
+        assertEquals(-350f, state.offsetX, 0.001f)
+        state.onPanX(50f, 400f)
+        assertEquals(-300f, state.offsetX, 0.001f)
+    }
 }

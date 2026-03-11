@@ -80,14 +80,23 @@ class ReaderGestureState {
     fun onPan(panX: Float, panY: Float, containerWidth: Float, containerHeight: Float) {
         if (!isZoomed) return
         val (maxOffsetX, maxOffsetY) = computeMaxOffsets(scale, containerWidth, containerHeight)
-        offsetX = (offsetX + panX).coerceIn(-maxOffsetX, maxOffsetX)
-        offsetY = (offsetY + panY).coerceIn(-maxOffsetY, maxOffsetY)
+        offsetX = (offsetX + panX).coerceIn(
+            minOf(-maxOffsetX, offsetX),
+            maxOf(maxOffsetX, offsetX),
+        )
+        offsetY = (offsetY + panY).coerceIn(
+            minOf(-maxOffsetY, offsetY),
+            maxOf(maxOffsetY, offsetY),
+        )
     }
 
     fun onPanX(panX: Float, containerWidth: Float) {
         if (!isZoomed) return
         val maxOffsetX = containerWidth * (scale - 1f) / 2f
-        offsetX = (offsetX + panX).coerceIn(-maxOffsetX, maxOffsetX)
+        offsetX = (offsetX + panX).coerceIn(
+            minOf(-maxOffsetX, offsetX),
+            maxOf(maxOffsetX, offsetX),
+        )
     }
 
     fun onDoubleTapWebtoon(
