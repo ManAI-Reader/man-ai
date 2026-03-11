@@ -140,85 +140,89 @@ fun HorizontalPagerViewer(
         var bitmapWidth by remember { mutableIntStateOf(0) }
         var bitmapHeight by remember { mutableIntStateOf(0) }
         Box(modifier = Modifier.fillMaxSize()) {
-        PdfPage(
-            uri = uri,
-            pageIndex = pageIndex,
-            onBitmapLoaded = { w, h ->
-                gestureState.setContentSize(w.toFloat(), h.toFloat())
-                bitmapWidth = w
-                bitmapHeight = h
-            },
-            modifier = Modifier
-                .fillMaxSize()
-                .testTag("reader_zoom_container")
-                .pointerInput(tapToNavigate) {
-                    detectTapGestures(
-                        onTap = { offset ->
-                            handleTapWithRegions(
-                                offset = offset,
-                                regions = regions,
-                                gestureState = gestureState,
-                                containerWidth = size.width,
-                                containerHeight = size.height,
-                                tapHandler = TapHandler(
-                                    tapToNavigate = tapToNavigate,
-                                    isZoomed = gestureState.isZoomed,
-                                    isRtl = isRtl,
-                                    currentPage = intendedPage,
-                                    pageCount = pageCount,
-                                ),
-                                onRegionTapped = onRegionTapped,
-                                onIntendedPageChange = onIntendedPageChange,
-                                onNavigateByTap = onNavigateByTap,
-                            )
-                        },
-                        onDoubleTap = { offset ->
-                            val target = gestureState.onDoubleTap(
-                                tapX = offset.x,
-                                tapY = offset.y,
-                                containerWidth = size.width.toFloat(),
-                                containerHeight = size.height.toFloat()
-                            )
-                            animateDoubleTapZoom(gestureState, target, coroutineScope)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag("reader_zoom_container")
+                    .pointerInput(tapToNavigate) {
+                        detectTapGestures(
+                            onTap = { offset ->
+                                handleTapWithRegions(
+                                    offset = offset,
+                                    regions = regions,
+                                    gestureState = gestureState,
+                                    containerWidth = size.width,
+                                    containerHeight = size.height,
+                                    tapHandler = TapHandler(
+                                        tapToNavigate = tapToNavigate,
+                                        isZoomed = gestureState.isZoomed,
+                                        isRtl = isRtl,
+                                        currentPage = intendedPage,
+                                        pageCount = pageCount,
+                                    ),
+                                    onRegionTapped = onRegionTapped,
+                                    onIntendedPageChange = onIntendedPageChange,
+                                    onNavigateByTap = onNavigateByTap,
+                                )
+                            },
+                            onDoubleTap = { offset ->
+                                val target = gestureState.onDoubleTap(
+                                    tapX = offset.x,
+                                    tapY = offset.y,
+                                    containerWidth = size.width.toFloat(),
+                                    containerHeight = size.height.toFloat()
+                                )
+                                animateDoubleTapZoom(gestureState, target, coroutineScope)
+                            }
+                        )
+                    }
+                    .pointerInput(Unit) {
+                        awaitEachGesture {
+                            awaitFirstDown(requireUnconsumed = false)
+                            do {
+                                val event = awaitPointerEvent()
+                                val zoomChange = event.calculateZoom()
+                                val panChange = event.calculatePan()
+
+                                if (zoomChange != 1f) {
+                                    gestureState.onZoom(zoomChange)
+                                    event.changes.forEach { if (it.positionChanged()) it.consume() }
+                                }
+
+                                if (gestureState.isZoomed && panChange != Offset.Zero) {
+                                    gestureState.onPan(
+                                        panChange.x, panChange.y,
+                                        size.width.toFloat(), size.height.toFloat()
+                                    )
+                                    event.changes.forEach { if (it.positionChanged()) it.consume() }
+                                }
+                            } while (event.changes.any { it.pressed })
                         }
+                    }
+                    .pageZoom(
+                        isCurrentPage = pageIndex == pagerState.currentPage,
+                        gestureState = gestureState,
+                    )
+            ) {
+                PdfPage(
+                    uri = uri,
+                    pageIndex = pageIndex,
+                    onBitmapLoaded = { w, h ->
+                        gestureState.setContentSize(w.toFloat(), h.toFloat())
+                        bitmapWidth = w
+                        bitmapHeight = h
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+                if (debugPipelineStates.isNotEmpty()) {
+                    DebugMlOverlay(
+                        pageState = debugPipelineStates[pageIndex],
+                        regions = regions,
+                        bitmapWidth = bitmapWidth,
+                        bitmapHeight = bitmapHeight,
                     )
                 }
-                .pointerInput(Unit) {
-                    awaitEachGesture {
-                        awaitFirstDown(requireUnconsumed = false)
-                        do {
-                            val event = awaitPointerEvent()
-                            val zoomChange = event.calculateZoom()
-                            val panChange = event.calculatePan()
-
-                            if (zoomChange != 1f) {
-                                gestureState.onZoom(zoomChange)
-                                event.changes.forEach { if (it.positionChanged()) it.consume() }
-                            }
-
-                            if (gestureState.isZoomed && panChange != Offset.Zero) {
-                                gestureState.onPan(
-                                    panChange.x, panChange.y,
-                                    size.width.toFloat(), size.height.toFloat()
-                                )
-                                event.changes.forEach { if (it.positionChanged()) it.consume() }
-                            }
-                        } while (event.changes.any { it.pressed })
-                    }
-                }
-                .pageZoom(
-                    isCurrentPage = pageIndex == pagerState.currentPage,
-                    gestureState = gestureState,
-                )
-        )
-        if (debugPipelineStates.isNotEmpty()) {
-            DebugMlOverlay(
-                pageState = debugPipelineStates[pageIndex],
-                regions = regions,
-                bitmapWidth = bitmapWidth,
-                bitmapHeight = bitmapHeight,
-            )
-        }
+            }
         }
     }
 }
