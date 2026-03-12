@@ -162,6 +162,7 @@ fun ManAiNavHost(
                         val ocrFontScale by viewModel.ocrFontScale.collectAsState()
                         val debugPipelineStates by viewModel.debugPipelineStates.collectAsState()
                         val tapToNavigate by viewModel.tapToNavigate.collectAsState()
+                        val visiblePagesRegions by viewModel.visiblePagesRegions.collectAsState()
 
                         if (BuildConfig.DEBUG_ML) {
                             val context = LocalContext.current
@@ -205,6 +206,8 @@ fun ManAiNavHost(
                                     }
                                 },
                                 debugPipelineStates = if (BuildConfig.DEBUG_ML) debugPipelineStates else emptyMap(),
+                                visiblePagesRegions = visiblePagesRegions,
+                                onVisiblePagesChanged = viewModel::onVisiblePagesChanged,
                             )
                         }
                     }

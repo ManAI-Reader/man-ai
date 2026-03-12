@@ -23,6 +23,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -107,6 +108,8 @@ fun ReaderScreen(
     onSettingsClick: () -> Unit,
     onImmersiveModeChange: (Boolean) -> Unit = {},
     debugPipelineStates: Map<Int, PagePipelineState> = emptyMap(),
+    visiblePagesRegions: Map<Int, List<PageRegion>> = emptyMap(),
+    onVisiblePagesChanged: (List<Int>) -> Unit = {},
 ) {
     val isRtl = readingMode == ReadingMode.RTL
     val isWebtoon = readingMode == ReadingMode.WEBTOON
@@ -155,6 +158,16 @@ fun ReaderScreen(
         }
     }
 
+    LaunchedEffect(lazyListState, isWebtoon) {
+        if (isWebtoon) {
+            snapshotFlow {
+                lazyListState.layoutInfo.visibleItemsInfo.map { it.index }
+            }.collect { pages ->
+                onVisiblePagesChanged(pages)
+            }
+        }
+    }
+
     LaunchedEffect(gestureState.areBarsVisible) {
         onImmersiveModeChange(!gestureState.areBarsVisible)
     }
@@ -177,15 +190,19 @@ fun ReaderScreen(
         Modifier
     }
 
-    val displayedCurrentPage = if (isWebtoon) {
-        computeWebtoonCurrentPage(
-            firstVisibleItemIndex = lazyListState.firstVisibleItemIndex,
-            canScrollForward = lazyListState.canScrollForward,
-            lastVisibleItemIndex = lazyListState.layoutInfo.visibleItemsInfo
-                .lastOrNull()?.index,
-        )
-    } else {
-        pagerState.currentPage
+    val displayedCurrentPage by remember(isWebtoon) {
+        derivedStateOf {
+            if (isWebtoon) {
+                computeWebtoonCurrentPage(
+                    firstVisibleItemIndex = lazyListState.firstVisibleItemIndex,
+                    canScrollForward = lazyListState.canScrollForward,
+                    lastVisibleItemIndex = lazyListState.layoutInfo.visibleItemsInfo
+                        .lastOrNull()?.index,
+                )
+            } else {
+                pagerState.currentPage
+            }
+        }
     }
 
     Box(
@@ -199,6 +216,9 @@ fun ReaderScreen(
                 uri = manga.uri,
                 pageCount = manga.pageCount,
                 gestureState = gestureState,
+                visiblePagesRegions = visiblePagesRegions,
+                onRegionTapped = onRegionTapped,
+                debugPipelineStates = debugPipelineStates,
             )
         } else {
             HorizontalPagerViewer(

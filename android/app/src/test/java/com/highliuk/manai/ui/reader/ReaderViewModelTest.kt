@@ -19,6 +19,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -394,6 +395,74 @@ class ReaderViewModelTest {
         val viewModel = createViewModel(1L)
 
         org.junit.Assert.assertNotNull(viewModel.debugEvents)
+    }
+
+    @Test
+    fun `onVisiblePagesChanged launches pipeline for each visible page`() = runTest(testDispatcher) {
+        val manga = Manga(id = 1, uri = "content://test", title = "Test", pageCount = 10)
+        coEvery { repository.getMangaById(1L) } returns flowOf(manga)
+        every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+        coEvery { pdfPageRenderer.render(any(), any()) } returns mockk(relaxed = true)
+
+        val viewModel = createViewModel(1L)
+        testScheduler.advanceUntilIdle()
+        clearMocks(processPageUseCase, answers = false)
+
+        viewModel.onVisiblePagesChanged(listOf(2, 3, 4))
+        testScheduler.advanceUntilIdle()
+
+        coVerify { processPageUseCase.execute(1L, 2, any(), any(), any()) }
+        coVerify { processPageUseCase.execute(1L, 3, any(), any(), any()) }
+        coVerify { processPageUseCase.execute(1L, 4, any(), any(), any()) }
+    }
+
+    @Test
+    fun `onVisiblePagesChanged does not relaunch already-active pipelines`() = runTest(testDispatcher) {
+        val manga = Manga(id = 1, uri = "content://test", title = "Test", pageCount = 10)
+        coEvery { repository.getMangaById(1L) } returns flowOf(manga)
+        every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+        coEvery { pdfPageRenderer.render(any(), any()) } returns mockk(relaxed = true)
+
+        val viewModel = createViewModel(1L)
+        testScheduler.advanceUntilIdle()
+        clearMocks(processPageUseCase, answers = false, verificationMarks = true)
+        coEvery { processPageUseCase.execute(any(), any(), any(), any(), any()) } coAnswers {
+            awaitCancellation()
+        }
+
+        viewModel.onVisiblePagesChanged(listOf(2, 3))
+        testScheduler.advanceUntilIdle()
+
+        viewModel.onVisiblePagesChanged(listOf(2, 3))
+        testScheduler.advanceUntilIdle()
+
+        coVerify(exactly = 1) { processPageUseCase.execute(1L, 2, any(), any(), any()) }
+        coVerify(exactly = 1) { processPageUseCase.execute(1L, 3, any(), any(), any()) }
+    }
+
+    @Test
+    fun `visiblePagesRegions emits regions for tracked visible pages`() = runTest(testDispatcher) {
+        val manga = Manga(id = 1, uri = "uri1", title = "Test", pageCount = 10)
+        coEvery { repository.getMangaById(1L) } returns flowOf(manga)
+        coEvery { pdfPageRenderer.render(any(), any()) } returns mockk(relaxed = true)
+
+        val regionsPage2 = listOf(PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "hello"))
+        val regionsPage3 = listOf(PageRegion(0, 0.2f, 0.2f, 0.6f, 0.6f, 0.8f, "world"))
+        every { ocrCache.observeRegions(1L, 2) } returns flowOf(regionsPage2)
+        every { ocrCache.observeRegions(1L, 3) } returns flowOf(regionsPage3)
+        every { ocrCache.observeRegions(1L, match { it != 2 && it != 3 }) } returns flowOf(emptyList())
+
+        val viewModel = createViewModel(1L)
+        testScheduler.advanceUntilIdle()
+
+        viewModel.visiblePagesRegions.test {
+            viewModel.onVisiblePagesChanged(listOf(2, 3))
+            testScheduler.advanceUntilIdle()
+
+            val map = expectMostRecentItem()
+            assertEquals(regionsPage2, map[2])
+            assertEquals(regionsPage3, map[3])
+        }
     }
 
     @Test

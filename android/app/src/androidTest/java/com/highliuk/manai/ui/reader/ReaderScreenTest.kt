@@ -29,9 +29,11 @@ import com.highliuk.manai.domain.model.Manga
 import com.highliuk.manai.domain.model.PageRegion
 import com.highliuk.manai.domain.model.ReadingMode
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
+@Suppress("LargeClass")
 class ReaderScreenTest {
 
     @get:Rule
@@ -767,6 +769,34 @@ class ReaderScreenTest {
         composeTestRule.waitForIdle()
 
         assertEquals(2, lastPage)
+    }
+
+    @Test
+    fun webtoonMode_reportsVisiblePages() {
+        val visiblePages = mutableListOf<List<Int>>()
+
+        composeTestRule.setContent {
+            ReaderScreen(
+                manga = Manga(id = 1, uri = "content://test", title = "Test", pageCount = 5),
+                currentPage = 0,
+                readingMode = ReadingMode.WEBTOON,
+                onPageChanged = {},
+                onBack = {},
+                onSettingsClick = {},
+                onVisiblePagesChanged = { visiblePages.add(it) },
+            )
+        }
+
+        composeTestRule.waitForIdle()
+
+        assertTrue(
+            "onVisiblePagesChanged should have been called",
+            visiblePages.isNotEmpty()
+        )
+        assertTrue(
+            "Page 0 should be in the visible pages",
+            visiblePages.last().contains(0)
+        )
     }
 
     @Test

@@ -220,6 +220,7 @@ fun HorizontalPagerViewer(
                         regions = regions,
                         bitmapWidth = bitmapWidth,
                         bitmapHeight = bitmapHeight,
+                        modifier = Modifier.matchParentSize(),
                     )
                 }
             }

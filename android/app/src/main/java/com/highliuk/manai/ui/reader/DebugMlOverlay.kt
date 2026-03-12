@@ -1,7 +1,6 @@
 package com.highliuk.manai.ui.reader
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -24,7 +23,7 @@ fun DebugMlOverlay(
 ) {
     if (pageState == null) return
 
-    Canvas(modifier = modifier.fillMaxSize().testTag("debug_ml_overlay")) {
+    Canvas(modifier = modifier.testTag("debug_ml_overlay")) {
         drawRect(
             color = Color(pageState.pageStatus.overlayColor),
             size = size,

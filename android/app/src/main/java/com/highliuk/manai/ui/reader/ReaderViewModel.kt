@@ -27,6 +27,8 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -73,6 +75,22 @@ class ReaderViewModel @Inject constructor(
     private val _selectedRegion = MutableStateFlow<PageRegion?>(null)
     val selectedRegion: StateFlow<PageRegion?> = _selectedRegion.asStateFlow()
 
+    private val _visiblePages = MutableStateFlow<List<Int>>(emptyList())
+
+    val visiblePagesRegions: StateFlow<Map<Int, List<PageRegion>>> = _visiblePages
+        .flatMapLatest { pages ->
+            if (pages.isEmpty()) {
+                kotlinx.coroutines.flow.flowOf(emptyMap())
+            } else {
+                combine(pages.map { page ->
+                    ocrCache.observeRegions(mangaId, page).map { regions -> page to regions }
+                }) { pairs ->
+                    pairs.toMap()
+                }
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
     private val _isProcessing = MutableStateFlow(false)
     val isProcessing: StateFlow<Boolean> = _isProcessing.asStateFlow()
 
@@ -98,6 +116,13 @@ class ReaderViewModel @Inject constructor(
     fun onPageChanged(page: Int) {
         _currentPage.value = page
         launchPipeline(page)
+    }
+
+    fun onVisiblePagesChanged(visiblePages: List<Int>) {
+        _visiblePages.value = visiblePages
+        for (page in visiblePages) {
+            launchPipeline(page)
+        }
     }
 
     fun onRegionTapped(region: PageRegion) {
