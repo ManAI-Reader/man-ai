@@ -315,6 +315,8 @@ class SettingsScreenTest {
             SettingsScreen(
                 gridColumns = 2,
                 onGridColumnsChange = {},
+                gridColumnsLandscape = 5,
+                onGridColumnsLandscapeChange = {},
                 readingMode = ReadingMode.LTR,
                 onReadingModeChange = {},
                 themeMode = ThemeMode.SYSTEM,
