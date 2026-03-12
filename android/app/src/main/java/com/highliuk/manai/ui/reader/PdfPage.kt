@@ -21,6 +21,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.highliuk.manai.R
+import com.highliuk.manai.data.pdf.PdfPageRenderer
 
 private const val PLACEHOLDER_ASPECT_RATIO = 0.7f
 
@@ -30,25 +31,32 @@ fun PdfPage(
     pageIndex: Int,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.FillWidth,
+    pdfPageRenderer: PdfPageRenderer? = null,
     onBitmapLoaded: ((width: Int, height: Int) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val bitmap = produceState<Bitmap?>(initialValue = null, uri, pageIndex) {
-        value = try {
-            val pfd = context.contentResolver.openFileDescriptor(Uri.parse(uri), "r")
-            pfd?.use { fd ->
-                PdfRenderer(fd).use { renderer ->
-                    if (pageIndex < renderer.pageCount) {
-                        renderer.openPage(pageIndex).use { page ->
-                            val bmp = Bitmap.createBitmap(page.width, page.height, Bitmap.Config.ARGB_8888)
-                            page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-                            bmp
-                        }
-                    } else null
+        value = if (pdfPageRenderer != null) {
+            pdfPageRenderer.render(uri, pageIndex)
+        } else {
+            try {
+                val pfd = context.contentResolver.openFileDescriptor(Uri.parse(uri), "r")
+                pfd?.use { fd ->
+                    PdfRenderer(fd).use { renderer ->
+                        if (pageIndex < renderer.pageCount) {
+                            renderer.openPage(pageIndex).use { page ->
+                                val bmp = Bitmap.createBitmap(
+                                    page.width, page.height, Bitmap.Config.ARGB_8888
+                                )
+                                page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                                bmp
+                            }
+                        } else null
+                    }
                 }
+            } catch (@Suppress("TooGenericExceptionCaught") _: Exception) {
+                null
             }
-        } catch (_: Exception) {
-            null
         }
     }
 

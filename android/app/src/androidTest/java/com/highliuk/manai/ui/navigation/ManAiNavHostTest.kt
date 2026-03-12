@@ -138,6 +138,22 @@ class ManAiNavHostTest {
     }
 
     @Test
+    fun tappingManga_readerScreenCollectsRegions() = runTest {
+        mangaDao.insert(MangaEntity(uri = "content://region-test", title = "Region Test", pageCount = 1))
+
+        composeTestRule.waitUntil(timeoutMillis = 10000) {
+            composeTestRule.onAllNodesWithText("Region Test").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithText("Region Test").performClick()
+
+        composeTestRule.waitUntil(timeoutMillis = 10000) {
+            composeTestRule.onAllNodesWithTag("reader_pager").fetchSemanticsNodes().isNotEmpty()
+        }
+        // Reader opens without crash — verifies NavHost passes the new params
+        composeTestRule.onNodeWithTag("reader_pager").assertIsDisplayed()
+    }
+
+    @Test
     fun tappingSettings_navigatesToSettingsScreen() {
         composeTestRule.waitForIdle()
 

@@ -20,10 +20,82 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.platform.testTag
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.semantics
+import com.highliuk.manai.domain.model.PagePipelineState
+import com.highliuk.manai.domain.model.PageRegion
 import kotlinx.coroutines.launch
 
 private const val DOUBLE_TAP_ANIM_DURATION = 300
+
+internal fun animateDoubleTapZoom(
+    gestureState: ReaderGestureState,
+    target: ZoomTarget,
+    coroutineScope: kotlinx.coroutines.CoroutineScope,
+) {
+    val startScale = gestureState.scale
+    val startOffsetX = gestureState.offsetX
+    val startOffsetY = gestureState.offsetY
+    coroutineScope.launch {
+        val anim = Animatable(0f)
+        anim.animateTo(1f, tween(DOUBLE_TAP_ANIM_DURATION)) {
+            val progress = value
+            gestureState.applyZoomTarget(
+                ZoomTarget(
+                    scale = startScale + (target.scale - startScale) * progress,
+                    offsetX = startOffsetX + (target.offsetX - startOffsetX) * progress,
+                    offsetY = startOffsetY + (target.offsetY - startOffsetY) * progress
+                )
+            )
+        }
+    }
+}
+
+@Suppress("LongParameterList")
+internal fun handleTapWithRegions(
+    offset: Offset,
+    regions: List<PageRegion>,
+    gestureState: ReaderGestureState,
+    containerWidth: Int,
+    containerHeight: Int,
+    tapHandler: TapHandler,
+    onRegionTapped: (PageRegion) -> Unit,
+    onIntendedPageChange: (Int) -> Unit,
+    onNavigateByTap: (Int) -> Unit,
+) {
+    val regionHit = if (regions.isNotEmpty()) {
+        val bw = gestureState.contentWidth.toInt().takeIf { it > 0 } ?: containerWidth
+        val bh = gestureState.contentHeight.toInt().takeIf { it > 0 } ?: containerHeight
+        RegionHitTester.hitTest(
+            tapX = offset.x, tapY = offset.y,
+            regions = regions,
+            containerWidth = containerWidth.toFloat(),
+            containerHeight = containerHeight.toFloat(),
+            bitmapWidth = bw, bitmapHeight = bh,
+            scale = gestureState.scale,
+            offsetX = gestureState.offsetX,
+            offsetY = gestureState.offsetY,
+        )
+    } else {
+        null
+    }
+    if (regionHit != null) {
+        onRegionTapped(regionHit)
+    } else {
+        tapHandler.handle(
+            offset = offset,
+            containerWidth = containerWidth.toFloat(),
+            toggleBars = gestureState::toggleBars,
+            navigateToPage = { target ->
+                onIntendedPageChange(target)
+                onNavigateByTap(target)
+            }
+        )
+    }
+}
 
 private fun Modifier.pageZoom(
     isCurrentPage: Boolean,
@@ -50,6 +122,9 @@ fun HorizontalPagerViewer(
     onIntendedPageChange: (Int) -> Unit = {},
     onNavigateByTap: (Int) -> Unit = {},
     isNavigatingByTap: Boolean = false,
+    regions: List<PageRegion> = emptyList(),
+    onRegionTapped: (PageRegion) -> Unit = {},
+    debugPipelineStates: Map<Int, PagePipelineState> = emptyMap(),
     modifier: Modifier = Modifier,
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -63,6 +138,8 @@ fun HorizontalPagerViewer(
             .fillMaxSize()
             .testTag("reader_pager")
     ) { pageIndex ->
+        var bitmapWidth by remember { mutableIntStateOf(0) }
+        var bitmapHeight by remember { mutableIntStateOf(0) }
         BoxWithConstraints(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
@@ -76,33 +153,29 @@ fun HorizontalPagerViewer(
                 containerHeight = containerH
             )
 
-            PdfPage(
-                uri = uri,
-                pageIndex = pageIndex,
-                contentScale = dynamicContentScale,
-                onBitmapLoaded = { w, h ->
-                    gestureState.setContentSize(w.toFloat(), h.toFloat())
-                },
+            BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxSize()
                     .testTag("reader_zoom_container")
                     .pointerInput(tapToNavigate) {
                         detectTapGestures(
                             onTap = { offset ->
-                                TapHandler(
-                                    tapToNavigate = tapToNavigate,
-                                    isZoomed = gestureState.isZoomed,
-                                    isRtl = isRtl,
-                                    currentPage = intendedPage,
-                                    pageCount = pageCount,
-                                ).handle(
+                                handleTapWithRegions(
                                     offset = offset,
-                                    containerWidth = size.width.toFloat(),
-                                    toggleBars = gestureState::toggleBars,
-                                    navigateToPage = { target ->
-                                        onIntendedPageChange(target)
-                                        onNavigateByTap(target)
-                                    }
+                                    regions = regions,
+                                    gestureState = gestureState,
+                                    containerWidth = size.width,
+                                    containerHeight = size.height,
+                                    tapHandler = TapHandler(
+                                        tapToNavigate = tapToNavigate,
+                                        isZoomed = gestureState.isZoomed,
+                                        isRtl = isRtl,
+                                        currentPage = intendedPage,
+                                        pageCount = pageCount,
+                                    ),
+                                    onRegionTapped = onRegionTapped,
+                                    onIntendedPageChange = onIntendedPageChange,
+                                    onNavigateByTap = onNavigateByTap,
                                 )
                             },
                             onDoubleTap = { offset ->
@@ -112,22 +185,7 @@ fun HorizontalPagerViewer(
                                     containerWidth = size.width.toFloat(),
                                     containerHeight = size.height.toFloat()
                                 )
-                                coroutineScope.launch {
-                                    val startScale = gestureState.scale
-                                    val startOffsetX = gestureState.offsetX
-                                    val startOffsetY = gestureState.offsetY
-                                    val anim = Animatable(0f)
-                                    anim.animateTo(1f, tween(DOUBLE_TAP_ANIM_DURATION)) {
-                                        val progress = value
-                                        gestureState.applyZoomTarget(
-                                            ZoomTarget(
-                                                scale = startScale + (target.scale - startScale) * progress,
-                                                offsetX = startOffsetX + (target.offsetX - startOffsetX) * progress,
-                                                offsetY = startOffsetY + (target.offsetY - startOffsetY) * progress
-                                            )
-                                        )
-                                    }
-                                }
+                                animateDoubleTapZoom(gestureState, target, coroutineScope)
                             }
                         )
                     }
@@ -158,7 +216,28 @@ fun HorizontalPagerViewer(
                         isCurrentPage = pageIndex == pagerState.currentPage,
                         gestureState = gestureState,
                     )
-            )
+            ) {
+                PdfPage(
+                    uri = uri,
+                    pageIndex = pageIndex,
+                    contentScale = dynamicContentScale,
+                    onBitmapLoaded = { w, h ->
+                        gestureState.setContentSize(w.toFloat(), h.toFloat())
+                        bitmapWidth = w
+                        bitmapHeight = h
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+                if (debugPipelineStates.isNotEmpty()) {
+                    DebugMlOverlay(
+                        pageState = debugPipelineStates[pageIndex],
+                        regions = regions,
+                        bitmapWidth = bitmapWidth,
+                        bitmapHeight = bitmapHeight,
+                        modifier = Modifier.matchParentSize(),
+                    )
+                }
+            }
         }
     }
 }

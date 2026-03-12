@@ -61,6 +61,15 @@
         <item quantity="other">Hapus %d manga?</item>
     </plurals>
 
+    <!-- OCR -->
+    <string name="comic_text_size">Ukuran teks komik</string>
+    <string name="comic_text_preview">漫画のテキスト</string>
+
+    <string name="ocr_loading">Mengenali teks…</string>
+    <string name="copy_text">Salin teks</string>
+    <string name="share_text">Bagikan teks</string>
+    <string name="text_copied">Teks disalin</string>
+
     <!-- PDF thumbnail -->
     <string name="pdf_thumbnail">Thumbnail PDF</string>
     <string name="pdf_placeholder">Placeholder PDF</string>

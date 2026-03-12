@@ -21,6 +21,9 @@ interface UserPreferencesRepository {
     val appLanguage: Flow<AppLanguage>
     suspend fun setAppLanguage(language: AppLanguage)
 
+    val ocrFontScale: Flow<Float>
+    suspend fun setOcrFontScale(scale: Float)
+
     val tapToNavigate: Flow<Boolean>
     suspend fun setTapToNavigate(enabled: Boolean)
 }

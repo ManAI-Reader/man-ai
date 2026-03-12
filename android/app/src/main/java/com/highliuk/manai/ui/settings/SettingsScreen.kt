@@ -16,6 +16,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -23,9 +24,15 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.intl.LocaleList as ComposeLocaleList
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.AppLanguage
 import com.highliuk.manai.domain.model.ReadingMode
@@ -65,6 +72,8 @@ fun SettingsScreen(
     onThemeModeChange: (ThemeMode) -> Unit,
     appLanguage: AppLanguage,
     onAppLanguageChange: (AppLanguage) -> Unit,
+    comicTextScale: Float = 1.5f,
+    onComicTextScaleChange: (Float) -> Unit = {},
     tapToNavigate: Boolean,
     onTapToNavigateChange: (Boolean) -> Unit,
     onBack: () -> Unit
@@ -244,6 +253,34 @@ fun SettingsScreen(
                     )
                 }
             }
+
+            Text(
+                text = stringResource(R.string.comic_text_size),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
+            )
+            Slider(
+                value = comicTextScale,
+                onValueChange = onComicTextScaleChange,
+                valueRange = 1f..3f,
+                steps = 3,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("comic_text_scale_slider"),
+            )
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(SpanStyle(localeList = ComposeLocaleList("ja"))) {
+                        append(stringResource(R.string.comic_text_preview))
+                    }
+                },
+                style = MaterialTheme.typography.bodyLarge,
+                fontSize = MaterialTheme.typography.bodyLarge.fontSize * comicTextScale,
+                lineHeight = 1.5.em,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+            )
         }
     }
 }

@@ -23,6 +23,8 @@ android {
         versionName = "0.6.0"
 
         testInstrumentationRunner = "com.highliuk.manai.HiltTestRunner"
+
+        buildConfigField("Boolean", "DEBUG_ML", (System.getenv("DEBUG_ML") ?: "false"))
     }
 
     signingConfigs {
@@ -63,6 +65,11 @@ android {
 
     testBuildType = "isolated"
 
+    @Suppress("UnstableApiUsage")
+    testCoverage {
+        jacocoVersion = "0.8.12"
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -73,6 +80,7 @@ android {
     }
 
     buildFeatures {
+        buildConfig = true
         compose = true
     }
 
@@ -98,6 +106,10 @@ android {
         }
     }
 
+    androidResources {
+        noCompress += "onnx"
+    }
+
     packaging {
         jniLibs { pickFirsts += setOf("**/*.so") }
         resources {
@@ -110,6 +122,17 @@ android {
     }
 }
 
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+configurations.matching { it.name.startsWith("jacoco") }.configureEach {
+    resolutionStrategy.force("org.jacoco:org.jacoco.agent:0.8.12")
+    resolutionStrategy.force("org.jacoco:org.jacoco.ant:0.8.12")
+    resolutionStrategy.force("org.jacoco:org.jacoco.core:0.8.12")
+    resolutionStrategy.force("org.jacoco:org.jacoco.report:0.8.12")
+}
+
 detekt {
     buildUponDefaultConfig = true
     allRules = true
@@ -120,9 +143,13 @@ detekt {
 val jacocoExcludes = listOf(
     // Android generated
     "**/R.class", "**/R$*.class", "**/BuildConfig.*", "**/Manifest*.*",
-    // Hilt generated
-    "dagger/hilt/**", "hilt_aggregated_deps/**",
-    "**/*_HiltModules*.*", "**/*_Factory.*", "**/*_MembersInjector.*",
+    // Hilt / Dagger generated
+    "dagger/**", "hilt_aggregated_deps/**",
+    "**/*_HiltModules*.*", "**/*_HiltComponents*.*",
+    "**/*_ComponentTreeDeps.*",
+    "**/Dagger*.*",
+    "**/*_Factory.*", "**/*_Factory$*.*",
+    "**/*_MembersInjector.*",
     "**/*_GeneratedInjector.*", "**/*Hilt_*.*",
     // Room generated
     "**/*_Impl.*", "**/*_Impl$*.*",
@@ -143,7 +170,7 @@ tasks.register<JacocoReport>("jacocoMergedReport") {
         csv.required.set(false)
     }
 
-    val kotlinClasses = fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/isolated") {
+    val kotlinClasses = fileTree("${layout.buildDirectory.get()}/intermediates/classes/isolated/transformIsolatedClassesWithAsm/dirs") {
         exclude(jacocoExcludes)
     }
     val javaClasses = fileTree("${layout.buildDirectory.get()}/intermediates/javac/isolated/classes") {
@@ -172,7 +199,7 @@ tasks.register<JacocoCoverageVerification>("jacocoCoverageVerification") {
     dependsOn("jacocoMergedReport")
 
     val kotlinClasses = fileTree(
-        "${layout.buildDirectory.get()}/tmp/kotlin-classes/isolated"
+        "${layout.buildDirectory.get()}/intermediates/classes/isolated/transformIsolatedClassesWithAsm/dirs"
     ) { exclude(jacocoExcludes) }
     val javaClasses = fileTree(
         "${layout.buildDirectory.get()}/intermediates/javac/isolated/classes"
@@ -309,6 +336,7 @@ dependencies {
     // Instrumented tests
     androidTestImplementation(libs.junit.ext)
     androidTestImplementation(libs.espresso.core)
+    androidTestImplementation(libs.uiautomator)
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test.junit4)
     androidTestImplementation(libs.room.testing)

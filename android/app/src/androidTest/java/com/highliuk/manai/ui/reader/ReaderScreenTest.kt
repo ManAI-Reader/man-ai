@@ -26,11 +26,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.highliuk.manai.domain.model.Manga
+import com.highliuk.manai.domain.model.PageRegion
 import com.highliuk.manai.domain.model.ReadingMode
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
+@Suppress("LargeClass")
 class ReaderScreenTest {
 
     @get:Rule
@@ -305,6 +308,80 @@ class ReaderScreenTest {
         setUpReaderScreen(onImmersiveModeChange = { lastImmersiveState = it })
         composeTestRule.waitForIdle()
         assertEquals(true, lastImmersiveState)
+    }
+
+    @Test
+    fun tappingOnScreen_withRegions_invokesOnRegionTapped() {
+        var tappedRegion: PageRegion? = null
+        val regions = listOf(
+            PageRegion(0, 0.0f, 0.0f, 1.0f, 1.0f, 0.9f, "\u5168\u753b\u9762")
+        )
+
+        composeTestRule.setContent {
+            ReaderScreen(
+                manga = Manga(id = 1, uri = "content://test", title = "Test", pageCount = 1),
+                currentPage = 0,
+                regions = regions,
+                onPageChanged = {},
+                onRegionTapped = { tappedRegion = it },
+                onBack = {},
+                onSettingsClick = {},
+            )
+        }
+
+        composeTestRule.onNodeWithTag("reader_pager").performTouchInput {
+            click(position = Offset(x = width * 0.5f, y = height * 0.5f))
+        }
+        advancePastDoubleTapTimeout()
+        composeTestRule.waitForIdle()
+
+        assertEquals(regions[0], tappedRegion)
+    }
+
+    @Test
+    fun tappingOnScreen_withRegionsParam_compilesAndRuns() {
+        var tappedRegion: PageRegion? = null
+        val regions = listOf(
+            PageRegion(0, 0.0f, 0.0f, 1.0f, 1.0f, 0.9f, "\u5168\u753b\u9762")
+        )
+
+        composeTestRule.setContent {
+            ReaderScreen(
+                manga = Manga(id = 1, uri = "content://test", title = "Test", pageCount = 1),
+                currentPage = 0,
+                regions = regions,
+                selectedRegion = null,
+                onPageChanged = {},
+                onRegionTapped = { tappedRegion = it },
+                onDismissBottomSheet = {},
+                onBack = {},
+                onSettingsClick = {},
+            )
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("reader_pager").assertIsDisplayed()
+    }
+
+    @Test
+    fun bottomSheet_appearsWhenSelectedRegionIsNotNull() {
+        val region = PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "\u30c6\u30b9\u30c8")
+
+        composeTestRule.setContent {
+            ReaderScreen(
+                manga = Manga(id = 1, uri = "content://test", title = "Test", pageCount = 1),
+                currentPage = 0,
+                regions = listOf(region),
+                selectedRegion = region,
+                onPageChanged = {},
+                onRegionTapped = {},
+                onDismissBottomSheet = {},
+                onBack = {},
+                onSettingsClick = {},
+            )
+        }
+
+        composeTestRule.onNodeWithText("\u30c6\u30b9\u30c8").assertIsDisplayed()
     }
 
     @Test
@@ -692,6 +769,34 @@ class ReaderScreenTest {
         composeTestRule.waitForIdle()
 
         assertEquals(2, lastPage)
+    }
+
+    @Test
+    fun webtoonMode_reportsVisiblePages() {
+        val visiblePages = mutableListOf<List<Int>>()
+
+        composeTestRule.setContent {
+            ReaderScreen(
+                manga = Manga(id = 1, uri = "content://test", title = "Test", pageCount = 5),
+                currentPage = 0,
+                readingMode = ReadingMode.WEBTOON,
+                onPageChanged = {},
+                onBack = {},
+                onSettingsClick = {},
+                onVisiblePagesChanged = { visiblePages.add(it) },
+            )
+        }
+
+        composeTestRule.waitForIdle()
+
+        assertTrue(
+            "onVisiblePagesChanged should have been called",
+            visiblePages.isNotEmpty()
+        )
+        assertTrue(
+            "Page 0 should be in the visible pages",
+            visiblePages.last().contains(0)
+        )
     }
 
     @Test

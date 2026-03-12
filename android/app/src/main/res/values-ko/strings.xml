@@ -61,6 +61,15 @@
         <item quantity="other">만화 %d개를 삭제하시겠습니까?</item>
     </plurals>
 
+    <!-- OCR -->
+    <string name="comic_text_size">만화 텍스트 크기</string>
+    <string name="comic_text_preview">漫画のテキスト</string>
+
+    <string name="ocr_loading">텍스트 인식 중…</string>
+    <string name="copy_text">텍스트 복사</string>
+    <string name="share_text">텍스트 공유</string>
+    <string name="text_copied">텍스트 복사됨</string>
+
     <!-- PDF thumbnail -->
     <string name="pdf_thumbnail">PDF 썸네일</string>
     <string name="pdf_placeholder">PDF 자리표시자</string>

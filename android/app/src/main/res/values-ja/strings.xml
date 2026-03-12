@@ -61,6 +61,15 @@
         <item quantity="other">%d件のマンガを削除しますか？</item>
     </plurals>
 
+    <!-- OCR -->
+    <string name="comic_text_size">テキストサイズ</string>
+    <string name="comic_text_preview">漫画のテキスト</string>
+
+    <string name="ocr_loading">テキストを認識中…</string>
+    <string name="copy_text">テキストをコピー</string>
+    <string name="share_text">テキストを共有</string>
+    <string name="text_copied">テキストをコピーしました</string>
+
     <!-- PDF thumbnail -->
     <string name="pdf_thumbnail">PDFサムネイル</string>
     <string name="pdf_placeholder">PDFプレースホルダー</string>

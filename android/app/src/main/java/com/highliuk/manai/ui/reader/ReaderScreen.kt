@@ -23,6 +23,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +39,8 @@ import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.semantics.SemanticsPropertyReceiver
 import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.Manga
+import com.highliuk.manai.domain.model.PagePipelineState
+import com.highliuk.manai.domain.model.PageRegion
 import com.highliuk.manai.domain.model.ReadingMode
 import com.highliuk.manai.ui.navigation.LocalAnimatedVisibilityScope
 import com.highliuk.manai.ui.navigation.LocalSharedTransitionScope
@@ -83,7 +86,7 @@ internal data class TapHandler(
     }
 }
 
-@Suppress("LongParameterList", "LongMethod")
+@Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod", "UnusedParameter")
 @OptIn(
     ExperimentalMaterial3Api::class,
     androidx.compose.foundation.ExperimentalFoundationApi::class,
@@ -94,11 +97,19 @@ fun ReaderScreen(
     manga: Manga,
     currentPage: Int,
     readingMode: ReadingMode = ReadingMode.LTR,
+    regions: List<PageRegion> = emptyList(),
+    selectedRegion: PageRegion? = null,
     tapToNavigate: Boolean = false,
     onPageChanged: (Int) -> Unit,
+    onRegionTapped: (PageRegion) -> Unit = {},
+    ocrFontScale: Float = 1.5f,
+    onDismissBottomSheet: () -> Unit = {},
     onBack: () -> Unit,
     onSettingsClick: () -> Unit,
     onImmersiveModeChange: (Boolean) -> Unit = {},
+    debugPipelineStates: Map<Int, PagePipelineState> = emptyMap(),
+    visiblePagesRegions: Map<Int, List<PageRegion>> = emptyMap(),
+    onVisiblePagesChanged: (List<Int>) -> Unit = {},
 ) {
     val isRtl = readingMode == ReadingMode.RTL
     val isWebtoon = readingMode == ReadingMode.WEBTOON
@@ -110,7 +121,6 @@ fun ReaderScreen(
     var isNavigatingByTap by remember { mutableStateOf(false) }
     var navigationJob by remember { mutableStateOf<Job?>(null) }
     var showGoToPageDialog by remember { mutableStateOf(false) }
-
     val sharedTransitionScope = LocalSharedTransitionScope.current
     val animatedVisibilityScope = LocalAnimatedVisibilityScope.current
 
@@ -148,6 +158,16 @@ fun ReaderScreen(
         }
     }
 
+    LaunchedEffect(lazyListState, isWebtoon) {
+        if (isWebtoon) {
+            snapshotFlow {
+                lazyListState.layoutInfo.visibleItemsInfo.map { it.index }
+            }.collect { pages ->
+                onVisiblePagesChanged(pages)
+            }
+        }
+    }
+
     LaunchedEffect(gestureState.areBarsVisible) {
         onImmersiveModeChange(!gestureState.areBarsVisible)
     }
@@ -170,15 +190,19 @@ fun ReaderScreen(
         Modifier
     }
 
-    val displayedCurrentPage = if (isWebtoon) {
-        computeWebtoonCurrentPage(
-            firstVisibleItemIndex = lazyListState.firstVisibleItemIndex,
-            canScrollForward = lazyListState.canScrollForward,
-            lastVisibleItemIndex = lazyListState.layoutInfo.visibleItemsInfo
-                .lastOrNull()?.index,
-        )
-    } else {
-        pagerState.currentPage
+    val displayedCurrentPage by remember(isWebtoon) {
+        derivedStateOf {
+            if (isWebtoon) {
+                computeWebtoonCurrentPage(
+                    firstVisibleItemIndex = lazyListState.firstVisibleItemIndex,
+                    canScrollForward = lazyListState.canScrollForward,
+                    lastVisibleItemIndex = lazyListState.layoutInfo.visibleItemsInfo
+                        .lastOrNull()?.index,
+                )
+            } else {
+                pagerState.currentPage
+            }
+        }
     }
 
     Box(
@@ -192,6 +216,9 @@ fun ReaderScreen(
                 uri = manga.uri,
                 pageCount = manga.pageCount,
                 gestureState = gestureState,
+                visiblePagesRegions = visiblePagesRegions,
+                onRegionTapped = onRegionTapped,
+                debugPipelineStates = debugPipelineStates,
             )
         } else {
             HorizontalPagerViewer(
@@ -215,6 +242,9 @@ fun ReaderScreen(
                     }
                 },
                 isNavigatingByTap = isNavigatingByTap,
+                regions = regions,
+                onRegionTapped = onRegionTapped,
+                debugPipelineStates = debugPipelineStates,
             )
         }
 
@@ -271,6 +301,12 @@ fun ReaderScreen(
                 },
                 onPageIndicatorClick = { showGoToPageDialog = true }
             )
+        }
+
+        if (selectedRegion != null) {
+            val liveRegion = regions.find { it.regionIndex == selectedRegion.regionIndex }
+                ?: selectedRegion
+            OcrBottomSheet(region = liveRegion, fontScale = ocrFontScale, onDismiss = onDismissBottomSheet)
         }
 
         if (showGoToPageDialog) {

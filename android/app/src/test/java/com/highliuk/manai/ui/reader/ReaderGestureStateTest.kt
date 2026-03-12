@@ -158,7 +158,7 @@ class ReaderGestureStateTest {
         val state = ReaderGestureState()
         state.setContentSize(1000f, 1500f)
         state.onZoom(2f)
-        // X: FillWidth → renderedWidth = containerWidth → same formula
+        // X: FillWidth -> renderedWidth = containerWidth -> same formula
         // maxOffsetX = 1000 * (2-1) / 2 = 500
         state.onPan(9999f, 0f, 1000f, 2000f)
         assertEquals(500f, state.offsetX, 0.001f)
@@ -231,6 +231,15 @@ class ReaderGestureStateTest {
         state.onZoom(1.5f)
         val target = state.onDoubleTap(500f, 1000f, 1000f, 2000f)
         assertEquals(1f, target.scale, 0.001f)
+    }
+
+    @Test
+    fun `contentWidth and contentHeight are accessible after setContentSize`() {
+        val state = ReaderGestureState()
+        state.setContentSize(640f, 480f)
+
+        assertEquals(640f, state.contentWidth, 0.01f)
+        assertEquals(480f, state.contentHeight, 0.01f)
     }
 
     @Test

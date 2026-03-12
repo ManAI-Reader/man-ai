@@ -42,6 +42,9 @@ import androidx.navigation.navArgument
 import com.highliuk.manai.ui.home.DeleteMangaDialog
 import com.highliuk.manai.ui.home.HomeScreen
 import com.highliuk.manai.ui.home.HomeViewModel
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import com.highliuk.manai.BuildConfig
 import com.highliuk.manai.ui.reader.ReaderScreen
 import com.highliuk.manai.ui.reader.ReaderViewModel
 import com.highliuk.manai.ui.settings.SettingsScreen
@@ -159,7 +162,22 @@ fun ManAiNavHost(
                         val manga by viewModel.manga.collectAsState()
                         val currentPage by viewModel.currentPage.collectAsState()
                         val readingMode by viewModel.readingMode.collectAsState()
+                        val regions by viewModel.currentPageRegions.collectAsState()
+                        val selectedRegion by viewModel.selectedRegion.collectAsState()
+                        val ocrFontScale by viewModel.ocrFontScale.collectAsState()
+                        val debugPipelineStates by viewModel.debugPipelineStates.collectAsState()
                         val tapToNavigate by viewModel.tapToNavigate.collectAsState()
+                        val visiblePagesRegions by viewModel.visiblePagesRegions.collectAsState()
+
+                        if (BuildConfig.DEBUG_ML) {
+                            val context = LocalContext.current
+                            LaunchedEffect(Unit) {
+                                viewModel.debugEvents.collect { event ->
+                                    Toast.makeText(context, event.toastMessage, Toast.LENGTH_SHORT)
+                                        .show()
+                                }
+                            }
+                        }
 
                         val view = LocalView.current
                         val window = (view.context as Activity).window
@@ -170,8 +188,13 @@ fun ManAiNavHost(
                                 manga = m,
                                 currentPage = currentPage,
                                 readingMode = readingMode,
+                                regions = regions,
+                                selectedRegion = selectedRegion,
+                                ocrFontScale = ocrFontScale,
                                 tapToNavigate = tapToNavigate,
                                 onPageChanged = viewModel::onPageChanged,
+                                onRegionTapped = viewModel::onRegionTapped,
+                                onDismissBottomSheet = viewModel::dismissBottomSheet,
                                 onBack = {
                                     if (!navController.popBackStack()) {
                                         (view.context as? Activity)?.finish()
@@ -180,7 +203,10 @@ fun ManAiNavHost(
                                 onSettingsClick = { navController.navigate("settings") },
                                 onImmersiveModeChange = { immersive ->
                                     applyImmersiveMode(insetsController, immersive)
-                                }
+                                },
+                                debugPipelineStates = if (BuildConfig.DEBUG_ML) debugPipelineStates else emptyMap(),
+                                visiblePagesRegions = visiblePagesRegions,
+                                onVisiblePagesChanged = viewModel::onVisiblePagesChanged,
                             )
                         }
                     }
@@ -218,6 +244,7 @@ fun ManAiNavHost(
                     val readingMode by viewModel.readingMode.collectAsState()
                     val themeMode by viewModel.themeMode.collectAsState()
                     val appLanguage by viewModel.appLanguage.collectAsState()
+                    val ocrFontScale by viewModel.ocrFontScale.collectAsState()
                     val tapToNavigate by viewModel.tapToNavigate.collectAsState()
 
                     SettingsScreen(
@@ -230,6 +257,8 @@ fun ManAiNavHost(
                         themeMode = themeMode,
                         onThemeModeChange = { viewModel.setThemeMode(it) },
                         appLanguage = appLanguage,
+                        comicTextScale = ocrFontScale,
+                        onComicTextScaleChange = { viewModel.setOcrFontScale(it) },
                         onAppLanguageChange = { language ->
                             viewModel.setAppLanguage(language)
                             val locales = if (language.tag != null) {

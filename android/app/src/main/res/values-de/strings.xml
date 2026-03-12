@@ -64,6 +64,15 @@
         <item quantity="other">%d Manga löschen?</item>
     </plurals>
 
+    <!-- OCR -->
+    <string name="comic_text_size">Schriftgröße</string>
+    <string name="comic_text_preview">漫画のテキスト</string>
+
+    <string name="ocr_loading">Text wird erkannt…</string>
+    <string name="copy_text">Text kopieren</string>
+    <string name="share_text">Text teilen</string>
+    <string name="text_copied">Text kopiert</string>
+
     <!-- PDF thumbnail -->
     <string name="pdf_thumbnail">PDF-Vorschaubild</string>
     <string name="pdf_placeholder">PDF-Platzhalter</string>

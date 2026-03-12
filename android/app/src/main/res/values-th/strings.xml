@@ -61,6 +61,15 @@
         <item quantity="other">ลบมังงะ %d เรื่อง?</item>
     </plurals>
 
+    <!-- OCR -->
+    <string name="comic_text_size">ขนาดตัวอักษร</string>
+    <string name="comic_text_preview">漫画のテキスト</string>
+
+    <string name="ocr_loading">กำลังจดจำข้อความ…</string>
+    <string name="copy_text">คัดลอกข้อความ</string>
+    <string name="share_text">แชร์ข้อความ</string>
+    <string name="text_copied">คัดลอกข้อความแล้ว</string>
+
     <!-- PDF thumbnail -->
     <string name="pdf_thumbnail">ภาพขนาดย่อ PDF</string>
     <string name="pdf_placeholder">ตัวยึดตำแหน่ง PDF</string>

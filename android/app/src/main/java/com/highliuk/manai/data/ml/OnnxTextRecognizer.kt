@@ -16,6 +16,13 @@ class OnnxTextRecognizer @Inject constructor(
     private val sessionManager: OnnxSessionManager,
 ) : TextRecognizer {
 
+    override suspend fun initialize() = withContext(Dispatchers.Default) {
+        sessionManager.encoderSession
+        sessionManager.decoderFirstSession
+        sessionManager.decoderWithPastSession
+        Unit
+    }
+
     override suspend fun recognize(bitmap: Bitmap, region: TextRegion): OcrResult =
         withContext(Dispatchers.Default) {
             val x1 = region.x1.toInt().coerceIn(0, bitmap.width - 1)

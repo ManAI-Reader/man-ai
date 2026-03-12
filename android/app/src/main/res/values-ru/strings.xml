@@ -70,6 +70,15 @@
         <item quantity="other">Удалить %d манг?</item>
     </plurals>
 
+    <!-- OCR -->
+    <string name="comic_text_size">Размер текста</string>
+    <string name="comic_text_preview">漫画のテキスト</string>
+
+    <string name="ocr_loading">Распознавание текста…</string>
+    <string name="copy_text">Копировать текст</string>
+    <string name="share_text">Поделиться текстом</string>
+    <string name="text_copied">Текст скопирован</string>
+
     <!-- PDF thumbnail -->
     <string name="pdf_thumbnail">Миниатюра PDF</string>
     <string name="pdf_placeholder">Заглушка PDF</string>
