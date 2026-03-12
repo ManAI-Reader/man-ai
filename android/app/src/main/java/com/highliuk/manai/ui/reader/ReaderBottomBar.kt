@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Slider
 import androidx.compose.material3.MaterialTheme
@@ -46,6 +47,7 @@ fun ReaderBottomBar(
             .testTag("reader_bottom_bar")
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
+            .navigationBarsPadding()
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Text(

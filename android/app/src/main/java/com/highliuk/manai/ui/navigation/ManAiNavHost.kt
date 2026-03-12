@@ -179,13 +179,7 @@ fun ManAiNavHost(
                                 },
                                 onSettingsClick = { navController.navigate("settings") },
                                 onImmersiveModeChange = { immersive ->
-                                    if (immersive) {
-                                        insetsController.hide(WindowInsetsCompat.Type.statusBars())
-                                        insetsController.systemBarsBehavior =
-                                            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                                    } else {
-                                        insetsController.show(WindowInsetsCompat.Type.statusBars())
-                                    }
+                                    applyImmersiveMode(insetsController, immersive)
                                 }
                             )
                         }
