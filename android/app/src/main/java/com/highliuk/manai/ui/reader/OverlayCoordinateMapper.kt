@@ -18,15 +18,28 @@ object OverlayCoordinateMapper {
         containerWidth: Float,
         containerHeight: Float,
     ): OverlayRect {
-        // ContentScale.FillWidth: scale to fill width, center vertically
-        val scale = containerWidth / bitmapWidth
-        val offsetY = (containerHeight - bitmapHeight * scale) / 2f
+        val imageAspect = bitmapWidth.toFloat() / bitmapHeight
+        val containerAspect = containerWidth / containerHeight
+        val useFillWidth = imageAspect <= 1f && containerAspect <= 1f
 
-        return OverlayRect(
-            left = region.normX1 * bitmapWidth * scale,
-            top = region.normY1 * bitmapHeight * scale + offsetY,
-            right = region.normX2 * bitmapWidth * scale,
-            bottom = region.normY2 * bitmapHeight * scale + offsetY,
-        )
+        return if (useFillWidth) {
+            val scale = containerWidth / bitmapWidth
+            val offsetY = (containerHeight - bitmapHeight * scale) / 2f
+            OverlayRect(
+                left = region.normX1 * bitmapWidth * scale,
+                top = region.normY1 * bitmapHeight * scale + offsetY,
+                right = region.normX2 * bitmapWidth * scale,
+                bottom = region.normY2 * bitmapHeight * scale + offsetY,
+            )
+        } else {
+            val scale = containerHeight / bitmapHeight
+            val offsetX = (containerWidth - bitmapWidth * scale) / 2f
+            OverlayRect(
+                left = region.normX1 * bitmapWidth * scale + offsetX,
+                top = region.normY1 * bitmapHeight * scale,
+                right = region.normX2 * bitmapWidth * scale + offsetX,
+                bottom = region.normY2 * bitmapHeight * scale,
+            )
+        }
     }
 }

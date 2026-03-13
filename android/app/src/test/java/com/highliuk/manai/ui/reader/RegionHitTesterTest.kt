@@ -118,4 +118,66 @@ class RegionHitTesterTest {
         assertEquals(1, hit!!.regionIndex)
         assertEquals(0.95f, hit.confidence, 0.01f)
     }
+
+    // --- FillHeight (landscape container with portrait image) ---
+    // Container: 1920x1080, Bitmap: 1000x2000 (portrait)
+    // FillHeight scale = 1080/2000 = 0.54
+    // Rendered width = 1000 * 0.54 = 540
+    // horizontalPadding = (1920 - 540) / 2 = 690
+
+    @Test
+    fun `screenToNormalized FillHeight at center of unzoomed image returns 0_5, 0_5`() {
+        val result = RegionHitTester.screenToNormalized(
+            tapX = 960f, tapY = 540f,
+            containerWidth = 1920f, containerHeight = 1080f,
+            bitmapWidth = 1000, bitmapHeight = 2000,
+            scale = 1f, offsetX = 0f, offsetY = 0f,
+        )
+        assertNotNull(result)
+        assertEquals(0.5f, result!!.first, 0.01f)
+        assertEquals(0.5f, result.second, 0.01f)
+    }
+
+    @Test
+    fun `screenToNormalized FillHeight at top-left of image returns 0, 0`() {
+        // Image top-left is at screen (690, 0) due to horizontal padding
+        val result = RegionHitTester.screenToNormalized(
+            tapX = 690f, tapY = 0f,
+            containerWidth = 1920f, containerHeight = 1080f,
+            bitmapWidth = 1000, bitmapHeight = 2000,
+            scale = 1f, offsetX = 0f, offsetY = 0f,
+        )
+        assertNotNull(result)
+        assertEquals(0f, result!!.first, 0.01f)
+        assertEquals(0f, result.second, 0.01f)
+    }
+
+    @Test
+    fun `screenToNormalized FillHeight outside image bounds returns null`() {
+        // Tap in the horizontal padding area (x = 100, left of image at 690)
+        val result = RegionHitTester.screenToNormalized(
+            tapX = 100f, tapY = 540f,
+            containerWidth = 1920f, containerHeight = 1080f,
+            bitmapWidth = 1000, bitmapHeight = 2000,
+            scale = 1f, offsetX = 0f, offsetY = 0f,
+        )
+        assertNull(result)
+    }
+
+    @Test
+    fun `hitTest FillHeight returns matching region`() {
+        val regions = listOf(
+            PageRegion(0, 0.4f, 0.4f, 0.6f, 0.6f, 0.9f, "center"),
+        )
+        // Normalized (0.5, 0.5) → screen: x = 690 + 0.5*540 = 960, y = 0.5*1080 = 540
+        val hit = RegionHitTester.hitTest(
+            tapX = 960f, tapY = 540f,
+            regions = regions,
+            containerWidth = 1920f, containerHeight = 1080f,
+            bitmapWidth = 1000, bitmapHeight = 2000,
+            scale = 1f, offsetX = 0f, offsetY = 0f,
+        )
+        assertNotNull(hit)
+        assertEquals(0, hit!!.regionIndex)
+    }
 }

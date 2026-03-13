@@ -68,4 +68,49 @@ class OverlayCoordinateMapperTest {
         assertEquals(300f, rect.right, 0.01f)   // 0.75 * 800 * 0.5
         assertEquals(550f, rect.bottom, 0.01f)  // 0.75 * 1200 * 0.5 + 100
     }
+
+    @Test
+    fun `FillHeight scales region to container height and centers horizontally`() {
+        // Bitmap 1000x2000 (portrait), container 1920x1080 (landscape)
+        // FillHeight scale = 1080/2000 = 0.54
+        // Scaled image width = 1000 * 0.54 = 540
+        // offsetX = (1920 - 540) / 2 = 690
+        val region = PageRegion(0, 0.1f, 0.2f, 0.5f, 0.6f, 0.9f, null)
+        val rect = OverlayCoordinateMapper.mapRegion(
+            region = region,
+            bitmapWidth = 1000,
+            bitmapHeight = 2000,
+            containerWidth = 1920f,
+            containerHeight = 1080f,
+        )
+
+        val scale = 1080f / 2000f
+        val offsetX = (1920f - 1000f * scale) / 2f
+        assertEquals(0.1f * 1000f * scale + offsetX, rect.left, 0.01f)
+        assertEquals(0.2f * 2000f * scale, rect.top, 0.01f)
+        assertEquals(0.5f * 1000f * scale + offsetX, rect.right, 0.01f)
+        assertEquals(0.6f * 2000f * scale, rect.bottom, 0.01f)
+    }
+
+    @Test
+    fun `FillHeight with landscape image in landscape container`() {
+        // Bitmap 1600x900 (landscape), container 1920x1080 (landscape)
+        // imageAspect = 1.78, containerAspect = 1.78 → FillHeight
+        // FillHeight scale = 1080/900 = 1.2
+        // Scaled image width = 1600 * 1.2 = 1920
+        // offsetX = (1920 - 1920) / 2 = 0
+        val region = PageRegion(0, 0.0f, 0.0f, 1.0f, 1.0f, 0.9f, null)
+        val rect = OverlayCoordinateMapper.mapRegion(
+            region = region,
+            bitmapWidth = 1600,
+            bitmapHeight = 900,
+            containerWidth = 1920f,
+            containerHeight = 1080f,
+        )
+
+        assertEquals(0f, rect.left, 0.01f)
+        assertEquals(0f, rect.top, 0.01f)
+        assertEquals(1920f, rect.right, 0.01f)
+        assertEquals(1080f, rect.bottom, 0.01f)
+    }
 }

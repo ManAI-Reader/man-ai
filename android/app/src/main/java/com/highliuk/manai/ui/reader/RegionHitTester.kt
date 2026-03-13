@@ -18,12 +18,23 @@ object RegionHitTester {
         val contentX = (tapX - centerX) / scale + centerX - offsetX / scale
         val contentY = (tapY - centerY) / scale + centerY - offsetY / scale
 
-        // Invert ContentScale.FillWidth (image fills width, centered vertically)
-        val renderedImageHeight = containerWidth * bitmapHeight / bitmapWidth
-        val verticalPadding = (containerHeight - renderedImageHeight) / 2f
+        val imageAspect = bitmapWidth.toFloat() / bitmapHeight
+        val containerAspect = containerWidth / containerHeight
+        val useFillWidth = imageAspect <= 1f && containerAspect <= 1f
 
-        val normX = contentX / containerWidth
-        val normY = (contentY - verticalPadding) / renderedImageHeight
+        val normX: Float
+        val normY: Float
+        if (useFillWidth) {
+            val renderedImageHeight = containerWidth * bitmapHeight / bitmapWidth
+            val verticalPadding = (containerHeight - renderedImageHeight) / 2f
+            normX = contentX / containerWidth
+            normY = (contentY - verticalPadding) / renderedImageHeight
+        } else {
+            val renderedImageWidth = containerHeight * bitmapWidth / bitmapHeight
+            val horizontalPadding = (containerWidth - renderedImageWidth) / 2f
+            normX = (contentX - horizontalPadding) / renderedImageWidth
+            normY = contentY / containerHeight
+        }
 
         val inBounds = normX in 0f..1f && normY in 0f..1f
         if (!inBounds) return null
