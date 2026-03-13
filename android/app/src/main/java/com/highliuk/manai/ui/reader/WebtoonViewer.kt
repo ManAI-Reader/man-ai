@@ -115,11 +115,15 @@ fun WebtoonViewer(
                                     }
                                 },
                                 onDoubleTap = { offset ->
+                                    val viewportHeight =
+                                        lazyListState.layoutInfo.viewportSize.height.toFloat()
+                                    val pageOffset = lazyListState.layoutInfo.visibleItemsInfo
+                                        .find { it.index == pageIndex }?.offset?.toFloat() ?: 0f
                                     val target = gestureState.onDoubleTapWebtoon(
                                         tapX = offset.x,
-                                        tapY = offset.y,
+                                        tapY = pageOffset + offset.y,
                                         containerWidth = size.width.toFloat(),
-                                        containerHeight = size.height.toFloat()
+                                        containerHeight = viewportHeight
                                     )
                                     coroutineScope.launch {
                                         val startScale = gestureState.scale

@@ -90,25 +90,45 @@ class WebtoonViewerTest {
     }
 
     @Test
-    fun doubleTapSetsNonZeroOffsetY() {
+    fun doubleTapZoomsAroundTapPoint() {
         val gestureState = ReaderGestureState()
+        lateinit var lazyListState: LazyListState
 
         composeTestRule.setContent {
+            lazyListState = rememberLazyListState()
             WebtoonViewer(
-                lazyListState = rememberLazyListState(),
+                lazyListState = lazyListState,
                 uri = "content://test",
-                pageCount = 5,
+                pageCount = 20,
                 gestureState = gestureState,
             )
         }
 
-        // Double-tap off-center to trigger zoom with Y offset
-        composeTestRule.onNodeWithTag("webtoon_viewer")
-            .performTouchInput { doubleClick(center.copy(y = center.y * 0.5f)) }
+        composeTestRule.waitForIdle()
+        val viewportHeight = lazyListState.layoutInfo.viewportSize.height.toFloat()
+        val pageTop = lazyListState.layoutInfo.visibleItemsInfo
+            .first { it.index == 0 }.offset.toFloat()
+        val pageHeight = lazyListState.layoutInfo.visibleItemsInfo
+            .first { it.index == 0 }.size.toFloat()
+
+        // Double-tap near the top of the first page. The tap point is well above
+        // the viewport center, so the zoom must produce a large positive offsetY
+        // to shift the content down and center on the tap point.
+        composeTestRule.onNodeWithTag("webtoon_page_0")
+            .performTouchInput { doubleClick(topCenter.copy(y = 10f)) }
         composeTestRule.mainClock.advanceTimeBy(500)
 
-        assertTrue("scale should be zoomed in", gestureState.scale > 1f)
-        assertNotEquals("offsetY should be non-zero after off-center double-tap", 0f, gestureState.offsetY)
+        assertEquals("scale should be 2x after double-tap", 2f, gestureState.scale, 0.01f)
+
+        // With correct viewport coords: offsetY ≈ viewportCenter - (pageTop + 10)
+        // With the bug (page coords): offsetY ≈ pageHeight/2 - 10 (much smaller)
+        val viewportCenter = viewportHeight / 2f
+        val expectedOffsetY = (viewportCenter - (pageTop + 10f))
+            .coerceIn(-viewportHeight / 2f, viewportHeight / 2f)
+        assertEquals(
+            "offsetY should use viewport coordinates, not page coordinates",
+            expectedOffsetY, gestureState.offsetY, viewportHeight * 0.15f
+        )
     }
 
     @Test
