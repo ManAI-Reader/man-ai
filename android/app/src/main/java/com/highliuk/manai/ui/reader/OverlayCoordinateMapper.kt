@@ -18,6 +18,9 @@ object OverlayCoordinateMapper {
         containerWidth: Float,
         containerHeight: Float,
     ): OverlayRect {
+        if (bitmapWidth <= 0 || bitmapHeight <= 0) {
+            return OverlayRect(0f, 0f, 0f, 0f)
+        }
         val imageAspect = bitmapWidth.toFloat() / bitmapHeight
         val containerAspect = containerWidth / containerHeight
         val useFillWidth = imageAspect <= 1f && containerAspect <= 1f

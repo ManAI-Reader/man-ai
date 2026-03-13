@@ -113,4 +113,21 @@ class OverlayCoordinateMapperTest {
         assertEquals(1920f, rect.right, 0.01f)
         assertEquals(1080f, rect.bottom, 0.01f)
     }
+
+    @Test
+    fun `mapRegion with zero bitmap dimensions returns zero rect`() {
+        val region = PageRegion(0, 0.1f, 0.2f, 0.5f, 0.6f, 0.9f, null)
+        val rect = OverlayCoordinateMapper.mapRegion(
+            region = region,
+            bitmapWidth = 0,
+            bitmapHeight = 0,
+            containerWidth = 500f,
+            containerHeight = 1000f,
+        )
+
+        assertEquals(0f, rect.left, 0.01f)
+        assertEquals(0f, rect.top, 0.01f)
+        assertEquals(0f, rect.right, 0.01f)
+        assertEquals(0f, rect.bottom, 0.01f)
+    }
 }
