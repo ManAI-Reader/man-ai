@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.0] - 2026-03-16
+
+### Added
+
+- Tap-to-OCR with bottom sheet for text recognition on manga pages
+- Selectable OCR text with native toolbar and custom word boundaries
+- Debug ML overlay to visualize text detection pipeline states
+- Landscape support for paged reader
+- Comic text font size setting with live preview
+
+### Fixed
+
+- System navigation bar overlapping reader progress slider
+- Zoom snap-back after panning at zoom boundaries
+- Shared element transition flicker on reader back navigation
+- Missing downgrade migration (v4→v3) for database rollback
+
 ## [0.6.0] - 2026-03-06
 
 ### Added

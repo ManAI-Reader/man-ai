@@ -185,5 +185,3 @@ If you committed the same violation on multiple tasks, go back to step 1 for eac
 ## Integration with Other Skills
 
 This skill is invoked automatically by `/add-feature` and `/fix-bug` when a TDD violation is detected. You don't need to invoke it manually — but if you catch yourself mid-violation, invoke it immediately.
-
-**REQUIRED BACKGROUND:** superpowers:test-driven-development
