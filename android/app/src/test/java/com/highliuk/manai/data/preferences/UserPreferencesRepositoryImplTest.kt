@@ -248,4 +248,40 @@ class UserPreferencesRepositoryImplTest {
 
         assertEquals(6, repository.gridColumnsLandscape.first())
     }
+
+    @Test
+    fun `ocrFontScale emits default value 1_5`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        val result = repository.ocrFontScale.first()
+
+        assertEquals(1.5f, result, 1e-4f)
+    }
+
+    @Test
+    fun `setOcrFontScale persists value`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        repository.setOcrFontScale(2.0f)
+
+        assertEquals(2.0f, repository.ocrFontScale.first(), 1e-4f)
+    }
+
+    @Test
+    fun `setOcrFontScale clamps value below minimum to 1_0`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        repository.setOcrFontScale(0.5f)
+
+        assertEquals(1.0f, repository.ocrFontScale.first(), 1e-4f)
+    }
+
+    @Test
+    fun `setOcrFontScale clamps value above maximum to 3_0`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        repository.setOcrFontScale(5.0f)
+
+        assertEquals(3.0f, repository.ocrFontScale.first(), 1e-4f)
+    }
 }

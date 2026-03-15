@@ -44,7 +44,7 @@ class OnnxSessionManager(private val context: Context) {
         return ortEnv.createSession(modelPath, opts)
     }
 
-    private fun copyAssetToDisk(fileName: String): String {
+    internal fun copyAssetToDisk(fileName: String): String {
         val modelDir = File(context.filesDir, "models").apply { mkdirs() }
         val outFile = File(modelDir, fileName)
         if (!outFile.exists()) {

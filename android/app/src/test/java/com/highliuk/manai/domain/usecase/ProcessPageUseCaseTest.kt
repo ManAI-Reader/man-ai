@@ -10,6 +10,7 @@ import com.highliuk.manai.domain.repository.OcrCacheRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
@@ -131,5 +132,26 @@ class ProcessPageUseCaseTest {
         pipelineJob.join()
 
         assertTrue("Should process fewer than 3 regions", recognizedIndices.size < 3)
+    }
+
+    @Test(expected = CancellationException::class)
+    fun `CancellationException during detection propagates without being swallowed`() = runTest {
+        coEvery { ocrCache.hasDetectionResults(1L, 0) } returns false
+        coEvery { textDetector.detect(bitmap) } throws CancellationException("job cancelled")
+
+        useCase.execute(mangaId = 1L, pageIndex = 0, bitmap = bitmap)
+    }
+
+    @Test(expected = CancellationException::class)
+    fun `CancellationException during OCR propagates without being swallowed`() = runTest {
+        coEvery { ocrCache.hasDetectionResults(1L, 0) } returns true
+        coEvery { ocrCache.getRegions(1L, 0) } returns listOf(
+            PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, null),
+        )
+        coEvery { bitmap.width } returns 640
+        coEvery { bitmap.height } returns 480
+        coEvery { textRecognizer.recognize(bitmap, any()) } throws CancellationException("job cancelled")
+
+        useCase.execute(mangaId = 1L, pageIndex = 0, bitmap = bitmap)
     }
 }

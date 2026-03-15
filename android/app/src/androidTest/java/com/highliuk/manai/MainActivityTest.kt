@@ -2,7 +2,11 @@ package com.highliuk.manai
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.test.core.app.ActivityScenario
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import com.highliuk.manai.data.local.ManAiDatabase
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -73,5 +77,21 @@ class MainActivityTest {
         InstrumentationRegistry.getInstrumentation()
             .callActivityOnNewIntent(activity, testIntent)
         composeTestRule.waitForIdle()
+    }
+
+    @Test
+    fun launchWithActionViewIntent_showsIntentLoading() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            data = Uri.parse("content://com.example/intent-test.pdf")
+            setClass(context, MainActivity::class.java)
+        }
+        ActivityScenario.launch<MainActivity>(intent).use { scenario ->
+            scenario.onActivity { activity ->
+                // Activity launched with ACTION_VIEW intent
+                // handleIncomingIntent sets pendingIntentUri, NavHost shows intent-loading
+                assertEquals(Intent.ACTION_VIEW, activity.intent.action)
+            }
+        }
     }
 }

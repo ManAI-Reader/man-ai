@@ -8,6 +8,7 @@ import android.graphics.Color
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -28,6 +29,13 @@ class OnnxTextDetectorMockedTest {
         every { detectorSession.inputNames } returns setOf("images")
 
         detector = spyk(OnnxTextDetector(sessionManager))
+    }
+
+    @Test
+    fun initialize_forcesLazyLoadOfDetectorSession() = runTest {
+        detector.initialize()
+
+        verify { sessionManager.detectorSession }
     }
 
     @Test

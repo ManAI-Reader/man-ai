@@ -7,6 +7,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
@@ -102,6 +103,46 @@ class OcrBottomSheetTest {
         }
 
         composeTestRule.onNodeWithTag("ocr_text").assertIsDisplayed()
+    }
+
+    @Test
+    fun copyButtonCopiesTextToClipboard() {
+        val region = PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "コピーテスト")
+
+        composeTestRule.mainClock.autoAdvance = false
+        composeTestRule.setContent {
+            OcrBottomSheet(region = region, onDismiss = {})
+        }
+        composeTestRule.mainClock.advanceTimeBy(1000)
+        composeTestRule.mainClock.autoAdvance = true
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithContentDescription("Copy text").performClick()
+        composeTestRule.waitForIdle()
+
+        val clipboard = InstrumentationRegistry.getInstrumentation().targetContext
+            .getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clipText = clipboard.primaryClip?.getItemAt(0)?.text?.toString()
+        assertEquals("コピーテスト", clipText)
+    }
+
+    @Test
+    fun shareButtonLaunchesShareIntent() {
+        val region = PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "共有テスト")
+
+        composeTestRule.mainClock.autoAdvance = false
+        composeTestRule.setContent {
+            OcrBottomSheet(region = region, onDismiss = {})
+        }
+        composeTestRule.mainClock.advanceTimeBy(1000)
+        composeTestRule.mainClock.autoAdvance = true
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithContentDescription("Share text").performClick()
+
+        // Share intent opens a chooser — wait for it then dismiss
+        device.wait(Until.hasObject(By.res("android:id/chooser_header")), 3000)
+        device.pressBack()
     }
 
     private fun setUpSheetAndLongPress(testText: String) {

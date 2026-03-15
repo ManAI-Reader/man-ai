@@ -9,6 +9,7 @@ import android.graphics.Color
 import com.highliuk.manai.domain.ml.TextRegion
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -37,6 +38,15 @@ class OnnxTextRecognizerMockedTest {
         every { sessionManager.vocab } returns vocab
 
         recognizer = OnnxTextRecognizer(sessionManager)
+    }
+
+    @Test
+    fun initialize_forcesLazyLoadOfAllSessions() = runTest {
+        recognizer.initialize()
+
+        verify { sessionManager.encoderSession }
+        verify { sessionManager.decoderFirstSession }
+        verify { sessionManager.decoderWithPastSession }
     }
 
     private fun logitsFor(token: Int): Array<Array<FloatArray>> {

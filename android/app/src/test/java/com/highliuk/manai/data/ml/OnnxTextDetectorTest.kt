@@ -151,6 +151,57 @@ class OnnxTextDetectorTest {
     }
 
     @Test
+    fun `postprocessYoloOutput returns empty for no predictions`() {
+        val output = arrayOf(
+            floatArrayOf(),
+            floatArrayOf(),
+            floatArrayOf(),
+            floatArrayOf(),
+            floatArrayOf(),
+        )
+        val letterbox = OnnxTextDetector.LetterboxParams(
+            origWidth = 640, origHeight = 640,
+            scale = 1.0f, newWidth = 640, newHeight = 640,
+            padLeft = 0, padTop = 0,
+        )
+
+        val result = OnnxTextDetector.postprocessYoloOutput(
+            output = output,
+            letterbox = letterbox,
+            confThreshold = 0.5f,
+            iouThreshold = 0.45f,
+        )
+
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `postprocessYoloOutput keeps multiple non-overlapping detections`() {
+        // Two boxes far apart — both should survive NMS
+        val output = arrayOf(
+            floatArrayOf(100f, 500f),
+            floatArrayOf(100f, 500f),
+            floatArrayOf(50f, 50f),
+            floatArrayOf(50f, 50f),
+            floatArrayOf(0.9f, 0.8f),
+        )
+        val letterbox = OnnxTextDetector.LetterboxParams(
+            origWidth = 640, origHeight = 640,
+            scale = 1.0f, newWidth = 640, newHeight = 640,
+            padLeft = 0, padTop = 0,
+        )
+
+        val result = OnnxTextDetector.postprocessYoloOutput(
+            output = output,
+            letterbox = letterbox,
+            confThreshold = 0.5f,
+            iouThreshold = 0.45f,
+        )
+
+        assertEquals(2, result.size)
+    }
+
+    @Test
     fun `postprocessYoloOutput applies NMS to filter overlapping boxes`() {
         val output = arrayOf(
             floatArrayOf(320f, 330f),
