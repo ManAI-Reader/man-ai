@@ -63,6 +63,13 @@ abstract class ManAiDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_4_3 = object : Migration(4, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP INDEX IF EXISTS index_page_ocr_result_mangaId_pageIndex")
+                db.execSQL("DROP TABLE IF EXISTS page_ocr_result")
+            }
+        }
+
         val MIGRATION_3_2 = object : Migration(3, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("DROP INDEX IF EXISTS index_manga_contentHash")

@@ -1,9 +1,10 @@
 package com.highliuk.manai.data.local
 
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import io.mockk.mockk
 import io.mockk.verifyOrder
-import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ManAiDatabaseTest {
@@ -11,17 +12,27 @@ class ManAiDatabaseTest {
     private val db = mockk<SupportSQLiteDatabase>(relaxed = true)
 
     @Test
-    fun downgradeMigration3to2_hasCorrectVersions() {
-        val migration = ManAiDatabase.MIGRATION_3_2
-        assertEquals(3, migration.startVersion)
-        assertEquals(2, migration.endVersion)
-    }
+    fun `every upgrade migration has a matching downgrade`() {
+        val all: List<Migration> = ManAiDatabase::class.java.declaredFields
+            .filter { Migration::class.java.isAssignableFrom(it.type) }
+            .map {
+                it.isAccessible = true
+                it.get(null) as Migration
+            }
 
-    @Test
-    fun downgradeMigration2to1_hasCorrectVersions() {
-        val migration = ManAiDatabase.MIGRATION_2_1
-        assertEquals(2, migration.startVersion)
-        assertEquals(1, migration.endVersion)
+        val ups = all.filter { it.startVersion < it.endVersion }
+        val downs = all.filter { it.startVersion > it.endVersion }
+
+        assertTrue("No migrations found via reflection", all.isNotEmpty())
+
+        ups.forEach { up ->
+            assertTrue(
+                "Missing downgrade migration ${up.endVersion}→${up.startVersion}",
+                downs.any { down ->
+                    down.startVersion == up.endVersion && down.endVersion == up.startVersion
+                }
+            )
+        }
     }
 
     @Test
