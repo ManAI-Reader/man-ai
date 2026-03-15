@@ -2,6 +2,7 @@ package com.highliuk.manai.ui.home
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -162,8 +163,8 @@ fun MangaGridItem(
             Modifier.sharedBounds(
                 sharedContentState = rememberSharedContentState(key = "manga_cover_${manga.id}"),
                 animatedVisibilityScope = animatedVisibilityScope,
-                enter = fadeIn(),
-                exit = fadeOut(),
+                enter = fadeIn(tween(300)),
+                exit = fadeOut(tween(300)),
                 resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds
             )
         }

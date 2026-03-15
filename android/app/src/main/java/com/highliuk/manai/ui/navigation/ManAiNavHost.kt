@@ -113,7 +113,13 @@ fun ManAiNavHost(
                             ExitTransition.None
                         }
                     },
-                    popEnterTransition = { EnterTransition.None },
+                    popEnterTransition = {
+                        if (initialState.destination.route?.startsWith("reader") == true) {
+                            fadeIn(tween(300))
+                        } else {
+                            EnterTransition.None
+                        }
+                    },
                     popExitTransition = { ExitTransition.None }
                 ) {
                     CompositionLocalProvider(LocalAnimatedVisibilityScope provides this@composable) {
