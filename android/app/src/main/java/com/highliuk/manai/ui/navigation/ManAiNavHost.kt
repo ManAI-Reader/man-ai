@@ -2,6 +2,7 @@ package com.highliuk.manai.ui.navigation
 
 import android.app.Activity
 import android.content.res.Configuration
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -188,6 +189,13 @@ fun ManAiNavHost(
                         val view = LocalView.current
                         val window = (view.context as Activity).window
                         val insetsController = WindowCompat.getInsetsController(window, view)
+
+                        BackHandler {
+                            applyImmersiveMode(insetsController, false)
+                            if (!navController.popBackStack()) {
+                                (view.context as? Activity)?.finish()
+                            }
+                        }
 
                         manga?.let { m ->
                             ReaderScreen(

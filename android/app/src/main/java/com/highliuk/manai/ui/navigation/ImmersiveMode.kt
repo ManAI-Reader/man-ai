@@ -12,6 +12,8 @@ internal fun applyImmersiveMode(
         insetsController.systemBarsBehavior =
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     } else {
+        insetsController.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
         insetsController.show(WindowInsetsCompat.Type.systemBars())
     }
 }
