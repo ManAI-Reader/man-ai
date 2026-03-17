@@ -11,5 +11,6 @@ interface MangaRepository {
     suspend fun getMangaByUri(uri: String): Manga?
     suspend fun getMangaByContentHash(contentHash: String): Manga?
     suspend fun updateLastReadPage(id: Long, page: Int)
+    suspend fun updateTitle(id: Long, title: String)
     suspend fun deleteMangaByIds(ids: List<Long>)
 }

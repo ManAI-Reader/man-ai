@@ -52,6 +52,11 @@
     <string name="ok">OK</string>
     <string name="cancel">Batal</string>
 
+    <!-- Rename manga -->
+    <string name="rename">Ubah nama</string>
+    <string name="rename_manga_dialog_title">Ubah nama manga</string>
+    <string name="rename_manga_hint">Judul</string>
+
     <!-- Delete manga -->
     <string name="delete">Hapus</string>
     <plurals name="n_selected">

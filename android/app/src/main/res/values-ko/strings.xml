@@ -52,6 +52,11 @@
     <string name="ok">확인</string>
     <string name="cancel">취소</string>
 
+    <!-- Rename manga -->
+    <string name="rename">이름 바꾸기</string>
+    <string name="rename_manga_dialog_title">만화 이름 바꾸기</string>
+    <string name="rename_manga_hint">제목</string>
+
     <!-- Delete manga -->
     <string name="delete">삭제</string>
     <plurals name="n_selected">

@@ -139,4 +139,11 @@ class MangaRepositoryImplTest {
 
         coVerify { dao.deleteByIds(listOf(1L, 2L)) }
     }
+
+    @Test
+    fun `updateTitle delegates to dao`() = runTest {
+        repository.updateTitle(1L, "New Title")
+
+        coVerify { dao.updateTitle(1L, "New Title") }
+    }
 }

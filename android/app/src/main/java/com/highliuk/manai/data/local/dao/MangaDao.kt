@@ -42,6 +42,9 @@ interface MangaDao {
     @Query("UPDATE manga SET lastReadPage = :page WHERE id = :id")
     suspend fun updateLastReadPage(id: Long, page: Int)
 
+    @Query("UPDATE manga SET title = :title WHERE id = :id")
+    suspend fun updateTitle(id: Long, title: String)
+
     @Query("DELETE FROM manga WHERE id IN (:ids)")
     suspend fun deleteByIds(ids: List<Long>)
 }

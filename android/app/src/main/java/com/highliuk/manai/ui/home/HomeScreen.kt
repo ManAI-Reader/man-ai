@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -62,6 +63,7 @@ fun HomeScreen(
     onSettingsClick: () -> Unit,
     onMangaClick: (Manga) -> Unit = {},
     onToggleSelection: (Long) -> Unit = {},
+    onRenameClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
     onClearSelection: () -> Unit = {}
 ) {
@@ -87,6 +89,14 @@ fun HomeScreen(
                         )
                     },
                     actions = {
+                        if (selectedMangaIds.size == 1) {
+                            IconButton(onClick = onRenameClick) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = stringResource(R.string.rename)
+                                )
+                            }
+                        }
                         IconButton(onClick = onDeleteClick) {
                             Icon(
                                 imageVector = Icons.Default.Delete,

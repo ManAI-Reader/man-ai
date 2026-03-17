@@ -53,6 +53,11 @@
     <string name="ok">Aceptar</string>
     <string name="cancel">Cancelar</string>
 
+    <!-- Rename manga -->
+    <string name="rename">Renombrar</string>
+    <string name="rename_manga_dialog_title">Renombrar manga</string>
+    <string name="rename_manga_hint">Título</string>
+
     <!-- Delete manga -->
     <string name="delete">Eliminar</string>
     <plurals name="n_selected">

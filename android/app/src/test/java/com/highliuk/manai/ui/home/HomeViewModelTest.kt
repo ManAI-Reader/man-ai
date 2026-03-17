@@ -300,7 +300,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `deleteSelectedManga deletes from repo and cleans local copies`() = runTest(testDispatcher) {
+    fun `confirmDelete deletes from repo and cleans local copies`() = runTest(testDispatcher) {
         val manga1 = Manga(id = 1, uri = "file:///local/manga/a.pdf", title = "A", pageCount = 10)
         val manga2 = Manga(id = 2, uri = "content://external/b.pdf", title = "B", pageCount = 20)
         mangaFlow.value = listOf(manga1, manga2)
@@ -312,7 +312,7 @@ class HomeViewModelTest {
 
             viewModel.toggleSelection(1L)
             viewModel.toggleSelection(2L)
-            viewModel.deleteSelectedManga()
+            viewModel.confirmDelete()
             testDispatcher.scheduler.advanceUntilIdle()
 
             coVerify { pdfFileCopier.deleteLocalCopy("file:///local/manga/a.pdf") }
@@ -341,6 +341,46 @@ class HomeViewModelTest {
             gridColumnsLandscapeFlow.value = 4
             assertEquals(4, awaitItem())
         }
+    }
+
+    @Test
+    fun `showRenameDialog is false initially`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        assertEquals(false, viewModel.showRenameDialog.value)
+    }
+
+    @Test
+    fun `requestRename sets dialog state`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        viewModel.toggleSelection(1L)
+        viewModel.requestRename()
+        assertEquals(true, viewModel.showRenameDialog.value)
+        assertEquals(1L, viewModel.renamingMangaId.value)
+    }
+
+    @Test
+    fun `confirmRename calls repository and clears state`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        viewModel.toggleSelection(1L)
+        viewModel.requestRename()
+
+        viewModel.confirmRename("New Title")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify { repository.updateTitle(1L, "New Title") }
+        assertEquals(false, viewModel.showRenameDialog.value)
+        assertEquals(emptySet<Long>(), viewModel.selectedMangaIds.value)
+    }
+
+    @Test
+    fun `dismissRename clears dialog state`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        viewModel.toggleSelection(1L)
+        viewModel.requestRename()
+        assertEquals(true, viewModel.showRenameDialog.value)
+
+        viewModel.dismissRename()
+        assertEquals(false, viewModel.showRenameDialog.value)
     }
 
     @Test

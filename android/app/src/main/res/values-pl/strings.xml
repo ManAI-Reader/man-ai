@@ -55,6 +55,11 @@
     <string name="ok">OK</string>
     <string name="cancel">Anuluj</string>
 
+    <!-- Rename manga -->
+    <string name="rename">Zmień nazwę</string>
+    <string name="rename_manga_dialog_title">Zmień nazwę mangi</string>
+    <string name="rename_manga_hint">Tytuł</string>
+
     <!-- Delete manga -->
     <string name="delete">Usuń</string>
     <plurals name="n_selected">

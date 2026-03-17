@@ -43,6 +43,7 @@ import androidx.navigation.navArgument
 import com.highliuk.manai.ui.home.DeleteMangaDialog
 import com.highliuk.manai.ui.home.HomeScreen
 import com.highliuk.manai.ui.home.HomeViewModel
+import com.highliuk.manai.ui.home.RenameMangaDialog
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import com.highliuk.manai.BuildConfig
@@ -133,6 +134,8 @@ fun ManAiNavHost(
                         val selectedMangaIds by viewModel.selectedMangaIds.collectAsState()
                         val isSelectionMode by viewModel.isSelectionMode.collectAsState()
                         val showDeleteDialog by viewModel.showDeleteDialog.collectAsState()
+                        val showRenameDialog by viewModel.showRenameDialog.collectAsState()
+                        val renamingMangaId by viewModel.renamingMangaId.collectAsState()
 
                         HomeScreen(
                             mangaList = mangaList,
@@ -143,9 +146,21 @@ fun ManAiNavHost(
                             onSettingsClick = { navController.navigate("settings") },
                             onMangaClick = { manga -> navController.navigate("reader/${manga.id}") },
                             onToggleSelection = viewModel::toggleSelection,
+                            onRenameClick = viewModel::requestRename,
                             onDeleteClick = viewModel::requestDelete,
                             onClearSelection = viewModel::clearSelection
                         )
+
+                        if (showRenameDialog) {
+                            val currentTitle = mangaList
+                                .firstOrNull { it.id == renamingMangaId }
+                                ?.title.orEmpty()
+                            RenameMangaDialog(
+                                currentTitle = currentTitle,
+                                onConfirm = viewModel::confirmRename,
+                                onDismiss = viewModel::dismissRename
+                            )
+                        }
 
                         if (showDeleteDialog) {
                             DeleteMangaDialog(

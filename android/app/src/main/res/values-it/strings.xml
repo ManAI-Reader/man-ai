@@ -62,6 +62,11 @@
     <string name="share_text">Condividi testo</string>
     <string name="text_copied">Testo copiato</string>
 
+    <!-- Rename manga -->
+    <string name="rename">Rinomina</string>
+    <string name="rename_manga_dialog_title">Rinomina manga</string>
+    <string name="rename_manga_hint">Titolo</string>
+
     <!-- Delete manga -->
     <string name="delete">Elimina</string>
     <plurals name="n_selected">

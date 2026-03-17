@@ -59,15 +59,6 @@ class HomeViewModel @Inject constructor(
     private val _navigateToReader = MutableSharedFlow<Long>()
     val navigateToReader: SharedFlow<Long> = _navigateToReader.asSharedFlow()
 
-    private suspend fun performImport(uri: String, fileName: String): Long {
-        val title = fileName.removeSuffix(".pdf")
-        val pageCount = pdfMetadataExtractor.extractPageCount(uri)
-        val contentHash = fileHashProvider.computeHash(uri)
-        return repository.upsertManga(
-            Manga(uri = uri, title = title, pageCount = pageCount, contentHash = contentHash)
-        )
-    }
-
     fun importManga(uri: String, fileName: String) {
         viewModelScope.launch {
             try {
@@ -76,12 +67,43 @@ class HomeViewModel @Inject constructor(
                 if (existing != null && existing.uri.startsWith("file://")) {
                     pdfFileCopier.deleteLocalCopy(existing.uri)
                 }
-                val id = performImport(uri, fileName)
+                val title = fileName.removeSuffix(".pdf")
+                val pageCount = pdfMetadataExtractor.extractPageCount(uri)
+                val hash = fileHashProvider.computeHash(uri)
+                val id = repository.upsertManga(
+                    Manga(uri = uri, title = title, pageCount = pageCount, contentHash = hash)
+                )
                 _navigateToReader.emit(id)
             } catch (_: Exception) {
                 // PDF could not be opened or read — silently ignore
             }
         }
+    }
+
+    private val _showRenameDialog = MutableStateFlow(false)
+    val showRenameDialog: StateFlow<Boolean> = _showRenameDialog.asStateFlow()
+
+    private val _renamingMangaId = MutableStateFlow(0L)
+    val renamingMangaId: StateFlow<Long> = _renamingMangaId.asStateFlow()
+
+    fun requestRename() {
+        val selected = _selectedMangaIds.value
+        if (selected.size == 1) {
+            _renamingMangaId.value = selected.first()
+            _showRenameDialog.value = true
+        }
+    }
+
+    fun confirmRename(newTitle: String) {
+        viewModelScope.launch {
+            repository.updateTitle(_renamingMangaId.value, newTitle)
+            _showRenameDialog.value = false
+            clearSelection()
+        }
+    }
+
+    fun dismissRename() {
+        _showRenameDialog.value = false
     }
 
     private val _showDeleteDialog = MutableStateFlow(false)
@@ -90,11 +112,6 @@ class HomeViewModel @Inject constructor(
     fun requestDelete() { _showDeleteDialog.value = true }
     fun dismissDelete() { _showDeleteDialog.value = false }
     fun confirmDelete() {
-        deleteSelectedManga()
-        _showDeleteDialog.value = false
-    }
-
-    fun deleteSelectedManga() {
         viewModelScope.launch {
             val ids = _selectedMangaIds.value.toList()
             val mangasToDelete = mangaList.value.filter { it.id in ids }
@@ -102,6 +119,7 @@ class HomeViewModel @Inject constructor(
             repository.deleteMangaByIds(ids)
             clearSelection()
         }
+        _showDeleteDialog.value = false
     }
 
     fun importMangaFromIntent(uri: String, fileName: String) {
@@ -114,7 +132,15 @@ class HomeViewModel @Inject constructor(
                     return@launch
                 }
                 val localUri = pdfFileCopier.copyToLocalStorage(uri)
-                val id = performImport(localUri, fileName)
+                val title = fileName.removeSuffix(".pdf")
+                val pageCount = pdfMetadataExtractor.extractPageCount(localUri)
+                val localHash = fileHashProvider.computeHash(localUri)
+                val id = repository.upsertManga(
+                    Manga(
+                        uri = localUri, title = title,
+                        pageCount = pageCount, contentHash = localHash
+                    )
+                )
                 _navigateToReader.emit(id)
             } catch (_: Exception) {
                 // Intent PDF could not be copied or read — silently ignore
