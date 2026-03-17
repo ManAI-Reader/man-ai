@@ -28,10 +28,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
@@ -55,6 +57,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -67,6 +70,7 @@ import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.PageRegion
 import java.util.Locale
 import kotlin.math.roundToInt
+import androidx.compose.ui.unit.max
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -144,11 +148,18 @@ fun OcrBottomSheet(
                         },
                     ),
             ) {
+                val safeInsets = WindowInsets.navigationBars.union(WindowInsets.displayCutout)
+                    .asPaddingValues()
+                val layoutDirection = LocalLayoutDirection.current
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .windowInsetsPadding(WindowInsets.navigationBars)
-                        .padding(horizontal = 24.dp, vertical = 16.dp)
+                        .padding(
+                            start = max(24.dp, safeInsets.calculateLeftPadding(layoutDirection)),
+                            end = max(24.dp, safeInsets.calculateRightPadding(layoutDirection)),
+                            top = 16.dp,
+                            bottom = max(16.dp, safeInsets.calculateBottomPadding()),
+                        )
                         .testTag("ocr_sheet_content"),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
