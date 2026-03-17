@@ -1,8 +1,10 @@
 package com.highliuk.manai.ui.reader
 
+import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.os.LocaleList
 import android.util.TypedValue
@@ -164,7 +166,8 @@ fun OcrBottomSheet(
 
                         AndroidView(
                             factory = { ctx ->
-                                SelectableOcrTextView(ctx).apply {
+                                SelectableOcrTextView(ctx.findActivity() ?: ctx).apply {
+                                    id = android.view.View.generateViewId()
                                     setTextIsSelectable(true)
                                     setLineSpacing(0f, 1.5f)
                                     textLocales = LocaleList(Locale("ja"))
@@ -228,4 +231,13 @@ fun OcrBottomSheet(
             }
         }
     }
+}
+
+private fun Context.findActivity(): Activity? {
+    var ctx = this
+    while (ctx is ContextWrapper) {
+        if (ctx is Activity) return ctx
+        ctx = ctx.baseContext
+    }
+    return null
 }
