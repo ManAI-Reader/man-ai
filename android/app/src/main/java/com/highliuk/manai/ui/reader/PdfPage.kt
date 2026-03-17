@@ -22,8 +22,35 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.highliuk.manai.R
 import com.highliuk.manai.data.pdf.PdfPageRenderer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 private const val PLACEHOLDER_ASPECT_RATIO = 0.7f
+
+internal suspend fun renderPdfFallback(
+    contentResolver: android.content.ContentResolver,
+    uri: String,
+    pageIndex: Int,
+): Bitmap? = withContext(Dispatchers.IO) {
+    try {
+        val pfd = contentResolver.openFileDescriptor(Uri.parse(uri), "r")
+        pfd?.use { fd ->
+            PdfRenderer(fd).use { renderer ->
+                if (pageIndex < renderer.pageCount) {
+                    renderer.openPage(pageIndex).use { page ->
+                        val bmp = Bitmap.createBitmap(
+                            page.width, page.height, Bitmap.Config.ARGB_8888
+                        )
+                        page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                        bmp
+                    }
+                } else null
+            }
+        }
+    } catch (@Suppress("TooGenericExceptionCaught") _: Exception) {
+        null
+    }
+}
 
 @Composable
 fun PdfPage(
@@ -39,24 +66,7 @@ fun PdfPage(
         value = if (pdfPageRenderer != null) {
             pdfPageRenderer.render(uri, pageIndex)
         } else {
-            try {
-                val pfd = context.contentResolver.openFileDescriptor(Uri.parse(uri), "r")
-                pfd?.use { fd ->
-                    PdfRenderer(fd).use { renderer ->
-                        if (pageIndex < renderer.pageCount) {
-                            renderer.openPage(pageIndex).use { page ->
-                                val bmp = Bitmap.createBitmap(
-                                    page.width, page.height, Bitmap.Config.ARGB_8888
-                                )
-                                page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-                                bmp
-                            }
-                        } else null
-                    }
-                }
-            } catch (@Suppress("TooGenericExceptionCaught") _: Exception) {
-                null
-            }
+            renderPdfFallback(context.contentResolver, uri, pageIndex)
         }
     }
 
