@@ -95,3 +95,37 @@ claude mcp add filesystem --scope user -- npx -y @modelcontextprotocol/server-fi
 - Node.js 18+ and npx (for context7, memory, mobile)
 - Python 3.10+ and uvx (for fetch)
 - ADB in PATH (for mobile — requires a running emulator or connected device)
+
+## Using Skills
+
+This project vendors [superpowers v4.3.0](https://github.com/obra/superpowers) skills in `.claude/skills/`. Invoke relevant skills BEFORE any response or action — even a 1% chance a skill might apply means you MUST invoke it.
+
+### The Rule
+
+**If a skill applies to your task, you do not have a choice. You MUST use it.** Use the `Skill` tool to invoke skills. Never use the Read tool on skill files.
+
+### Red Flags
+
+These thoughts mean STOP — you're rationalizing:
+
+| Thought | Reality |
+|---------|---------|
+| "This is just a simple question" | Questions are tasks. Check for skills. |
+| "I need more context first" | Skill check comes BEFORE clarifying questions. |
+| "Let me explore the codebase first" | Skills tell you HOW to explore. Check first. |
+| "This doesn't need a formal skill" | If a skill exists, use it. |
+| "I remember this skill" | Skills evolve. Read current version. |
+| "The skill is overkill" | Simple things become complex. Use it. |
+| "I'll just do this one thing first" | Check BEFORE doing anything. |
+
+### Skill Priority
+
+When multiple skills could apply:
+
+1. **Process skills first** (brainstorming, debugging) — determine HOW to approach the task
+2. **Implementation skills second** — guide execution
+
+### Skill Types
+
+**Rigid** (TDD, debugging): Follow exactly. Don't adapt away discipline.
+**Flexible** (patterns): Adapt principles to context. The skill itself tells you which.
