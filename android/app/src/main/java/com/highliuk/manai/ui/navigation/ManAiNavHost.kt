@@ -188,7 +188,13 @@ fun ManAiNavHost(
                         val selectedRegion by viewModel.selectedRegion.collectAsState()
                         val ocrFontScale by viewModel.ocrFontScale.collectAsState()
                         val debugPipelineStates by viewModel.debugPipelineStates.collectAsState()
-                        val tapToNavigate by viewModel.tapToNavigate.collectAsState()
+                        val tapToNavigatePortrait by viewModel.tapToNavigatePortrait.collectAsState()
+                        val tapToNavigateLandscape by viewModel.tapToNavigateLandscape.collectAsState()
+                        val tapToNavigate = resolveTapToNavigate(
+                            LocalConfiguration.current.orientation,
+                            tapToNavigatePortrait,
+                            tapToNavigateLandscape,
+                        )
                         val visiblePagesRegions by viewModel.visiblePagesRegions.collectAsState()
 
                         if (BuildConfig.DEBUG_ML) {
@@ -274,7 +280,8 @@ fun ManAiNavHost(
                     val themeMode by viewModel.themeMode.collectAsState()
                     val appLanguage by viewModel.appLanguage.collectAsState()
                     val ocrFontScale by viewModel.ocrFontScale.collectAsState()
-                    val tapToNavigate by viewModel.tapToNavigate.collectAsState()
+                    val tapToNavigatePortrait by viewModel.tapToNavigatePortrait.collectAsState()
+                    val tapToNavigateLandscape by viewModel.tapToNavigateLandscape.collectAsState()
 
                     SettingsScreen(
                         gridColumns = gridColumns,
@@ -297,8 +304,10 @@ fun ManAiNavHost(
                             }
                             AppCompatDelegate.setApplicationLocales(locales)
                         },
-                        tapToNavigate = tapToNavigate,
-                        onTapToNavigateChange = { viewModel.setTapToNavigate(it) },
+                        tapToNavigatePortrait = tapToNavigatePortrait,
+                        onTapToNavigatePortraitChange = { viewModel.setTapToNavigatePortrait(it) },
+                        tapToNavigateLandscape = tapToNavigateLandscape,
+                        onTapToNavigateLandscapeChange = { viewModel.setTapToNavigateLandscape(it) },
                         onBack = { navController.popBackStack() }
                     )
                 }
@@ -306,3 +315,9 @@ fun ManAiNavHost(
         }
     }
 }
+
+private fun resolveTapToNavigate(
+    orientation: Int,
+    portrait: Boolean,
+    landscape: Boolean,
+): Boolean = if (orientation == Configuration.ORIENTATION_LANDSCAPE) landscape else portrait

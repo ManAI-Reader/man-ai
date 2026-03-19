@@ -30,7 +30,8 @@ class SettingsViewModelTest {
     private val themeModeFlow = MutableStateFlow(ThemeMode.SYSTEM)
     private val appLanguageFlow = MutableStateFlow(AppLanguage.SYSTEM)
     private val ocrFontScaleFlow = MutableStateFlow(1.5f)
-    private val tapToNavigateFlow = MutableStateFlow(false)
+    private val tapToNavigatePortraitFlow = MutableStateFlow(false)
+    private val tapToNavigateLandscapeFlow = MutableStateFlow(true)
     private val gridColumnsLandscapeFlow = MutableStateFlow(5)
 
     @Before
@@ -42,7 +43,8 @@ class SettingsViewModelTest {
         every { userPreferencesRepository.themeMode } returns themeModeFlow
         every { userPreferencesRepository.appLanguage } returns appLanguageFlow
         every { userPreferencesRepository.ocrFontScale } returns ocrFontScaleFlow
-        every { userPreferencesRepository.tapToNavigate } returns tapToNavigateFlow
+        every { userPreferencesRepository.tapToNavigatePortrait } returns tapToNavigatePortraitFlow
+        every { userPreferencesRepository.tapToNavigateLandscape } returns tapToNavigateLandscapeFlow
     }
 
     @After
@@ -158,24 +160,45 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `tapToNavigate emits current preference value`() = runTest(testDispatcher) {
+    fun `tapToNavigatePortrait emits current preference value`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
 
-        viewModel.tapToNavigate.test {
+        viewModel.tapToNavigatePortrait.test {
             assertEquals(false, awaitItem())
-            tapToNavigateFlow.value = true
+            tapToNavigatePortraitFlow.value = true
             assertEquals(true, awaitItem())
         }
     }
 
     @Test
-    fun `setTapToNavigate updates preference`() = runTest(testDispatcher) {
+    fun `setTapToNavigatePortrait updates preference`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
 
-        viewModel.setTapToNavigate(true)
+        viewModel.setTapToNavigatePortrait(true)
         testDispatcher.scheduler.advanceUntilIdle()
 
-        coVerify { userPreferencesRepository.setTapToNavigate(true) }
+        coVerify { userPreferencesRepository.setTapToNavigatePortrait(true) }
+    }
+
+    @Test
+    fun `tapToNavigateLandscape emits current preference value`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.tapToNavigateLandscape.test {
+            assertEquals(true, awaitItem())
+            tapToNavigateLandscapeFlow.value = false
+            assertEquals(false, awaitItem())
+        }
+    }
+
+    @Test
+    fun `setTapToNavigateLandscape updates preference`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.setTapToNavigateLandscape(false)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify { userPreferencesRepository.setTapToNavigateLandscape(false) }
     }
 
     @Test

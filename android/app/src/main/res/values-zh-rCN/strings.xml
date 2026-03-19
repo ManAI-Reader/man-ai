@@ -17,8 +17,10 @@
     <string name="reading_mode_ltr">从左到右</string>
     <string name="reading_mode_rtl">从右到左</string>
     <string name="reading_mode_webtoon">Webtoon</string>
-    <string name="tap_to_navigate">点击翻页</string>
-    <string name="tap_to_navigate_description">点击左侧或右侧边缘翻页</string>
+    <string name="tap_to_navigate_portrait">点击翻页（竖屏）</string>
+    <string name="tap_to_navigate_portrait_description">在竖屏模式下点击边缘翻页</string>
+    <string name="tap_to_navigate_landscape">点击翻页（横屏）</string>
+    <string name="tap_to_navigate_landscape_description">在横屏模式下点击边缘翻页</string>
 
     <!-- Theme mode -->
     <string name="theme_mode">主题</string>

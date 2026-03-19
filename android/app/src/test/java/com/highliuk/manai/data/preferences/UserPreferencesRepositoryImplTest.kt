@@ -3,6 +3,7 @@ package com.highliuk.manai.data.preferences
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.highliuk.manai.domain.model.AppLanguage
@@ -211,6 +212,84 @@ class UserPreferencesRepositoryImplTest {
         repository.setTapToNavigate(false)
 
         assertEquals(false, repository.tapToNavigate.first())
+    }
+
+    @Test
+    fun `tapToNavigatePortrait emits default value false`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        val result = repository.tapToNavigatePortrait.first()
+
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun `setTapToNavigatePortrait persists true`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        repository.setTapToNavigatePortrait(true)
+
+        assertEquals(true, repository.tapToNavigatePortrait.first())
+    }
+
+    @Test
+    fun `setTapToNavigatePortrait persists false after true`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        repository.setTapToNavigatePortrait(true)
+        repository.setTapToNavigatePortrait(false)
+
+        assertEquals(false, repository.tapToNavigatePortrait.first())
+    }
+
+    @Test
+    fun `tapToNavigateLandscape emits default value true`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        val result = repository.tapToNavigateLandscape.first()
+
+        assertEquals(true, result)
+    }
+
+    @Test
+    fun `setTapToNavigateLandscape persists false`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        repository.setTapToNavigateLandscape(false)
+
+        assertEquals(false, repository.tapToNavigateLandscape.first())
+    }
+
+    @Test
+    fun `setTapToNavigateLandscape persists true after false`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        repository.setTapToNavigateLandscape(false)
+        repository.setTapToNavigateLandscape(true)
+
+        assertEquals(true, repository.tapToNavigateLandscape.first())
+    }
+
+    @Test
+    fun `tapToNavigatePortrait falls back to old tapToNavigate when not set`() = runTest(testDispatcher) {
+        val dataStore = createDataStore()
+        dataStore.edit { preferences ->
+            preferences[booleanPreferencesKey("tap_to_navigate")] = true
+        }
+        val repository = UserPreferencesRepositoryImpl(dataStore)
+
+        assertEquals(true, repository.tapToNavigatePortrait.first())
+    }
+
+    @Test
+    fun `tapToNavigateLandscape falls back to old tapToNavigate when not set`() = runTest(testDispatcher) {
+        val dataStore = createDataStore()
+        dataStore.edit { preferences ->
+            preferences[booleanPreferencesKey("tap_to_navigate")] = false
+        }
+        val repository = UserPreferencesRepositoryImpl(dataStore)
+
+        assertEquals(false, repository.tapToNavigateLandscape.first())
     }
 
     @Test

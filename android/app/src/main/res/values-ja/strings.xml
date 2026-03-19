@@ -16,8 +16,10 @@
     <string name="reading_mode">読み方向</string>
     <string name="reading_mode_ltr">左から右</string>
     <string name="reading_mode_rtl">右から左</string>
-    <string name="tap_to_navigate">タップでページ移動</string>
-    <string name="tap_to_navigate_description">左右の端をタップしてページを切り替え</string>
+    <string name="tap_to_navigate_portrait">タップでページ移動（縦向き）</string>
+    <string name="tap_to_navigate_portrait_description">縦向きモードで端をタップしてページを切り替え</string>
+    <string name="tap_to_navigate_landscape">タップでページ移動（横向き）</string>
+    <string name="tap_to_navigate_landscape_description">横向きモードで端をタップしてページを切り替え</string>
     <string name="reading_mode_webtoon">Webtoon</string>
 
     <!-- Theme mode -->

@@ -26,4 +26,10 @@ interface UserPreferencesRepository {
 
     val tapToNavigate: Flow<Boolean>
     suspend fun setTapToNavigate(enabled: Boolean)
+
+    val tapToNavigatePortrait: Flow<Boolean>
+    suspend fun setTapToNavigatePortrait(enabled: Boolean)
+
+    val tapToNavigateLandscape: Flow<Boolean>
+    suspend fun setTapToNavigateLandscape(enabled: Boolean)
 }

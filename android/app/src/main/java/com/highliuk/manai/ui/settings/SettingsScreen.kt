@@ -74,8 +74,10 @@ fun SettingsScreen(
     onAppLanguageChange: (AppLanguage) -> Unit,
     comicTextScale: Float = 1.5f,
     onComicTextScaleChange: (Float) -> Unit = {},
-    tapToNavigate: Boolean,
-    onTapToNavigateChange: (Boolean) -> Unit,
+    tapToNavigatePortrait: Boolean,
+    onTapToNavigatePortraitChange: (Boolean) -> Unit,
+    tapToNavigateLandscape: Boolean,
+    onTapToNavigateLandscapeChange: (Boolean) -> Unit,
     onBack: () -> Unit
 ) {
     Scaffold(
@@ -180,24 +182,48 @@ fun SettingsScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onTapToNavigateChange(!tapToNavigate) }
+                    .clickable { onTapToNavigatePortraitChange(!tapToNavigatePortrait) }
                     .padding(vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = stringResource(R.string.tap_to_navigate),
+                        text = stringResource(R.string.tap_to_navigate_portrait),
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
-                        text = stringResource(R.string.tap_to_navigate_description),
+                        text = stringResource(R.string.tap_to_navigate_portrait_description),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 Switch(
-                    checked = tapToNavigate,
-                    onCheckedChange = onTapToNavigateChange
+                    checked = tapToNavigatePortrait,
+                    onCheckedChange = onTapToNavigatePortraitChange
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onTapToNavigateLandscapeChange(!tapToNavigateLandscape) }
+                    .padding(vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.tap_to_navigate_landscape),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = stringResource(R.string.tap_to_navigate_landscape_description),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = tapToNavigateLandscape,
+                    onCheckedChange = onTapToNavigateLandscapeChange
                 )
             }
 

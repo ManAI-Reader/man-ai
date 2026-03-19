@@ -72,12 +72,21 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    val tapToNavigate: StateFlow<Boolean> = userPreferencesRepository.tapToNavigate
+    val tapToNavigatePortrait: StateFlow<Boolean> = userPreferencesRepository.tapToNavigatePortrait
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-    fun setTapToNavigate(enabled: Boolean) {
+    fun setTapToNavigatePortrait(enabled: Boolean) {
         viewModelScope.launch {
-            userPreferencesRepository.setTapToNavigate(enabled)
+            userPreferencesRepository.setTapToNavigatePortrait(enabled)
+        }
+    }
+
+    val tapToNavigateLandscape: StateFlow<Boolean> = userPreferencesRepository.tapToNavigateLandscape
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
+    fun setTapToNavigateLandscape(enabled: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.setTapToNavigateLandscape(enabled)
         }
     }
 }

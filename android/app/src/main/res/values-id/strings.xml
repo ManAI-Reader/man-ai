@@ -16,8 +16,10 @@
     <string name="reading_mode">Mode baca</string>
     <string name="reading_mode_ltr">Kiri ke kanan</string>
     <string name="reading_mode_rtl">Kanan ke kiri</string>
-    <string name="tap_to_navigate">Ketuk untuk navigasi</string>
-    <string name="tap_to_navigate_description">Ketuk tepi kiri atau kanan untuk mengganti halaman</string>
+    <string name="tap_to_navigate_portrait">Ketuk untuk navigasi (potret)</string>
+    <string name="tap_to_navigate_portrait_description">Ketuk tepi untuk mengganti halaman dalam mode potret</string>
+    <string name="tap_to_navigate_landscape">Ketuk untuk navigasi (lanskap)</string>
+    <string name="tap_to_navigate_landscape_description">Ketuk tepi untuk mengganti halaman dalam mode lanskap</string>
     <string name="reading_mode_webtoon">Webtoon</string>
 
     <!-- Theme mode -->

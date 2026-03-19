@@ -17,8 +17,10 @@
     <string name="reading_mode_ltr">ซ้ายไปขวา</string>
     <string name="reading_mode_rtl">ขวาไปซ้าย</string>
     <string name="reading_mode_webtoon">Webtoon</string>
-    <string name="tap_to_navigate">แตะเพื่อเปลี่ยนหน้า</string>
-    <string name="tap_to_navigate_description">แตะขอบซ้ายหรือขวาเพื่อเปลี่ยนหน้า</string>
+    <string name="tap_to_navigate_portrait">แตะเพื่อเปลี่ยนหน้า (แนวตั้ง)</string>
+    <string name="tap_to_navigate_portrait_description">แตะขอบเพื่อเปลี่ยนหน้าในโหมดแนวตั้ง</string>
+    <string name="tap_to_navigate_landscape">แตะเพื่อเปลี่ยนหน้า (แนวนอน)</string>
+    <string name="tap_to_navigate_landscape_description">แตะขอบเพื่อเปลี่ยนหน้าในโหมดแนวนอน</string>
 
     <!-- Theme mode -->
     <string name="theme_mode">ธีม</string>

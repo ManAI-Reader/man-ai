@@ -1,6 +1,9 @@
 package com.highliuk.manai.ui.navigation
 
+import android.content.pm.ActivityInfo
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
@@ -9,6 +12,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
@@ -47,6 +51,11 @@ class ManAiNavHostTest {
     fun setUp() {
         hiltRule.inject()
         database.clearAllTables()
+    }
+
+    @org.junit.After
+    fun tearDown() {
+        composeTestRule.activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
     }
 
     @SdkSuppress(minSdkVersion = 30) // Immersive mode tap-to-show unreliable on API < 30
@@ -296,5 +305,39 @@ class ManAiNavHostTest {
         composeTestRule.mainClock.advanceTimeBy(500)
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithContentDescription("Reader settings").assertIsDisplayed()
+    }
+
+    @SdkSuppress(minSdkVersion = 30)
+    @Test
+    fun reader_landscapeDefaultEnablesTapToNavigate() = runTest {
+        composeTestRule.activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        composeTestRule.waitForIdle()
+
+        mangaDao.insert(MangaEntity(uri = "content://orient-landscape", title = "Orient Landscape", pageCount = 5))
+
+        composeTestRule.waitUntil(timeoutMillis = 10000) {
+            composeTestRule.onAllNodesWithText("Orient Landscape").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithText("Orient Landscape").performClick()
+        composeTestRule.waitUntil(timeoutMillis = 10000) {
+            composeTestRule.onAllNodesWithTag("reader_pager").fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Tap right edge in landscape — tapToNavigateLandscape defaults to true
+        // so this should navigate to next page, NOT toggle bars
+        composeTestRule.onNodeWithTag("reader_pager").performTouchInput {
+            click(position = Offset(x = width * 0.9f, y = height * 0.5f))
+        }
+        composeTestRule.mainClock.advanceTimeBy(500)
+        composeTestRule.waitForIdle()
+
+        // Bars should NOT be visible (tap navigated, did not toggle bars)
+        val backButtonVisible = try {
+            composeTestRule.onNodeWithContentDescription("Back").assertIsDisplayed()
+            true
+        } catch (_: AssertionError) {
+            false
+        }
+        assertFalse("Back button should NOT be visible — tap should navigate, not toggle bars", backButtonVisible)
     }
 }

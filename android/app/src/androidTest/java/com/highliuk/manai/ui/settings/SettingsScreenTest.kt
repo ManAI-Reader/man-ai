@@ -35,8 +35,10 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
-                tapToNavigate = false,
-                onTapToNavigateChange = {},
+                tapToNavigatePortrait = false,
+                onTapToNavigatePortraitChange = {},
+                tapToNavigateLandscape = true,
+                onTapToNavigateLandscapeChange = {},
                 onBack = {}
             )
         }
@@ -62,8 +64,10 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
-                tapToNavigate = false,
-                onTapToNavigateChange = {},
+                tapToNavigatePortrait = false,
+                onTapToNavigatePortraitChange = {},
+                tapToNavigateLandscape = true,
+                onTapToNavigateLandscapeChange = {},
                 onBack = {}
             )
         }
@@ -89,8 +93,10 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
-                tapToNavigate = false,
-                onTapToNavigateChange = {},
+                tapToNavigatePortrait = false,
+                onTapToNavigatePortraitChange = {},
+                tapToNavigateLandscape = true,
+                onTapToNavigateLandscapeChange = {},
                 onBack = { backCalled = true }
             )
         }
@@ -115,8 +121,10 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
-                tapToNavigate = false,
-                onTapToNavigateChange = {},
+                tapToNavigatePortrait = false,
+                onTapToNavigatePortraitChange = {},
+                tapToNavigateLandscape = true,
+                onTapToNavigateLandscapeChange = {},
                 onBack = {}
             )
         }
@@ -142,8 +150,10 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
-                tapToNavigate = false,
-                onTapToNavigateChange = {},
+                tapToNavigatePortrait = false,
+                onTapToNavigatePortraitChange = {},
+                tapToNavigateLandscape = true,
+                onTapToNavigateLandscapeChange = {},
                 onBack = {}
             )
         }
@@ -167,8 +177,10 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
-                tapToNavigate = false,
-                onTapToNavigateChange = {},
+                tapToNavigatePortrait = false,
+                onTapToNavigatePortraitChange = {},
+                tapToNavigateLandscape = true,
+                onTapToNavigateLandscapeChange = {},
                 onBack = {}
             )
         }
@@ -195,8 +207,10 @@ class SettingsScreenTest {
                 onThemeModeChange = { selectedTheme = it },
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
-                tapToNavigate = false,
-                onTapToNavigateChange = {},
+                tapToNavigatePortrait = false,
+                onTapToNavigatePortraitChange = {},
+                tapToNavigateLandscape = true,
+                onTapToNavigateLandscapeChange = {},
                 onBack = {}
             )
         }
@@ -220,8 +234,10 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
-                tapToNavigate = false,
-                onTapToNavigateChange = {},
+                tapToNavigatePortrait = false,
+                onTapToNavigatePortraitChange = {},
+                tapToNavigateLandscape = true,
+                onTapToNavigateLandscapeChange = {},
                 onBack = {}
             )
         }
@@ -246,8 +262,10 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
-                tapToNavigate = false,
-                onTapToNavigateChange = {},
+                tapToNavigatePortrait = false,
+                onTapToNavigatePortraitChange = {},
+                tapToNavigateLandscape = true,
+                onTapToNavigateLandscapeChange = {},
                 onBack = {}
             )
         }
@@ -271,8 +289,10 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
-                tapToNavigate = false,
-                onTapToNavigateChange = {},
+                tapToNavigatePortrait = false,
+                onTapToNavigatePortraitChange = {},
+                tapToNavigateLandscape = true,
+                onTapToNavigateLandscapeChange = {},
                 onBack = {}
             )
         }
@@ -298,8 +318,10 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = { selectedLanguage = it },
-                tapToNavigate = false,
-                onTapToNavigateChange = {},
+                tapToNavigatePortrait = false,
+                onTapToNavigatePortraitChange = {},
+                tapToNavigateLandscape = true,
+                onTapToNavigateLandscapeChange = {},
                 onBack = {}
             )
         }
@@ -325,8 +347,10 @@ class SettingsScreenTest {
                 onAppLanguageChange = {},
                 comicTextScale = 1.5f,
                 onComicTextScaleChange = {},
-                tapToNavigate = false,
-                onTapToNavigateChange = {},
+                tapToNavigatePortrait = false,
+                onTapToNavigatePortraitChange = {},
+                tapToNavigateLandscape = true,
+                onTapToNavigateLandscapeChange = {},
                 onBack = {},
             )
         }
@@ -348,14 +372,16 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
-                tapToNavigate = false,
-                onTapToNavigateChange = {},
+                tapToNavigatePortrait = false,
+                onTapToNavigatePortraitChange = {},
+                tapToNavigateLandscape = true,
+                onTapToNavigateLandscapeChange = {},
                 onBack = {}
             )
         }
 
-        composeTestRule.onNodeWithText("Tap to navigate").performScrollTo().assertIsDisplayed()
-        composeTestRule.onNodeWithText("Tap left or right edge to change page")
+        composeTestRule.onNodeWithText("Tap to navigate (portrait)").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Tap edges to change page in portrait mode")
             .performScrollTo().assertIsDisplayed()
     }
 
@@ -375,13 +401,71 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
-                tapToNavigate = false,
-                onTapToNavigateChange = { toggled = true },
+                tapToNavigatePortrait = false,
+                onTapToNavigatePortraitChange = { toggled = true },
+                tapToNavigateLandscape = true,
+                onTapToNavigateLandscapeChange = {},
                 onBack = {}
             )
         }
 
-        composeTestRule.onNodeWithText("Tap to navigate").performScrollTo().performClick()
+        composeTestRule.onNodeWithText("Tap to navigate (portrait)").performScrollTo().performClick()
+
+        assert(toggled)
+    }
+
+    @Test
+    fun displaysTapToNavigateLandscapeSwitch() {
+        composeTestRule.setContent {
+            SettingsScreen(
+                gridColumns = 2,
+                onGridColumnsChange = {},
+                gridColumnsLandscape = 5,
+                onGridColumnsLandscapeChange = {},
+                readingMode = ReadingMode.LTR,
+                onReadingModeChange = {},
+                themeMode = ThemeMode.SYSTEM,
+                onThemeModeChange = {},
+                appLanguage = AppLanguage.SYSTEM,
+                onAppLanguageChange = {},
+                tapToNavigatePortrait = false,
+                onTapToNavigatePortraitChange = {},
+                tapToNavigateLandscape = true,
+                onTapToNavigateLandscapeChange = {},
+                onBack = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("Tap to navigate (landscape)").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Tap edges to change page in landscape mode")
+            .performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun tappingLandscapeSwitchCallsCallback() {
+        var toggled = false
+
+        composeTestRule.setContent {
+            SettingsScreen(
+                gridColumns = 2,
+                onGridColumnsChange = {},
+                gridColumnsLandscape = 5,
+                onGridColumnsLandscapeChange = {},
+                readingMode = ReadingMode.LTR,
+                onReadingModeChange = {},
+                themeMode = ThemeMode.SYSTEM,
+                onThemeModeChange = {},
+                appLanguage = AppLanguage.SYSTEM,
+                onAppLanguageChange = {},
+                tapToNavigatePortrait = false,
+                onTapToNavigatePortraitChange = {},
+                tapToNavigateLandscape = true,
+                onTapToNavigateLandscapeChange = { toggled = true },
+                onBack = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("Tap to navigate (landscape)").performScrollTo().performClick()
 
         assert(toggled)
     }
@@ -400,8 +484,10 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
-                tapToNavigate = false,
-                onTapToNavigateChange = {},
+                tapToNavigatePortrait = false,
+                onTapToNavigatePortraitChange = {},
+                tapToNavigateLandscape = true,
+                onTapToNavigateLandscapeChange = {},
                 onBack = {}
             )
         }
@@ -428,8 +514,10 @@ class SettingsScreenTest {
                 onThemeModeChange = {},
                 appLanguage = AppLanguage.SYSTEM,
                 onAppLanguageChange = {},
-                tapToNavigate = false,
-                onTapToNavigateChange = {},
+                tapToNavigatePortrait = false,
+                onTapToNavigatePortraitChange = {},
+                tapToNavigateLandscape = true,
+                onTapToNavigateLandscapeChange = {},
                 onBack = {}
             )
         }

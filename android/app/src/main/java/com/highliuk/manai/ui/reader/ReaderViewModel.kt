@@ -59,8 +59,11 @@ class ReaderViewModel @Inject constructor(
     val ocrFontScale: StateFlow<Float> = userPreferencesRepository.ocrFontScale
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 1.5f)
 
-    val tapToNavigate: StateFlow<Boolean> = userPreferencesRepository.tapToNavigate
+    val tapToNavigatePortrait: StateFlow<Boolean> = userPreferencesRepository.tapToNavigatePortrait
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val tapToNavigateLandscape: StateFlow<Boolean> = userPreferencesRepository.tapToNavigateLandscape
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     val manga: StateFlow<Manga?> = repository.getMangaById(mangaId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)

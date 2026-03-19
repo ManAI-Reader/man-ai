@@ -46,6 +46,12 @@ class UserPreferencesRepositoryImpl @Inject constructor(
 
         val TAP_TO_NAVIGATE = booleanPreferencesKey("tap_to_navigate")
         const val DEFAULT_TAP_TO_NAVIGATE = false
+
+        val TAP_TO_NAVIGATE_PORTRAIT = booleanPreferencesKey("tap_to_navigate_portrait")
+        const val DEFAULT_TAP_TO_NAVIGATE_PORTRAIT = false
+
+        val TAP_TO_NAVIGATE_LANDSCAPE = booleanPreferencesKey("tap_to_navigate_landscape")
+        const val DEFAULT_TAP_TO_NAVIGATE_LANDSCAPE = true
     }
 
     override val gridColumns: Flow<Int> = dataStore.data.map { preferences ->
@@ -145,6 +151,30 @@ class UserPreferencesRepositoryImpl @Inject constructor(
     override suspend fun setTapToNavigate(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[TAP_TO_NAVIGATE] = enabled
+        }
+    }
+
+    override val tapToNavigatePortrait: Flow<Boolean> = dataStore.data.map { preferences ->
+        preferences[TAP_TO_NAVIGATE_PORTRAIT]
+            ?: preferences[TAP_TO_NAVIGATE]
+            ?: DEFAULT_TAP_TO_NAVIGATE_PORTRAIT
+    }
+
+    override suspend fun setTapToNavigatePortrait(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[TAP_TO_NAVIGATE_PORTRAIT] = enabled
+        }
+    }
+
+    override val tapToNavigateLandscape: Flow<Boolean> = dataStore.data.map { preferences ->
+        preferences[TAP_TO_NAVIGATE_LANDSCAPE]
+            ?: preferences[TAP_TO_NAVIGATE]
+            ?: DEFAULT_TAP_TO_NAVIGATE_LANDSCAPE
+    }
+
+    override suspend fun setTapToNavigateLandscape(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[TAP_TO_NAVIGATE_LANDSCAPE] = enabled
         }
     }
 }

@@ -19,8 +19,10 @@
     <string name="reading_mode">Tryb czytania</string>
     <string name="reading_mode_ltr">Od lewej do prawej</string>
     <string name="reading_mode_rtl">Od prawej do lewej</string>
-    <string name="tap_to_navigate">Dotknij, aby nawigować</string>
-    <string name="tap_to_navigate_description">Dotknij lewej lub prawej krawędzi, aby zmienić stronę</string>
+    <string name="tap_to_navigate_portrait">Dotknij, aby nawigować (pionowo)</string>
+    <string name="tap_to_navigate_portrait_description">Dotknij krawędzi, aby zmienić stronę w trybie pionowym</string>
+    <string name="tap_to_navigate_landscape">Dotknij, aby nawigować (poziomo)</string>
+    <string name="tap_to_navigate_landscape_description">Dotknij krawędzi, aby zmienić stronę w trybie poziomym</string>
     <string name="reading_mode_webtoon">Webtoon</string>
 
     <!-- Theme mode -->

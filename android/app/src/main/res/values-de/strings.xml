@@ -17,8 +17,10 @@
     <string name="reading_mode">Lesemodus</string>
     <string name="reading_mode_ltr">Links nach rechts</string>
     <string name="reading_mode_rtl">Rechts nach links</string>
-    <string name="tap_to_navigate">Tippen zum Navigieren</string>
-    <string name="tap_to_navigate_description">Tippen Sie auf den linken oder rechten Rand, um die Seite zu wechseln</string>
+    <string name="tap_to_navigate_portrait">Tippen zum Navigieren (Hochformat)</string>
+    <string name="tap_to_navigate_portrait_description">Tippen Sie auf die Ränder, um im Hochformat die Seite zu wechseln</string>
+    <string name="tap_to_navigate_landscape">Tippen zum Navigieren (Querformat)</string>
+    <string name="tap_to_navigate_landscape_description">Tippen Sie auf die Ränder, um im Querformat die Seite zu wechseln</string>
     <string name="reading_mode_webtoon">Webtoon</string>
 
     <!-- Theme mode -->

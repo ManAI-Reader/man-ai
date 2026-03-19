@@ -17,8 +17,10 @@
     <string name="reading_mode">Modalità di lettura</string>
     <string name="reading_mode_ltr">Da sinistra a destra</string>
     <string name="reading_mode_rtl">Da destra a sinistra</string>
-    <string name="tap_to_navigate">Tocca per navigare</string>
-    <string name="tap_to_navigate_description">Tocca il bordo sinistro o destro per cambiare pagina</string>
+    <string name="tap_to_navigate_portrait">Tocca per navigare (verticale)</string>
+    <string name="tap_to_navigate_portrait_description">Tocca i bordi per cambiare pagina in modalità verticale</string>
+    <string name="tap_to_navigate_landscape">Tocca per navigare (orizzontale)</string>
+    <string name="tap_to_navigate_landscape_description">Tocca i bordi per cambiare pagina in modalità orizzontale</string>
     <string name="reading_mode_webtoon">Webtoon</string>
 
     <!-- Theme mode -->
