@@ -1,12 +1,19 @@
 package com.highliuk.manai.ui.reader
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
-import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -111,6 +118,36 @@ class ReaderBottomBarTest {
         composeTestRule.waitForIdle()
 
         assertTrue("onPageSelected should be called with a page > 0", selectedPage > 0)
+    }
+
+    @Test
+    fun tappingBottomBarBackground_doesNotPropagateToContentBelow() {
+        var contentTapped = false
+        composeTestRule.setContent {
+            Box(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable { contentTapped = true }
+                )
+                Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+                    ReaderBottomBar(
+                        currentPage = 0,
+                        pageCount = 10,
+                        onPageSelected = {}
+                    )
+                }
+            }
+        }
+
+        composeTestRule.onNodeWithTag("reader_bottom_bar").performTouchInput {
+            click(Offset(center.x, top + 1f))
+        }
+
+        assertFalse(
+            "Tap on bottom bar background should NOT propagate to content below",
+            contentTapped
+        )
     }
 
     @Test
