@@ -128,7 +128,7 @@ class ReaderViewModel @Inject constructor(
     fun onRegionTapped(region: PageRegion) {
         _selectedRegion.value = region
         if (region.ocrText == null) {
-            launchPipeline(_currentPage.value, priorityRegionIndex = region.regionIndex)
+            launchPipeline(region.pageIndex, priorityRegionIndex = region.regionIndex)
         }
     }
 

@@ -151,4 +151,36 @@ class OcrCacheRepositoryImplTest {
 
         coVerify { dao.updateOcrText(1L, 0, 2, "recognized text") }
     }
+
+    @Test
+    fun `observeRegions includes pageIndex from entity`() = runTest {
+        val entities = listOf(
+            PageOcrResultEntity(
+                mangaId = 1L, pageIndex = 5, regionIndex = 0,
+                normX1 = 0.1f, normY1 = 0.2f, normX2 = 0.3f, normY2 = 0.4f,
+                confidence = 0.95f, ocrText = "hello"
+            )
+        )
+        coEvery { dao.getByPage(1L, 5) } returns flowOf(entities)
+
+        val result = repository.observeRegions(1L, 5).first()
+
+        assertEquals(5, result[0].pageIndex)
+    }
+
+    @Test
+    fun `getRegions includes pageIndex from entity`() = runTest {
+        val entities = listOf(
+            PageOcrResultEntity(
+                mangaId = 1L, pageIndex = 7, regionIndex = 0,
+                normX1 = 0.1f, normY1 = 0.2f, normX2 = 0.3f, normY2 = 0.4f,
+                confidence = 0.9f, ocrText = null
+            )
+        )
+        coEvery { dao.getByPageOnce(1L, 7) } returns entities
+
+        val result = repository.getRegions(1L, 7)
+
+        assertEquals(7, result[0].pageIndex)
+    }
 }

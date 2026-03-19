@@ -466,6 +466,42 @@ class ReaderViewModelTest {
     }
 
     @Test
+    fun `onRegionTapped with null ocrText launches pipeline on region pageIndex not currentPage`() =
+        runTest(testDispatcher) {
+            val manga = Manga(id = 1, uri = "content://test", title = "Test", pageCount = 20)
+            coEvery { repository.getMangaById(1L) } returns flowOf(manga)
+            every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+            coEvery { pdfPageRenderer.render(any(), any()) } returns mockk(relaxed = true)
+
+            val viewModel = createViewModel(1L)
+            advanceTimeBy(400)
+            testScheduler.advanceUntilIdle()
+
+            // Current page is 0 (from init). Tap a region that lives on page 5.
+            clearMocks(processPageUseCase, answers = false)
+
+            val regionOnPage5 = PageRegion(
+                regionIndex = 2, normX1 = 0.1f, normY1 = 0.1f,
+                normX2 = 0.5f, normY2 = 0.5f, confidence = 0.9f,
+                ocrText = null, pageIndex = 5,
+            )
+            viewModel.onRegionTapped(regionOnPage5)
+            testScheduler.advanceUntilIdle()
+
+            // Pipeline must be launched for page 5, NOT page 0
+            coVerify {
+                processPageUseCase.execute(
+                    1L, 5, any(), detectionOnly = false, priorityRegionIndex = 2
+                )
+            }
+            coVerify(exactly = 0) {
+                processPageUseCase.execute(
+                    1L, 0, any(), detectionOnly = false, priorityRegionIndex = 2
+                )
+            }
+        }
+
+    @Test
     fun `readingMode emits WEBTOON when set`() = runTest(testDispatcher) {
         coEvery { repository.getMangaById(1L) } returns flowOf(null)
         val viewModel = createViewModel(1L)

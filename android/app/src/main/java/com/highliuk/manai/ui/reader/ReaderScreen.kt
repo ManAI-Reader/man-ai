@@ -305,7 +305,12 @@ fun ReaderScreen(
         }
 
         if (selectedRegion != null) {
-            val liveRegion = regions.find { it.regionIndex == selectedRegion.regionIndex }
+            val sourceRegions = if (isWebtoon) {
+                visiblePagesRegions[selectedRegion.pageIndex].orEmpty()
+            } else {
+                regions
+            }
+            val liveRegion = sourceRegions.find { it.regionIndex == selectedRegion.regionIndex }
                 ?: selectedRegion
             OcrBottomSheet(region = liveRegion, fontScale = ocrFontScale, onDismiss = onDismissBottomSheet)
         }

@@ -79,6 +79,7 @@ class OcrCacheRepositoryImpl @Inject constructor(
         normY2 = normY2,
         confidence = confidence,
         ocrText = ocrText,
+        pageIndex = pageIndex,
     )
 
     companion object {

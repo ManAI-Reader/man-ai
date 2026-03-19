@@ -11,6 +11,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
 import com.highliuk.manai.domain.model.Manga
 import com.highliuk.manai.domain.model.PageRegion
+import com.highliuk.manai.domain.model.ReadingMode
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -79,5 +80,50 @@ class ReaderScreenOcrTest {
         composeTestRule.waitForIdle()
 
         assertEquals(regions[0], tappedRegion)
+    }
+
+    @Test
+    fun webtoonMode_bottomSheet_showsCorrectPageRegionText() {
+        // Bug: in webtoon, liveRegion lookup used currentPageRegions (page 0)
+        // instead of the tapped region's page (page 1). Both pages have regionIndex=0
+        // but different OCR text.
+
+        val regionPage0 = PageRegion(
+            regionIndex = 0, normX1 = 0f, normY1 = 0f, normX2 = 1f, normY2 = 1f,
+            confidence = 0.9f, ocrText = "wrong_page0_text", pageIndex = 0,
+        )
+        val regionPage1 = PageRegion(
+            regionIndex = 0, normX1 = 0f, normY1 = 0f, normX2 = 1f, normY2 = 1f,
+            confidence = 0.9f, ocrText = "correct_page1_text", pageIndex = 1,
+        )
+
+        // regions = currentPageRegions = page 0's regions
+        val currentPageRegions = listOf(regionPage0)
+        // selectedRegion is the one from page 1 (tapped in webtoon)
+        val selectedRegion = mutableStateOf<PageRegion?>(regionPage1)
+
+        composeTestRule.setContent {
+            ReaderScreen(
+                manga = Manga(id = 1, uri = "content://test", title = "Test", pageCount = 5),
+                currentPage = 0,
+                readingMode = ReadingMode.WEBTOON,
+                regions = currentPageRegions,
+                selectedRegion = selectedRegion.value,
+                visiblePagesRegions = mapOf(
+                    0 to listOf(regionPage0),
+                    1 to listOf(regionPage1),
+                ),
+                onPageChanged = {},
+                onDismissBottomSheet = { selectedRegion.value = null },
+                onBack = {},
+                onSettingsClick = {},
+            )
+        }
+
+        composeTestRule.waitForIdle()
+
+        // The bottom sheet must show page 1's text, not page 0's
+        composeTestRule.onNodeWithText("correct_page1_text").assertIsDisplayed()
+        composeTestRule.onNodeWithText("wrong_page0_text").assertDoesNotExist()
     }
 }

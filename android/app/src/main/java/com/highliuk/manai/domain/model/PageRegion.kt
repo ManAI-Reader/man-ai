@@ -8,4 +8,5 @@ data class PageRegion(
     val normY2: Float,
     val confidence: Float,
     val ocrText: String?,
+    val pageIndex: Int = 0,
 )
