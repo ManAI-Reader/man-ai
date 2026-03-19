@@ -11,8 +11,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 class PdfPageTest {
 
@@ -35,7 +33,6 @@ class PdfPageTest {
 
     @Test
     fun rendersPageImage_whenValidPdfProvided() {
-        val latch = CountDownLatch(1)
         var loadedWidth = 0
         var loadedHeight = 0
 
@@ -46,30 +43,29 @@ class PdfPageTest {
                 onBitmapLoaded = { w, h ->
                     loadedWidth = w
                     loadedHeight = h
-                    latch.countDown()
                 }
             )
         }
 
-        assertTrue("onBitmapLoaded should be called", latch.await(5, TimeUnit.SECONDS))
+        composeTestRule.waitUntil(timeoutMillis = 5_000) { loadedWidth > 0 }
         assertTrue("Bitmap width should be > 0", loadedWidth > 0)
         assertTrue("Bitmap height should be > 0", loadedHeight > 0)
     }
 
     @Test
     fun rendersPageImage_whenContentScaleIsFillHeight() {
-        val latch = CountDownLatch(1)
+        var bitmapLoaded = false
 
         composeTestRule.setContent {
             PdfPage(
                 uri = testPdfUri,
                 pageIndex = 0,
                 contentScale = ContentScale.FillHeight,
-                onBitmapLoaded = { _, _ -> latch.countDown() }
+                onBitmapLoaded = { _, _ -> bitmapLoaded = true }
             )
         }
 
-        assertTrue("onBitmapLoaded should be called", latch.await(5, TimeUnit.SECONDS))
+        composeTestRule.waitUntil(timeoutMillis = 5_000) { bitmapLoaded }
     }
 
     @Test
