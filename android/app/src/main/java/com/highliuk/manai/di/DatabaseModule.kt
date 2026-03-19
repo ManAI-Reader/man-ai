@@ -28,6 +28,7 @@ object DatabaseModule {
                 ManAiDatabase.MIGRATION_3_2,
                 ManAiDatabase.MIGRATION_2_1
             )
+            .fallbackToDestructiveMigrationOnDowngrade()
             .build()
 
     @Provides
