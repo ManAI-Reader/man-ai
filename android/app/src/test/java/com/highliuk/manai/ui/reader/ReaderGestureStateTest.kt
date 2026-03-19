@@ -1,6 +1,7 @@
 package com.highliuk.manai.ui.reader
 
 import androidx.compose.runtime.snapshots.Snapshot
+import androidx.compose.ui.geometry.Offset
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -51,36 +52,36 @@ class ReaderGestureStateTest {
     @Test
     fun `onZoom multiplies scale`() {
         val state = ReaderGestureState()
-        state.onZoom(1.5f)
+        state.onZoom(1.5f, Offset(500f, 1000f), 1000f, 2000f)
         assertEquals(1.5f, state.scale, 0.001f)
     }
 
     @Test
     fun `onZoom clamps scale at max 5f`() {
         val state = ReaderGestureState()
-        state.onZoom(10f)
+        state.onZoom(10f, Offset(500f, 1000f), 1000f, 2000f)
         assertEquals(5f, state.scale, 0.001f)
     }
 
     @Test
     fun `onZoom clamps scale at min 1f`() {
         val state = ReaderGestureState()
-        state.onZoom(2f)
-        state.onZoom(0.1f)
+        state.onZoom(2f, Offset(500f, 1000f), 1000f, 2000f)
+        state.onZoom(0.1f, Offset(500f, 1000f), 1000f, 2000f)
         assertEquals(1f, state.scale, 0.001f)
     }
 
     @Test
     fun `isZoomed returns true when scale above 1f`() {
         val state = ReaderGestureState()
-        state.onZoom(1.5f)
+        state.onZoom(1.5f, Offset(500f, 1000f), 1000f, 2000f)
         assertTrue(state.isZoomed)
     }
 
     @Test
     fun `onPan updates offsets when zoomed`() {
         val state = ReaderGestureState()
-        state.onZoom(2f)
+        state.onZoom(2f, Offset(500f, 1000f), 1000f, 2000f)
         state.onPan(50f, 30f, 1000f, 2000f)
         assertEquals(50f, state.offsetX, 0.001f)
         assertEquals(30f, state.offsetY, 0.001f)
@@ -89,7 +90,7 @@ class ReaderGestureStateTest {
     @Test
     fun `onPan clamps offsets to page bounds`() {
         val state = ReaderGestureState()
-        state.onZoom(2f)
+        state.onZoom(2f, Offset(500f, 1000f), 1000f, 2000f)
         state.onPan(9999f, 9999f, 1000f, 2000f)
         assertEquals(500f, state.offsetX, 0.001f)
         assertEquals(1000f, state.offsetY, 0.001f)
@@ -98,7 +99,7 @@ class ReaderGestureStateTest {
     @Test
     fun `onPan clamps negative offsets`() {
         val state = ReaderGestureState()
-        state.onZoom(2f)
+        state.onZoom(2f, Offset(500f, 1000f), 1000f, 2000f)
         state.onPan(-9999f, -9999f, 1000f, 2000f)
         assertEquals(-500f, state.offsetX, 0.001f)
         assertEquals(-1000f, state.offsetY, 0.001f)
@@ -115,7 +116,7 @@ class ReaderGestureStateTest {
     @Test
     fun `onPan accumulates offsets`() {
         val state = ReaderGestureState()
-        state.onZoom(2f)
+        state.onZoom(2f, Offset(500f, 1000f), 1000f, 2000f)
         state.onPan(50f, 30f, 1000f, 2000f)
         state.onPan(50f, 30f, 1000f, 2000f)
         assertEquals(100f, state.offsetX, 0.001f)
@@ -125,7 +126,7 @@ class ReaderGestureStateTest {
     @Test
     fun `resetZoom sets scale to 1f and offsets to 0f`() {
         val state = ReaderGestureState()
-        state.onZoom(2.5f)
+        state.onZoom(2.5f, Offset(500f, 1000f), 1000f, 2000f)
         state.onPan(100f, 200f, 1000f, 2000f)
         state.resetZoom()
         assertEquals(1f, state.scale, 0.001f)
@@ -137,7 +138,7 @@ class ReaderGestureStateTest {
     fun `onPan clamps Y offset to image edge when image is shorter than container`() {
         val state = ReaderGestureState()
         state.setContentSize(1000f, 1500f)
-        state.onZoom(2f)
+        state.onZoom(2f, Offset(500f, 1000f), 1000f, 2000f)
         // container 1000x2000, rendered image 1000x1500 (FillWidth)
         // maxOffsetY = max(0, 2 * 1500/2 - 2000/2) = 500
         state.onPan(0f, 9999f, 1000f, 2000f)
@@ -148,7 +149,7 @@ class ReaderGestureStateTest {
     fun `onPan clamps negative Y offset to image edge when image is shorter than container`() {
         val state = ReaderGestureState()
         state.setContentSize(1000f, 1500f)
-        state.onZoom(2f)
+        state.onZoom(2f, Offset(500f, 1000f), 1000f, 2000f)
         state.onPan(0f, -9999f, 1000f, 2000f)
         assertEquals(-500f, state.offsetY, 0.001f)
     }
@@ -157,7 +158,7 @@ class ReaderGestureStateTest {
     fun `onPan X offset unchanged when image fills width`() {
         val state = ReaderGestureState()
         state.setContentSize(1000f, 1500f)
-        state.onZoom(2f)
+        state.onZoom(2f, Offset(500f, 1000f), 1000f, 2000f)
         // X: FillWidth -> renderedWidth = containerWidth -> same formula
         // maxOffsetX = 1000 * (2-1) / 2 = 500
         state.onPan(9999f, 0f, 1000f, 2000f)
@@ -167,7 +168,7 @@ class ReaderGestureStateTest {
     @Test
     fun `onPan without content size uses container bounds`() {
         val state = ReaderGestureState()
-        state.onZoom(2f)
+        state.onZoom(2f, Offset(500f, 1000f), 1000f, 2000f)
         state.onPan(9999f, 9999f, 1000f, 2000f)
         assertEquals(500f, state.offsetX, 0.001f)
         assertEquals(1000f, state.offsetY, 0.001f)
@@ -176,9 +177,81 @@ class ReaderGestureStateTest {
     @Test
     fun `zoom back to 1f resets offsets`() {
         val state = ReaderGestureState()
-        state.onZoom(2f)
+        state.onZoom(2f, Offset(500f, 1000f), 1000f, 2000f)
         state.onPan(50f, 50f, 1000f, 1000f)
-        state.onZoom(0.5f)
+        state.onZoom(0.5f, Offset(500f, 1000f), 1000f, 2000f)
+        assertEquals(0f, state.offsetX, 0.001f)
+        assertEquals(0f, state.offsetY, 0.001f)
+    }
+
+    @Test
+    fun `onZoom with centroid at top-left shifts offset toward top-left`() {
+        val state = ReaderGestureState()
+        // Container 1000x2000, centroid at (0, 0) = top-left corner
+        // centroidRelX = 0 - 500 = -500, centroidRelY = 0 - 1000 = -1000
+        // oldScale=1, newScale=2, ratio=2
+        // offsetX = -500 - (-500 - 0) * 2 = -500 + 1000 = 500 -> clamp to maxX=500 -> 500
+        // offsetY = -1000 - (-1000 - 0) * 2 = -1000 + 2000 = 1000 -> clamp to maxY=1000 -> 1000
+        state.onZoom(2f, Offset(0f, 0f), 1000f, 2000f)
+        assertEquals(2f, state.scale, 0.001f)
+        assertEquals(500f, state.offsetX, 0.001f)
+        assertEquals(1000f, state.offsetY, 0.001f)
+    }
+
+    @Test
+    fun `onZoom with centroid at bottom-right shifts offset toward bottom-right`() {
+        val state = ReaderGestureState()
+        // centroidRelX = 1000-500=500, centroidRelY = 2000-1000=1000
+        // offsetX = 500 - (500-0)*2 = 500-1000 = -500 -> clamp to [-500,500] -> -500
+        // offsetY = 1000 - (1000-0)*2 = 1000-2000 = -1000 -> clamp to [-1000,1000] -> -1000
+        state.onZoom(2f, Offset(1000f, 2000f), 1000f, 2000f)
+        assertEquals(-500f, state.offsetX, 0.001f)
+        assertEquals(-1000f, state.offsetY, 0.001f)
+    }
+
+    @Test
+    fun `onZoom with centroid at center produces no offset`() {
+        val state = ReaderGestureState()
+        state.onZoom(2f, Offset(500f, 1000f), 1000f, 2000f)
+        assertEquals(0f, state.offsetX, 0.001f)
+        assertEquals(0f, state.offsetY, 0.001f)
+    }
+
+    @Test
+    fun `onZoom clamps offsets during de-zoom`() {
+        val state = ReaderGestureState()
+        // Zoom in to 3x with offset at max bounds
+        state.onZoom(3f, Offset(500f, 1000f), 1000f, 2000f)
+        state.onPan(9999f, 9999f, 1000f, 2000f)
+        // At 3x: maxX=1000, maxY=2000
+        assertEquals(1000f, state.offsetX, 0.001f)
+        assertEquals(2000f, state.offsetY, 0.001f)
+        // De-zoom to 2x from center — offsets must be clamped to 2x bounds
+        // At 2x: maxX=500, maxY=1000
+        state.onZoom(2f / 3f, Offset(500f, 1000f), 1000f, 2000f)
+        assertEquals(2f, state.scale, 0.01f)
+        assertTrue("offsetX should be <= 500 after de-zoom", state.offsetX <= 500f + 0.01f)
+        assertTrue("offsetY should be <= 1000 after de-zoom", state.offsetY <= 1000f + 0.01f)
+    }
+
+    @Test
+    fun `onZoom de-zoom to 1x resets offsets to zero`() {
+        val state = ReaderGestureState()
+        state.onZoom(3f, Offset(200f, 400f), 1000f, 2000f)
+        // Now de-zoom back to 1x
+        state.onZoom(1f / 3f, Offset(200f, 400f), 1000f, 2000f)
+        assertEquals(1f, state.scale, 0.01f)
+        assertEquals(0f, state.offsetX, 0.001f)
+        assertEquals(0f, state.offsetY, 0.001f)
+    }
+
+    @Test
+    fun `onZoom then de-zoom round-trip from center preserves zero offset`() {
+        val state = ReaderGestureState()
+        val center = Offset(500f, 1000f)
+        state.onZoom(2f, center, 1000f, 2000f)
+        assertEquals(0f, state.offsetX, 0.001f)
+        state.onZoom(0.5f, center, 1000f, 2000f)
         assertEquals(0f, state.offsetX, 0.001f)
         assertEquals(0f, state.offsetY, 0.001f)
     }
@@ -193,7 +266,7 @@ class ReaderGestureStateTest {
     @Test
     fun `onDoubleTap when zoomed returns target scale 1f`() {
         val state = ReaderGestureState()
-        state.onZoom(2f)
+        state.onZoom(2f, Offset(500f, 1000f), 1000f, 2000f)
         val target = state.onDoubleTap(500f, 1000f, 1000f, 2000f)
         assertEquals(1f, target.scale, 0.001f)
     }
@@ -201,7 +274,7 @@ class ReaderGestureStateTest {
     @Test
     fun `onDoubleTap when zoomed returns zero offsets`() {
         val state = ReaderGestureState()
-        state.onZoom(2f)
+        state.onZoom(2f, Offset(500f, 1000f), 1000f, 2000f)
         val target = state.onDoubleTap(500f, 1000f, 1000f, 2000f)
         assertEquals(0f, target.offsetX, 0.001f)
         assertEquals(0f, target.offsetY, 0.001f)
@@ -228,7 +301,7 @@ class ReaderGestureStateTest {
     @Test
     fun `onDoubleTap at 1_5x from pinch returns target 1f`() {
         val state = ReaderGestureState()
-        state.onZoom(1.5f)
+        state.onZoom(1.5f, Offset(500f, 1000f), 1000f, 2000f)
         val target = state.onDoubleTap(500f, 1000f, 1000f, 2000f)
         assertEquals(1f, target.scale, 0.001f)
     }
@@ -245,7 +318,7 @@ class ReaderGestureStateTest {
     @Test
     fun `onPanX updates only offsetX when zoomed`() {
         val state = ReaderGestureState()
-        state.onZoom(2f)
+        state.onZoom(2f, Offset(500f, 1000f), 1000f, 2000f)
 
         state.onPanX(50f, 400f)
 
@@ -265,7 +338,7 @@ class ReaderGestureStateTest {
     @Test
     fun `onPanX clamps to max offset`() {
         val state = ReaderGestureState()
-        state.onZoom(2f) // maxOffsetX = 400 * (2-1) / 2 = 200
+        state.onZoom(2f, Offset(500f, 1000f), 1000f, 2000f) // maxOffsetX = 400 * (2-1) / 2 = 200
 
         state.onPanX(999f, 400f)
 
@@ -285,7 +358,7 @@ class ReaderGestureStateTest {
     @Test
     fun `onDoubleTapWebtoon when zoomed returns reset target`() {
         val state = ReaderGestureState()
-        state.onZoom(2f)
+        state.onZoom(2f, Offset(500f, 1000f), 1000f, 2000f)
 
         val target = state.onDoubleTapWebtoon(tapX = 100f, containerWidth = 400f)
 
@@ -337,7 +410,7 @@ class ReaderGestureStateTest {
         // Rendered: height fills 1080, width = 1080 * 1000/1500 = 720
         // At scale 3: rendered width = 2160, maxOffsetX = max(0, 2160/2 - 1920/2) = 120
         state.setContentSize(1000f, 1500f)
-        state.onZoom(3f)
+        state.onZoom(3f, Offset(960f, 540f), 1920f, 1080f)
         state.onPan(9999f, 0f, 1920f, 1080f)
         assertEquals(120f, state.offsetX, 1f)
     }
@@ -348,7 +421,7 @@ class ReaderGestureStateTest {
         // Image 1000x1500, container 1920x1080
         // Rendered at scale 2: width = 2*720 = 1440 < 1920 -> maxOffsetX = 0
         state.setContentSize(1000f, 1500f)
-        state.onZoom(2f)
+        state.onZoom(2f, Offset(960f, 540f), 1920f, 1080f)
         state.onPan(9999f, 0f, 1920f, 1080f)
         assertEquals(0f, state.offsetX, 1f)
     }
@@ -360,7 +433,7 @@ class ReaderGestureStateTest {
         // Fit-to-height: rendered height = 1080
         // At scale 2: maxOffsetY = max(0, 2*1080/2 - 1080/2) = 540
         state.setContentSize(1000f, 1500f)
-        state.onZoom(2f)
+        state.onZoom(2f, Offset(960f, 540f), 1920f, 1080f)
         state.onPan(0f, 9999f, 1920f, 1080f)
         assertEquals(540f, state.offsetY, 1f)
     }

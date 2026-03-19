@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Offset
 
 class ReaderGestureState {
     var areBarsVisible by mutableStateOf(false)
@@ -35,12 +36,30 @@ class ReaderGestureState {
         areBarsVisible = !areBarsVisible
     }
 
-    fun onZoom(zoomChange: Float) {
-        scale = (scale * zoomChange).coerceIn(MIN_SCALE, MAX_SCALE)
+    fun onZoom(
+        zoomChange: Float,
+        centroid: Offset,
+        containerWidth: Float,
+        containerHeight: Float,
+    ) {
+        val oldScale = scale
+        val newScale = (scale * zoomChange).coerceIn(MIN_SCALE, MAX_SCALE)
+        scale = newScale
+
         if (!isZoomed) {
             offsetX = 0f
             offsetY = 0f
+            return
         }
+
+        val centroidRelX = centroid.x - containerWidth / 2f
+        val centroidRelY = centroid.y - containerHeight / 2f
+        offsetX = centroidRelX - (centroidRelX - offsetX) * (newScale / oldScale)
+        offsetY = centroidRelY - (centroidRelY - offsetY) * (newScale / oldScale)
+
+        val (maxX, maxY) = computeMaxOffsets(newScale, containerWidth, containerHeight)
+        offsetX = offsetX.coerceIn(-maxX, maxX)
+        offsetY = offsetY.coerceIn(-maxY, maxY)
     }
 
     fun resetZoom() {

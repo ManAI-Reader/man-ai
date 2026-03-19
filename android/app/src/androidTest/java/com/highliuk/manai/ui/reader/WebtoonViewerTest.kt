@@ -3,6 +3,7 @@ package com.highliuk.manai.ui.reader
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.remember
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertHeightIsEqualTo
@@ -13,6 +14,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.doubleClick
+import androidx.compose.ui.test.pinch
 import androidx.compose.ui.test.swipeUp
 import com.highliuk.manai.domain.model.PagePipelineState
 import com.highliuk.manai.domain.model.PageRegion
@@ -134,7 +136,7 @@ class WebtoonViewerTest {
     @Test
     fun scrollWorksWhenZoomed() {
         val gestureState = ReaderGestureState()
-        gestureState.onZoom(2f)
+        gestureState.onZoom(2f, Offset(200f, 400f), 400f, 800f)
         lateinit var lazyListState: LazyListState
 
         composeTestRule.setContent {
@@ -264,5 +266,42 @@ class WebtoonViewerTest {
 
         composeTestRule.onAllNodesWithTag("debug_ml_overlay")
             .assertCountEquals(2)
+    }
+
+    @Test
+    fun pinchAtCornerShiftsOffsetTowardCorner() {
+        val gestureState = ReaderGestureState()
+
+        composeTestRule.setContent {
+            WebtoonViewer(
+                lazyListState = rememberLazyListState(),
+                uri = "content://test",
+                pageCount = 5,
+                gestureState = gestureState,
+            )
+        }
+
+        composeTestRule.onNodeWithTag("webtoon_viewer")
+            .performTouchInput {
+                // Pinch out (zoom in) at top-left corner
+                // Fingers spread apart, centroid near (75, 75)
+                pinch(
+                    start0 = Offset(50f, 50f),
+                    end0 = Offset(25f, 25f),
+                    start1 = Offset(100f, 100f),
+                    end1 = Offset(125f, 125f),
+                )
+            }
+        composeTestRule.waitForIdle()
+
+        assertTrue("should be zoomed after pinch", gestureState.scale > 1f)
+        assertTrue(
+            "offsetX should be > 0 when pinching at top-left (focal point shifts view right)",
+            gestureState.offsetX > 0f
+        )
+        assertTrue(
+            "offsetY should be > 0 when pinching at top-left (focal point shifts view down)",
+            gestureState.offsetY > 0f
+        )
     }
 }

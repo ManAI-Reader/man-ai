@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculateCentroid
 import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -19,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
@@ -58,7 +60,13 @@ fun WebtoonViewer(
                         val panChange = event.calculatePan()
 
                         if (zoomChange != 1f) {
-                            gestureState.onZoom(zoomChange)
+                            val centroid = event.calculateCentroid(useCurrent = false)
+                            gestureState.onZoom(
+                                zoomChange,
+                                centroid,
+                                size.width.toFloat(),
+                                size.height.toFloat(),
+                            )
                             event.changes.forEach { if (it.positionChanged()) it.consume() }
                         }
 
