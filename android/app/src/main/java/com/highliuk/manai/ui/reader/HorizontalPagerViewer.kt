@@ -138,6 +138,8 @@ fun HorizontalPagerViewer(
             .fillMaxSize()
             .testTag("reader_pager")
     ) { pageIndex ->
+        val isCurrentPage = pageIndex == pagerState.currentPage
+        val pageRegions = if (isCurrentPage) regions else emptyList()
         var bitmapWidth by remember { mutableIntStateOf(0) }
         var bitmapHeight by remember { mutableIntStateOf(0) }
         BoxWithConstraints(
@@ -162,7 +164,7 @@ fun HorizontalPagerViewer(
                             onTap = { offset ->
                                 handleTapWithRegions(
                                     offset = offset,
-                                    regions = regions,
+                                    regions = pageRegions,
                                     gestureState = gestureState,
                                     containerWidth = size.width,
                                     containerHeight = size.height,
@@ -231,7 +233,7 @@ fun HorizontalPagerViewer(
                 if (debugPipelineStates.isNotEmpty()) {
                     DebugMlOverlay(
                         pageState = debugPipelineStates[pageIndex],
-                        regions = regions,
+                        regions = pageRegions,
                         bitmapWidth = bitmapWidth,
                         bitmapHeight = bitmapHeight,
                         modifier = Modifier.matchParentSize(),
