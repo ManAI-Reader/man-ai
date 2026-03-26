@@ -82,6 +82,7 @@ fun OcrBottomSheet(
     region: PageRegion,
     fontScale: Float = 1.5f,
     onDismiss: () -> Unit,
+    cutoutInsets: WindowInsets = WindowInsets.displayCutout,
 ) {
     val context = LocalContext.current
     var visible by remember { mutableStateOf(false) }
@@ -148,7 +149,7 @@ fun OcrBottomSheet(
                         },
                     ),
             ) {
-                val safeInsets = WindowInsets.navigationBars.union(WindowInsets.displayCutout)
+                val safeInsets = WindowInsets.navigationBars.union(cutoutInsets)
                     .asPaddingValues()
                 val layoutDirection = LocalLayoutDirection.current
                 Column(
