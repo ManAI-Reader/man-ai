@@ -54,13 +54,22 @@ jobs:
       - name: Decode keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/keystore.jks
 
-      - name: Build release APK
+      - name: Build release APKs (per-ABI split)
         env:
           KEYSTORE_FILE: keystore.jks
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: ./gradlew assembleRelease
+
+      - name: Rename APKs for release
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          cd app/build/outputs/apk/release
+          for apk in *.apk; do
+            abi=$(echo "$apk" | sed -n 's/app-\(.*\)-release\.apk/\1/p')
+            [ -n "$abi" ] && mv "$apk" "man-ai-${version}-${abi}.apk"
+          done
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
