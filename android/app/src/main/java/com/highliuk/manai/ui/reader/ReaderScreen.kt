@@ -114,8 +114,8 @@ fun ReaderScreen(
 ) {
     val isRtl = readingMode == ReadingMode.RTL
     val isWebtoon = readingMode == ReadingMode.WEBTOON
-    val pagerState = rememberPagerState(initialPage = currentPage) { manga.pageCount }
-    val lazyListState = rememberLazyListState(initialFirstVisibleItemIndex = currentPage)
+    val pagerState = rememberPagerState(initialPage = manga.lastReadPage) { manga.pageCount }
+    val lazyListState = rememberLazyListState(initialFirstVisibleItemIndex = manga.lastReadPage)
     val gestureState = remember { ReaderGestureState() }
     val coroutineScope = rememberCoroutineScope()
     var intendedPage by remember { mutableIntStateOf(currentPage) }
@@ -124,11 +124,20 @@ fun ReaderScreen(
     var showGoToPageDialog by remember { mutableStateOf(false) }
     val sharedTransitionScope = LocalSharedTransitionScope.current
     val animatedVisibilityScope = LocalAnimatedVisibilityScope.current
+    val isTransitionActive = sharedTransitionScope?.isTransitionActive ?: false
+    var transitionCompleted by remember { mutableStateOf(sharedTransitionScope == null) }
+    val isViewerStable = transitionCompleted && !isTransitionActive
 
-    LaunchedEffect(readingMode) {
-        if (isWebtoon) {
+    LaunchedEffect(isTransitionActive) {
+        if (!isTransitionActive) {
+            transitionCompleted = true
+        }
+    }
+
+    LaunchedEffect(readingMode, isViewerStable) {
+        if (isWebtoon && isViewerStable) {
             lazyListState.scrollToItem(currentPage)
-        } else {
+        } else if (!isWebtoon) {
             pagerState.scrollToPage(currentPage)
         }
         gestureState.resetZoom()
@@ -144,8 +153,8 @@ fun ReaderScreen(
         }
     }
 
-    LaunchedEffect(lazyListState, isWebtoon) {
-        if (isWebtoon) {
+    LaunchedEffect(lazyListState, isWebtoon, isViewerStable) {
+        if (isWebtoon && isViewerStable) {
             snapshotFlow {
                 computeWebtoonCurrentPage(
                     firstVisibleItemIndex = lazyListState.firstVisibleItemIndex,
@@ -159,8 +168,8 @@ fun ReaderScreen(
         }
     }
 
-    LaunchedEffect(lazyListState, isWebtoon) {
-        if (isWebtoon) {
+    LaunchedEffect(lazyListState, isWebtoon, isViewerStable) {
+        if (isWebtoon && isViewerStable) {
             snapshotFlow {
                 lazyListState.layoutInfo.visibleItemsInfo.map { it.index }
             }.collect { pages ->
