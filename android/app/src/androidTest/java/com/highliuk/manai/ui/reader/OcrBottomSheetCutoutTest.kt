@@ -8,6 +8,7 @@ import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.UiDevice
 import com.highliuk.manai.domain.model.PageRegion
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -18,10 +19,18 @@ import org.junit.runner.Description
 
 class LandscapeRule : TestWatcher() {
     override fun starting(description: Description) {
-        val auto = InstrumentationRegistry.getInstrumentation().uiAutomation
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val auto = instrumentation.uiAutomation
         auto.executeShellCommand("settings put system accelerometer_rotation 0").close()
         auto.executeShellCommand("settings put system user_rotation 1").close()
-        Thread.sleep(1500)
+        val device = UiDevice.getInstance(instrumentation)
+        // Wait until the device actually reports landscape dimensions
+        val deadline = System.currentTimeMillis() + 5_000
+        while (device.displayWidth < device.displayHeight &&
+            System.currentTimeMillis() < deadline
+        ) {
+            device.waitForIdle()
+        }
     }
 
     override fun finished(description: Description) {

@@ -22,7 +22,7 @@ import org.junit.Rule
 import org.junit.Test
 import javax.inject.Inject
 
-private const val TIMEOUT = 3_000L
+private const val TIMEOUT = 5_000L
 
 @HiltAndroidTest
 class WebtoonLastPageE2ETest {
@@ -59,7 +59,16 @@ class WebtoonLastPageE2ETest {
         device.unfreezeRotation()
     }
 
+    /** Block until the WebtoonViewer composable is on screen. */
+    private fun waitForReader() {
+        assertNotNull(
+            "WebtoonViewer should be visible",
+            device.wait(Until.findObject(By.res("webtoon_viewer")), TIMEOUT),
+        )
+    }
+
     private fun showBarsAndFindIndicator(): String {
+        waitForReader()
         device.click(device.displayWidth / 2, device.displayHeight / 2)
         val indicator = device.wait(Until.findObject(By.textContains("/ 10")), TIMEOUT)
         assertNotNull("Page indicator not visible after tap", indicator)
@@ -72,13 +81,16 @@ class WebtoonLastPageE2ETest {
             Until.findObject(By.clazz("android.widget.EditText")),
             TIMEOUT,
         )
+        assertNotNull("EditText should appear in dialog", input)
         input.click()
         input.clear()
         for (digit in pageNumber.toString()) {
             device.pressKeyCode(android.view.KeyEvent.KEYCODE_0 + (digit - '0'))
         }
         device.pressBack()
-        device.wait(Until.findObject(By.text("OK")), TIMEOUT).click()
+        val okButton = device.wait(Until.findObject(By.text("OK")), TIMEOUT)
+        assertNotNull("OK button should appear in dialog", okButton)
+        okButton.click()
     }
 
     @Test
@@ -86,10 +98,11 @@ class WebtoonLastPageE2ETest {
         ActivityScenario.launch(MainActivity::class.java)
 
         // 1. Tap manga
-        device.wait(Until.findObject(By.text("Webtoon Save Test")), TIMEOUT).click()
+        val mangaItem = device.wait(Until.findObject(By.text("Webtoon Save Test")), TIMEOUT)
+        assertNotNull("Manga should appear on home screen", mangaItem)
+        mangaItem.click()
 
         // 2. Show bars, tap page indicator → GoToPageDialog
-        Thread.sleep(500)
         showBarsAndFindIndicator()
         device.findObject(By.textContains("/ 10")).click()
 
@@ -98,12 +111,15 @@ class WebtoonLastPageE2ETest {
             Until.findObject(By.clazz("android.widget.EditText")),
             TIMEOUT,
         )
+        assertNotNull("EditText should appear in dialog", input)
         input.click()
         input.clear()
         device.pressKeyCode(android.view.KeyEvent.KEYCODE_1)
         device.pressKeyCode(android.view.KeyEvent.KEYCODE_0)
         device.pressBack()
-        device.wait(Until.findObject(By.text("OK")), TIMEOUT).click()
+        val okButton = device.wait(Until.findObject(By.text("OK")), TIMEOUT)
+        assertNotNull("OK button should appear in dialog", okButton)
+        okButton.click()
 
         // 4. Bars still visible — verify page 10
         val indicatorBefore = device.wait(
@@ -112,20 +128,21 @@ class WebtoonLastPageE2ETest {
         )
         assertNotNull("Should show 10 / 10 before leaving", indicatorBefore)
 
-        // 5. Back → home
+        // 5. Back → home, wait for home to settle
         device.pressBack()
+        device.wait(Until.hasObject(By.text("Webtoon Save Test")), TIMEOUT)
+        device.waitForIdle()
 
         // 6. Reopen
-        device.wait(Until.findObject(By.text("Webtoon Save Test")), TIMEOUT).click()
+        device.findObject(By.text("Webtoon Save Test")).click()
 
         // 7. Show bars, verify page restored correctly
-        Thread.sleep(500)
         val indicatorText = showBarsAndFindIndicator()
         assertEquals("10 / 10", indicatorText)
 
         // 8. Hide bars so they don't interfere with scrolling
         device.click(device.displayWidth / 2, device.displayHeight / 2)
-        Thread.sleep(500)
+        device.wait(Until.gone(By.textContains("/ 10")), TIMEOUT)
 
         // 9. Record Y of the bottom-most placeholder before swiping
         val before = device.findObjects(By.desc("PDF placeholder"))
@@ -141,7 +158,7 @@ class WebtoonLastPageE2ETest {
             device.displayHeight / 4,
             10,
         )
-        Thread.sleep(500)
+        device.waitForIdle()
 
         // 11. Record Y after swiping
         val after = device.findObjects(By.desc("PDF placeholder"))
@@ -160,14 +177,16 @@ class WebtoonLastPageE2ETest {
 
     private fun setLandscape() {
         device.setOrientationLeft()
-        Thread.sleep(500)
+        waitForReader()
     }
 
     @Test
     fun webtoonLastPage_isSavedCorrectly_landscape() {
         ActivityScenario.launch(MainActivity::class.java)
-        device.wait(Until.findObject(By.text("Webtoon Save Test")), TIMEOUT).click()
-        Thread.sleep(500)
+        val mangaItem = device.wait(Until.findObject(By.text("Webtoon Save Test")), TIMEOUT)
+        assertNotNull("Manga should appear on home screen", mangaItem)
+        mangaItem.click()
+        waitForReader()
         setLandscape()
 
         showBarsAndFindIndicator()
@@ -179,9 +198,10 @@ class WebtoonLastPageE2ETest {
         assertNotNull("Should show 10 / 10 before leaving", indicatorBefore)
 
         device.pressBack()
-        device.wait(Until.findObject(By.text("Webtoon Save Test")), TIMEOUT).click()
+        device.wait(Until.hasObject(By.text("Webtoon Save Test")), TIMEOUT)
+        device.waitForIdle()
+        device.findObject(By.text("Webtoon Save Test")).click()
 
-        Thread.sleep(500)
         val indicatorText = showBarsAndFindIndicator()
         assertEquals("10 / 10", indicatorText)
     }

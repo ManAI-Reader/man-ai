@@ -25,7 +25,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
@@ -54,7 +57,7 @@ import com.highliuk.manai.ui.settings.SettingsViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 
-@OptIn(ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun ManAiNavHost(
     onImportClick: () -> Unit,
@@ -74,7 +77,10 @@ fun ManAiNavHost(
     }
 
     SharedTransitionLayout(
-        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
+        modifier = Modifier
+            .fillMaxSize()
+            .semantics { testTagsAsResourceId = true }
+            .background(MaterialTheme.colorScheme.background)
     ) {
         CompositionLocalProvider(LocalSharedTransitionScope provides this) {
             NavHost(

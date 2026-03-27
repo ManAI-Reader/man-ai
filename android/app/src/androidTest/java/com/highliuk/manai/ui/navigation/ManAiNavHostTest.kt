@@ -1,6 +1,7 @@
 package com.highliuk.manai.ui.navigation
 
 import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.click
@@ -311,7 +312,10 @@ class ManAiNavHostTest {
     @Test
     fun reader_landscapeDefaultEnablesTapToNavigate() = runTest {
         composeTestRule.activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(timeoutMillis = 10000) {
+            composeTestRule.activity.resources.configuration.orientation ==
+                Configuration.ORIENTATION_LANDSCAPE
+        }
 
         mangaDao.insert(MangaEntity(uri = "content://orient-landscape", title = "Orient Landscape", pageCount = 5))
 

@@ -190,8 +190,7 @@ class OcrBottomSheetTest {
         val copyButton = device.wait(Until.findObject(By.text("Copy")), 5000)
         assertNotNull("Copy should appear", copyButton)
         copyButton.click()
-
-        Thread.sleep(500)
+        device.waitForIdle()
 
         val clipboard = InstrumentationRegistry.getInstrumentation().targetContext
             .getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
