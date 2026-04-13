@@ -138,6 +138,7 @@ fun HorizontalPagerViewer(
         modifier = modifier
             .fillMaxSize()
             .testTag("reader_pager")
+            .semantics { tapToNavigateEnabled = tapToNavigate }
     ) { pageIndex ->
         val isCurrentPage = pageIndex == pagerState.currentPage
         val pageRegions = if (isCurrentPage) regions else emptyList()

@@ -51,6 +51,9 @@ import kotlinx.coroutines.launch
 internal val ZoomScaleKey = SemanticsPropertyKey<Float>("ZoomScale")
 internal var SemanticsPropertyReceiver.zoomScale by ZoomScaleKey
 
+internal val TapToNavigateKey = SemanticsPropertyKey<Boolean>("TapToNavigate")
+internal var SemanticsPropertyReceiver.tapToNavigateEnabled by TapToNavigateKey
+
 internal data class TapHandler(
     val tapToNavigate: Boolean,
     val isZoomed: Boolean,

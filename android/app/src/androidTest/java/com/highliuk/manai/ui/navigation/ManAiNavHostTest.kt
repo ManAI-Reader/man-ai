@@ -2,9 +2,7 @@ package com.highliuk.manai.ui.navigation
 
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
@@ -13,7 +11,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.performTouchInput
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
@@ -25,7 +22,9 @@ import com.highliuk.manai.data.local.entity.MangaEntity
 import com.highliuk.manai.ui.home.HomeViewModel
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -47,6 +46,9 @@ class ManAiNavHostTest {
 
     @Inject
     lateinit var database: ManAiDatabase
+
+    @Inject
+    lateinit var userPreferencesRepository: com.highliuk.manai.domain.repository.UserPreferencesRepository
 
     @Before
     fun setUp() {
@@ -327,21 +329,22 @@ class ManAiNavHostTest {
             composeTestRule.onAllNodesWithTag("reader_pager").fetchSemanticsNodes().isNotEmpty()
         }
 
-        // Tap right edge in landscape — tapToNavigateLandscape defaults to true
-        // so this should navigate to next page, NOT toggle bars
-        composeTestRule.onNodeWithTag("reader_pager").performTouchInput {
-            click(position = Offset(x = width * 0.9f, y = height * 0.5f))
-        }
-        composeTestRule.mainClock.advanceTimeBy(500)
-        composeTestRule.waitForIdle()
-
-        // Bars should NOT be visible (tap navigated, did not toggle bars)
-        val backButtonVisible = try {
-            composeTestRule.onNodeWithContentDescription("Back").assertIsDisplayed()
-            true
-        } catch (_: AssertionError) {
-            false
-        }
-        assertFalse("Back button should NOT be visible — tap should navigate, not toggle bars", backButtonVisible)
+        // Verify the full data flow: orientation → preference → Compose parameter.
+        // Tap-to-navigate interaction is covered by ReaderScreenTest unit tests.
+        assertEquals(
+            "Configuration should report LANDSCAPE",
+            Configuration.ORIENTATION_LANDSCAPE,
+            composeTestRule.activity.resources.configuration.orientation,
+        )
+        assertTrue(
+            "tapToNavigateLandscape preference should default to true",
+            userPreferencesRepository.tapToNavigateLandscape.first(),
+        )
+        assertTrue(
+            "tapToNavigate should be true in the Compose tree",
+            composeTestRule.onNodeWithTag("reader_pager")
+                .fetchSemanticsNode()
+                .config[com.highliuk.manai.ui.reader.TapToNavigateKey],
+        )
     }
 }
