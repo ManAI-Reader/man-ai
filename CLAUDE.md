@@ -13,8 +13,7 @@ For ANY code change (bug fix, feature, refactor), follow RED-GREEN-REFACTOR:
 RULES:
 
 - Complete one full RED-GREEN-REFACTOR cycle per task before moving to the next
-- NEVER write production code before its failing test exists
-- If you wrote production code first, DELETE IT and start over with the test
+- Always write the failing test first, then the production code. If you wrote production code first, delete it and start over with the test
 - Always run and show test output at each step
 
 ## Project
@@ -32,7 +31,7 @@ RULES:
 - **JUnit 4** as test runner
 - Test files mirror source structure under `src/test/java/`
 - Instrumented Compose UI tests in `src/androidTest/java/` — use `createComposeRule()`
-- **`android.util.Log` is NOT available in unit tests** — never use it in ViewModels or domain logic
+- **`android.util.Log` is NOT available in unit tests** — use Timber or constructor-injected loggers in ViewModels and domain logic instead
 - **Visibility for testability**: if a function needs testing but is `private`, make it `internal`
 - **Tests MUST import and call REAL code** — a test that recreates logic without importing the source is worthless
 - **detekt** for static analysis — runs automatically via Claude Code hook on every `.kt` file edit
@@ -72,7 +71,7 @@ Semantic versioning (MAJOR.MINOR.PATCH). Each release: bump `versionName` + `ver
 - Coroutines + Flow for async (no RxJava)
 - Room for local persistence
 - Repository pattern: interface in domain/, implementation in data/
-- **Multi-language**: every user-facing or accessibility string goes in `res/values/strings.xml` — use `stringResource(R.string.xxx)` in composables, NEVER hardcode strings
+- **Multi-language**: every user-facing or accessibility string goes in `res/values/strings.xml` — always use `stringResource(R.string.xxx)` in composables instead of hardcoded strings
 
 ## MCP Servers
 

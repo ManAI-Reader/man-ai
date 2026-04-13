@@ -1,6 +1,6 @@
 ---
 name: update-readme
-description: Updates the README.md features section to reflect the current state of the app. Use after implementing new user-facing features.
+description: Use when user wants to update the README.md features section to reflect the current state of the app. Use after implementing new user-facing features.
 ---
 
 Update the Features section of `/README.md`.

@@ -107,7 +107,7 @@ Then: Cleanup worktree (Step 5)
 
 #### Option 3: Keep As-Is
 
-Report: "Keeping branch <name>. Worktree preserved at <path>."
+Report: "Keeping branch `<name>`. Worktree preserved at `<path>`."
 
 **Don't cleanup worktree.**
 
