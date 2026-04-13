@@ -1,3 +1,8 @@
+---
+name: pipeline
+description: Documents the OCR pipeline architecture for manga text detection, recognition, and caching. Use when working on the ML pipeline, text detection, OCR, or the debug overlay.
+---
+
 # OCR Pipeline Architecture
 
 ## Overview

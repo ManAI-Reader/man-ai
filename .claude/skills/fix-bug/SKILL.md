@@ -1,6 +1,6 @@
 ---
 name: fix-bug
-description: Fix a bug using strict TDD. Use when fixing bugs, resolving issues, or when the user reports something broken.
+description: Fixes bugs using strict TDD with RED-GREEN-REFACTOR. Use when fixing bugs, resolving issues, or when the user reports something broken.
 ---
 
 # Fix Bug via TDD
@@ -13,7 +13,7 @@ For EACH bug fix, follow this cycle internally. Do NOT combine steps.
 
 - Write a test that reproduces the bug
 - Choose the right test level:
-  - Logic bug → unit test with `cd android && ./gradlew test`
+  - Logic bug → unit test with `cd android && ./gradlew testDebugUnitTest`
   - Device/permission/UI bug → instrumented test with `cd android && ./gradlew connectedIsolatedAndroidTest`
 - **RUN the test and show the failure output.** A RED you didn't execute is not a RED.
 - Compilation failure counts as RED only for unit tests. For instrumented tests, you MUST run on emulator.

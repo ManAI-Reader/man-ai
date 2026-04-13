@@ -1,6 +1,6 @@
 ---
 name: update-changelog
-description: Update CHANGELOG.md with changes for a specific version. Use when preparing a release.
+description: Updates CHANGELOG.md with categorized changes for a specific version following Keep a Changelog format. Use when preparing a release.
 ---
 
 Update `CHANGELOG.md` with the changes for version `$ARGUMENTS`.

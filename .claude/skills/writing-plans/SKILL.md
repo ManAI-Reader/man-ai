@@ -1,6 +1,6 @@
 ---
 name: writing-plans
-description: Use when you have a spec or requirements for a multi-step task, before touching code
+description: Creates comprehensive implementation plans with bite-sized TDD tasks from specs or requirements. Use when a multi-step task needs planning before touching code.
 ---
 
 # Writing Plans

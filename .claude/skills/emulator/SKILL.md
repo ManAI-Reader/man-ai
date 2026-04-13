@@ -1,3 +1,8 @@
+---
+name: emulator
+description: Manages Android emulator lifecycle and MCP mobile interactions. Starts emulators, installs and launches the app, interacts with devices via ADB and MCP mobile tools. Use when running the app, smoke testing, deploying to device, or interacting with an emulator.
+---
+
 # Emulator Management
 
 Start the Android emulator, install and launch the app. Use this before returning to the user after any code change.
@@ -65,7 +70,7 @@ Cache the device ID for the rest of the session, but never persist it in code or
 
 Screen resolution varies per device/emulator and can change if the user resizes the window. **ALWAYS** call `mobile_get_screen_size` at the start of a session if you need coordinates. Never assume a fixed resolution.
 
-### Golden rule: `list_elements_on_screen` BEFORE clicking
+### Golden rule: `mobile_list_elements_on_screen` BEFORE clicking
 
 **NEVER guess coordinates.** Always use `mobile_list_elements_on_screen` to get the exact pixel coordinates of elements before clicking. Screenshot images are scaled down and DO NOT match real device pixels — never calculate click coordinates from screenshots.
 
@@ -78,7 +83,7 @@ Screen resolution varies per device/emulator and can change if the user resizes 
 
 **Don't take redundant screenshots.** If you already know what's on screen:
 
-- **Use `list_elements_on_screen`** as the primary source of truth — it's faster than a screenshot and gives exact coordinates
+- **Use `mobile_list_elements_on_screen`** as the primary source of truth — it's faster than a screenshot and gives exact coordinates
 - **Take screenshots only when** you need to verify visual appearance (layout, colors, gradients) or when you genuinely don't know what's on screen
 - **If you know the action sequence**, execute all steps in a row without stopping for intermediate screenshots
 
@@ -89,9 +94,9 @@ When you need to perform a known sequence (e.g. importing 4 PDFs), do it all in 
 ```
 Example: importing 4 PDFs from the Download folder
 
-1. list_elements_on_screen → find FAB "Import PDF"
+1. mobile_list_elements_on_screen → find FAB "Import PDF"
 2. click FAB
-3. (file picker opens) → list_elements_on_screen ONCE to learn the layout
+3. (file picker opens) → mobile_list_elements_on_screen ONCE to learn the layout
 4. click first PDF
 5. click FAB again
 6. click second PDF
@@ -105,17 +110,17 @@ DON'T take screenshots after every click. After the first import you already kno
 When the file picker opens (`OpenDocument`):
 
 - PDF files in `/sdcard/Download/` appear in the "Downloads" or "Recents" view
-- Use `list_elements_on_screen` to find the file names
+- Use `mobile_list_elements_on_screen` to find the file names
 - Click directly on the file name
 
 ### Common patterns
 
 | Action           | How                                                                             |
 | ---------------- | ------------------------------------------------------------------------------- |
-| Tap element      | `list_elements_on_screen` → find coordinates → `click_on_screen_at_coordinates` |
+| Tap element      | `mobile_list_elements_on_screen` → find coordinates → `mobile_click_on_screen_at_coordinates` |
 | Navigate back    | `mobile_press_button` with button="BACK"                                        |
 | Scroll list      | `mobile_swipe_on_screen` direction="up"/"down"                                  |
-| Type text        | `click_on_screen_at_coordinates` on field → `mobile_type_keys`                  |
+| Type text        | `mobile_click_on_screen_at_coordinates` on field → `mobile_type_keys`           |
 | Visual check     | `mobile_take_screenshot` (only for visual appearance)                           |
 | Structural check | `mobile_list_elements_on_screen` (for content and position)                     |
 
@@ -168,6 +173,6 @@ adb wait-for-device && sleep 20 && adb shell getprop sys.boot_completed
 - If `adb devices` shows "offline", kill and restart the emulator.
 - APK path after build: `android/app/build/outputs/apk/debug/app-debug.apk`
 - App package: `com.highliuk.manai`, main activity: `.MainActivity`
-- **Screenshot coordinates are SCALED** — never use them for clicking. Always use `list_elements_on_screen`.
+- **Screenshot coordinates are SCALED** — never use them for clicking. Always use `mobile_list_elements_on_screen`.
 - **Speed matters**: the user is faster at manual testing. For smoke tests, go with rapid action sequences without intermediate screenshots.
 - **Never hardcode** device IDs, AVD names, or screen resolutions — always discover them at runtime.

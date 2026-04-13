@@ -1,6 +1,6 @@
 ---
 name: using-git-worktrees
-description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - creates isolated git worktrees
+description: Creates isolated git worktrees for feature work without affecting the current workspace. Use when starting feature work that needs isolation or before executing implementation plans.
 ---
 
 # Using Git Worktrees

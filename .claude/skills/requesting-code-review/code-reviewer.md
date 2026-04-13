@@ -2,6 +2,16 @@
 
 You are reviewing code changes for production readiness.
 
+## Contents
+
+- [What Was Implemented](#what-was-implemented)
+- [Requirements/Plan](#requirementsplan)
+- [Git Range to Review](#git-range-to-review)
+- [Review Checklist](#review-checklist)
+- [Output Format](#output-format)
+- [Critical Rules](#critical-rules)
+- [Example Output](#example-output)
+
 **Your task:**
 1. Review {WHAT_WAS_IMPLEMENTED}
 2. Compare against {PLAN_OR_REQUIREMENTS}

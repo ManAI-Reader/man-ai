@@ -1,3 +1,8 @@
+---
+name: gradle
+description: Runs Gradle build, test, and analysis commands for the Android project. Use when building APKs, running unit or instrumented tests, linting, running detekt, or executing any Gradle task.
+---
+
 # Gradle Commands
 
 ## Key Rules
@@ -24,8 +29,8 @@ Read(file_path="/private/tmp/.../tasks/<task_id>.output")
 ```bash
 ./gradlew assembleDebug          # Build debug APK
 ./gradlew assembleRelease        # Build release APK
-./gradlew test                   # Unit tests
-./gradlew connectedAndroidTest   # Instrumented tests (needs device/emulator)
+./gradlew testDebugUnitTest      # Unit tests (debug variant)
+./gradlew connectedIsolatedAndroidTest  # Instrumented tests (needs device/emulator)
 ./gradlew test --tests "com.highliuk.manai.SomeTest.someMethod"  # Single test
 ./gradlew detekt                  # Static analysis (full project, type resolution)
 ./gradlew detektGenerateConfig    # Regenerate default detekt config

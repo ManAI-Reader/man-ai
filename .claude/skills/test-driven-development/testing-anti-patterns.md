@@ -2,6 +2,19 @@
 
 **Load this reference when:** writing or changing tests, adding mocks, or tempted to add test-only methods to production code.
 
+## Contents
+
+- [Overview](#overview)
+- [Anti-Pattern 1: Testing Mock Behavior](#anti-pattern-1-testing-mock-behavior)
+- [Anti-Pattern 2: Test-Only Methods in Production](#anti-pattern-2-test-only-methods-in-production)
+- [Anti-Pattern 3: Mocking Without Understanding](#anti-pattern-3-mocking-without-understanding)
+- [Anti-Pattern 4: Incomplete Mocks](#anti-pattern-4-incomplete-mocks)
+- [Anti-Pattern 5: Integration Tests as Afterthought](#anti-pattern-5-integration-tests-as-afterthought)
+- [When Mocks Become Too Complex](#when-mocks-become-too-complex)
+- [TDD Prevents These Anti-Patterns](#tdd-prevents-these-anti-patterns)
+- [Quick Reference](#quick-reference)
+- [Red Flags](#red-flags)
+
 ## Overview
 
 Tests must verify real behavior, not mock behavior. Mocks are a means to isolate, not the thing being tested.
@@ -21,12 +34,13 @@ Tests must verify real behavior, not mock behavior. Mocks are a means to isolate
 ## Anti-Pattern 1: Testing Mock Behavior
 
 **The violation:**
-```typescript
-// ❌ BAD: Testing that the mock exists
-test('renders sidebar', () => {
-  render(<Page />);
-  expect(screen.getByTestId('sidebar-mock')).toBeInTheDocument();
-});
+```kotlin
+// BAD: Testing that the mock exists
+@Test
+fun `renders sidebar`() {
+    composeTestRule.setContent { PageScreen() }
+    composeTestRule.onNodeWithTag("sidebar-mock").assertExists()
+}
 ```
 
 **Why this is wrong:**
@@ -34,15 +48,16 @@ test('renders sidebar', () => {
 - Test passes when mock is present, fails when it's not
 - Tells you nothing about real behavior
 
-**your human partner's correction:** "Are we testing the behavior of a mock?"
+**The key question:** "Are we testing the behavior of a mock?"
 
 **The fix:**
-```typescript
-// ✅ GOOD: Test real component or don't mock it
-test('renders sidebar', () => {
-  render(<Page />);  // Don't mock sidebar
-  expect(screen.getByRole('navigation')).toBeInTheDocument();
-});
+```kotlin
+// GOOD: Test real component or don't mock it
+@Test
+fun `renders sidebar`() {
+    composeTestRule.setContent { PageScreen() }  // Don't mock sidebar
+    composeTestRule.onNodeWithContentDescription("Navigation").assertExists()
+}
 
 // OR if sidebar must be mocked for isolation:
 // Don't assert on the mock - test Page's behavior with sidebar present
@@ -63,17 +78,18 @@ BEFORE asserting on any mock element:
 ## Anti-Pattern 2: Test-Only Methods in Production
 
 **The violation:**
-```typescript
-// ❌ BAD: destroy() only used in tests
+```kotlin
+// BAD: destroy() only used in tests
 class Session {
-  async destroy() {  // Looks like production API!
-    await this._workspaceManager?.destroyWorkspace(this.id);
-    // ... cleanup
-  }
+    suspend fun destroy() {  // Looks like production API!
+        workspaceManager?.destroyWorkspace(id)
+        // ... cleanup
+    }
 }
 
 // In tests
-afterEach(() => session.destroy());
+@After
+fun tearDown() = runTest { session.destroy() }
 ```
 
 **Why this is wrong:**
@@ -83,20 +99,19 @@ afterEach(() => session.destroy());
 - Confuses object lifecycle with entity lifecycle
 
 **The fix:**
-```typescript
-// ✅ GOOD: Test utilities handle test cleanup
+```kotlin
+// GOOD: Test utilities handle test cleanup
 // Session has no destroy() - it's stateless in production
 
-// In test-utils/
-export async function cleanupSession(session: Session) {
-  const workspace = session.getWorkspaceInfo();
-  if (workspace) {
-    await workspaceManager.destroyWorkspace(workspace.id);
-  }
+// In test utilities
+suspend fun cleanupSession(session: Session) {
+    val workspace = session.getWorkspaceInfo()
+    workspace?.let { workspaceManager.destroyWorkspace(it.id) }
 }
 
 // In tests
-afterEach(() => cleanupSession(session));
+@After
+fun tearDown() = runTest { cleanupSession(session) }
 ```
 
 ### Gate Function
@@ -118,17 +133,16 @@ BEFORE adding any method to production class:
 ## Anti-Pattern 3: Mocking Without Understanding
 
 **The violation:**
-```typescript
-// ❌ BAD: Mock breaks test logic
-test('detects duplicate server', () => {
-  // Mock prevents config write that test depends on!
-  vi.mock('ToolCatalog', () => ({
-    discoverAndCacheTools: vi.fn().mockResolvedValue(undefined)
-  }));
+```kotlin
+// BAD: Mock breaks test logic
+@Test
+fun `detects duplicate server`() = runTest {
+    // Mock prevents config write that test depends on!
+    every { toolCatalog.discoverAndCacheTools() } returns Unit
 
-  await addServer(config);
-  await addServer(config);  // Should throw - but won't!
-});
+    addServer(config)
+    addServer(config)  // Should throw - but won't!
+}
 ```
 
 **Why this is wrong:**
@@ -137,15 +151,16 @@ test('detects duplicate server', () => {
 - Test passes for wrong reason or fails mysteriously
 
 **The fix:**
-```typescript
-// ✅ GOOD: Mock at correct level
-test('detects duplicate server', () => {
-  // Mock the slow part, preserve behavior test needs
-  vi.mock('MCPServerManager'); // Just mock slow server startup
+```kotlin
+// GOOD: Mock at correct level
+@Test
+fun `detects duplicate server`() = runTest {
+    // Mock the slow part, preserve behavior test needs
+    coEvery { mcpServerManager.startServer(any()) } returns mockk()
 
-  await addServer(config);  // Config written
-  await addServer(config);  // Duplicate detected ✓
-});
+    addServer(config)  // Config written
+    addServer(config)  // Duplicate detected
+}
 ```
 
 ### Gate Function
@@ -177,13 +192,13 @@ BEFORE mocking any method:
 ## Anti-Pattern 4: Incomplete Mocks
 
 **The violation:**
-```typescript
-// ❌ BAD: Partial mock - only fields you think you need
-const mockResponse = {
-  status: 'success',
-  data: { userId: '123', name: 'Alice' }
-  // Missing: metadata that downstream code uses
-};
+```kotlin
+// BAD: Partial mock - only fields you think you need
+val mockResponse = ApiResponse(
+    status = "success",
+    data = UserData(userId = "123", name = "Alice")
+    // Missing: metadata that downstream code uses
+)
 
 // Later: breaks when code accesses response.metadata.requestId
 ```
@@ -197,14 +212,14 @@ const mockResponse = {
 **The Iron Rule:** Mock the COMPLETE data structure as it exists in reality, not just fields your immediate test uses.
 
 **The fix:**
-```typescript
-// ✅ GOOD: Mirror real API completeness
-const mockResponse = {
-  status: 'success',
-  data: { userId: '123', name: 'Alice' },
-  metadata: { requestId: 'req-789', timestamp: 1234567890 }
-  // All fields real API returns
-};
+```kotlin
+// GOOD: Mirror real API completeness
+val mockResponse = ApiResponse(
+    status = "success",
+    data = UserData(userId = "123", name = "Alice"),
+    metadata = Metadata(requestId = "req-789", timestamp = 1234567890L)
+    // All fields real API returns
+)
 ```
 
 ### Gate Function
@@ -229,8 +244,8 @@ BEFORE creating mock responses:
 
 **The violation:**
 ```
-✅ Implementation complete
-❌ No tests written
+Implementation complete
+No tests written
 "Ready for testing"
 ```
 
@@ -256,17 +271,17 @@ TDD cycle:
 - Mocks missing methods real components have
 - Test breaks when mock changes
 
-**your human partner's question:** "Do we need to be using a mock here?"
+**The key question:** "Do we need to be using a mock here?"
 
 **Consider:** Integration tests with real components often simpler than complex mocks
 
 ## TDD Prevents These Anti-Patterns
 
 **Why TDD helps:**
-1. **Write test first** → Forces you to think about what you're actually testing
-2. **Watch it fail** → Confirms test tests real behavior, not mocks
-3. **Minimal implementation** → No test-only methods creep in
-4. **Real dependencies** → You see what the test actually needs before mocking
+1. **Write test first** - Forces you to think about what you're actually testing
+2. **Watch it fail** - Confirms test tests real behavior, not mocks
+3. **Minimal implementation** - No test-only methods creep in
+4. **Real dependencies** - You see what the test actually needs before mocking
 
 **If you're testing mock behavior, you violated TDD** - you added mocks without watching test fail against real code first.
 

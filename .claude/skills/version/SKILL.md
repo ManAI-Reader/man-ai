@@ -1,6 +1,6 @@
 ---
 name: version
-description: Bump the app version, update changelog, and create a git tag. Use when releasing a new version.
+description: Bumps the app version, updates changelog, and creates an annotated git tag. Use when releasing a new version.
 ---
 
 Release version `$ARGUMENTS`.

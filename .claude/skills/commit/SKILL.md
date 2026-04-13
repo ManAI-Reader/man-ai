@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Create atomic git commits. Use when committing changes to the repository.
+description: Creates atomic git commits with pre-commit verification (detekt, unit tests, instrumented tests). Use when committing changes to the repository.
 allowed-tools: Bash(git *)
 ---
 

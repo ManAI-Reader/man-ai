@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: Use when implementing any feature or bugfix, before writing implementation code
+description: Enforces strict test-driven development discipline with RED-GREEN-REFACTOR cycles. Use when implementing any feature or bugfix, before writing implementation code.
 ---
 
 # Test-Driven Development (TDD)
@@ -73,34 +73,36 @@ digraph tdd_cycle {
 Write one minimal test showing what should happen.
 
 <Good>
-```typescript
-test('retries failed operations 3 times', async () => {
-  let attempts = 0;
-  const operation = () => {
-    attempts++;
-    if (attempts < 3) throw new Error('fail');
-    return 'success';
-  };
+```kotlin
+@Test
+fun `retries failed operations 3 times`() = runTest {
+    var attempts = 0
+    val operation: suspend () -> String = {
+        attempts++
+        if (attempts < 3) throw RuntimeException("fail")
+        "success"
+    }
 
-  const result = await retryOperation(operation);
+    val result = retryOperation(operation)
 
-  expect(result).toBe('success');
-  expect(attempts).toBe(3);
-});
+    assertEquals("success", result)
+    assertEquals(3, attempts)
+}
 ```
 Clear name, tests real behavior, one thing
 </Good>
 
 <Bad>
-```typescript
-test('retry works', async () => {
-  const mock = jest.fn()
-    .mockRejectedValueOnce(new Error())
-    .mockRejectedValueOnce(new Error())
-    .mockResolvedValueOnce('success');
-  await retryOperation(mock);
-  expect(mock).toHaveBeenCalledTimes(3);
-});
+```kotlin
+@Test
+fun `retry works`() = runTest {
+    val mock = mockk<suspend () -> String>()
+    coEvery { mock() } throwsMany listOf(
+        RuntimeException(), RuntimeException()
+    ) andThen "success"
+    retryOperation { mock() }
+    coVerify(exactly = 3) { mock() }
+}
 ```
 Vague name, tests mock not code
 </Bad>
@@ -115,7 +117,7 @@ Vague name, tests mock not code
 **MANDATORY. Never skip.**
 
 ```bash
-npm test path/to/test.test.ts
+cd android && ./gradlew test --tests "com.highliuk.manai.SomeTest.someMethod"
 ```
 
 Confirm:
@@ -132,32 +134,30 @@ Confirm:
 Write simplest code to pass the test.
 
 <Good>
-```typescript
-async function retryOperation<T>(fn: () => Promise<T>): Promise<T> {
-  for (let i = 0; i < 3; i++) {
-    try {
-      return await fn();
-    } catch (e) {
-      if (i === 2) throw e;
+```kotlin
+suspend fun <T> retryOperation(fn: suspend () -> T): T {
+    for (i in 0 until 3) {
+        try {
+            return fn()
+        } catch (e: Exception) {
+            if (i == 2) throw e
+        }
     }
-  }
-  throw new Error('unreachable');
+    error("unreachable")
 }
 ```
 Just enough to pass
 </Good>
 
 <Bad>
-```typescript
-async function retryOperation<T>(
-  fn: () => Promise<T>,
-  options?: {
-    maxRetries?: number;
-    backoff?: 'linear' | 'exponential';
-    onRetry?: (attempt: number) => void;
-  }
-): Promise<T> {
-  // YAGNI
+```kotlin
+suspend fun <T> retryOperation(
+    fn: suspend () -> T,
+    maxRetries: Int = 3,
+    backoff: BackoffStrategy = BackoffStrategy.LINEAR,
+    onRetry: ((attempt: Int) -> Unit)? = null
+): T {
+    // YAGNI
 }
 ```
 Over-engineered
@@ -170,7 +170,7 @@ Don't add features, refactor other code, or "improve" beyond the test.
 **MANDATORY.**
 
 ```bash
-npm test path/to/test.test.ts
+cd android && ./gradlew test --tests "com.highliuk.manai.SomeTest.someMethod"
 ```
 
 Confirm:
@@ -199,8 +199,8 @@ Next failing test for next feature.
 
 | Quality | Good | Bad |
 |---------|------|-----|
-| **Minimal** | One thing. "and" in name? Split it. | `test('validates email and domain and whitespace')` |
-| **Clear** | Name describes behavior | `test('test1')` |
+| **Minimal** | One thing. "and" in name? Split it. | `fun 'validates email and domain and whitespace'()` |
+| **Clear** | Name describes behavior | `fun 'test1'()` |
 | **Shows intent** | Demonstrates desired API | Obscures what code should do |
 
 ## Why Order Matters
@@ -221,7 +221,7 @@ Manual testing is ad-hoc. You think you tested everything but:
 - No record of what you tested
 - Can't re-run when code changes
 - Easy to forget cases under pressure
-- "It worked when I tried it" ≠ comprehensive
+- "It worked when I tried it" does not equal comprehensive
 
 Automated tests are systematic. They run the same way every time.
 
@@ -251,7 +251,7 @@ Tests-after are biased by your implementation. You test what you built, not what
 
 Tests-first force edge case discovery before implementing. Tests-after verify you remembered everything (you didn't).
 
-30 minutes of tests after ≠ TDD. You get coverage, lose proof tests work.
+30 minutes of tests after does not equal TDD. You get coverage, lose proof tests work.
 
 ## Common Rationalizations
 
@@ -260,7 +260,7 @@ Tests-first force edge case discovery before implementing. Tests-after verify yo
 | "Too simple to test" | Simple code breaks. Test takes 30 seconds. |
 | "I'll test after" | Tests passing immediately prove nothing. |
 | "Tests after achieve same goals" | Tests-after = "what does this do?" Tests-first = "what should this do?" |
-| "Already manually tested" | Ad-hoc ≠ systematic. No record, can't re-run. |
+| "Already manually tested" | Ad-hoc does not equal systematic. No record, can't re-run. |
 | "Deleting X hours is wasteful" | Sunk cost fallacy. Keeping unverified code is technical debt. |
 | "Keep as reference, write tests first" | You'll adapt it. That's testing after. Delete means delete. |
 | "Need to explore first" | Fine. Throw away exploration, start with TDD. |
@@ -292,32 +292,33 @@ Tests-first force edge case discovery before implementing. Tests-after verify yo
 **Bug:** Empty email accepted
 
 **RED**
-```typescript
-test('rejects empty email', async () => {
-  const result = await submitForm({ email: '' });
-  expect(result.error).toBe('Email required');
-});
+```kotlin
+@Test
+fun `rejects empty email`() {
+    val result = submitForm(FormData(email = ""))
+    assertEquals("Email required", result.error)
+}
 ```
 
 **Verify RED**
 ```bash
-$ npm test
-FAIL: expected 'Email required', got undefined
+$ cd android && ./gradlew testDebugUnitTest
+FAIL: expected "Email required", got null
 ```
 
 **GREEN**
-```typescript
-function submitForm(data: FormData) {
-  if (!data.email?.trim()) {
-    return { error: 'Email required' };
-  }
-  // ...
+```kotlin
+fun submitForm(data: FormData): FormResult {
+    if (data.email.isNullOrBlank()) {
+        return FormResult(error = "Email required")
+    }
+    // ...
 }
 ```
 
 **Verify GREEN**
 ```bash
-$ npm test
+$ cd android && ./gradlew testDebugUnitTest
 PASS
 ```
 
@@ -356,7 +357,7 @@ Never fix bugs without a test.
 
 ## Testing Anti-Patterns
 
-When adding mocks or test utilities, read @testing-anti-patterns.md to avoid common pitfalls:
+When adding mocks or test utilities, read [testing-anti-patterns.md](testing-anti-patterns.md) to avoid common pitfalls:
 - Testing mock behavior instead of real behavior
 - Adding test-only methods to production classes
 - Mocking without understanding dependencies
@@ -364,8 +365,8 @@ When adding mocks or test utilities, read @testing-anti-patterns.md to avoid com
 ## Final Rule
 
 ```
-Production code → test exists and failed first
-Otherwise → not TDD
+Production code -> test exists and failed first
+Otherwise -> not TDD
 ```
 
 No exceptions without your human partner's permission.

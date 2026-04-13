@@ -1,6 +1,6 @@
 ---
 name: tdd-verify
-description: Use when you realize you skipped a test, didn't see RED, wrote an always-passing test, or skipped instrumented tests during a TDD cycle - provides git stash-based remediation to retroactively prove the test is valid
+description: Provides git stash-based remediation to retroactively prove a test is valid after a TDD violation. Use when a test was skipped, RED was missed, a test passed immediately on first run, or an instrumented test was incorrectly written as a unit test.
 ---
 
 # TDD Verify — Retroactive RED Proof via Git Stash

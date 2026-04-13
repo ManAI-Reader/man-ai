@@ -1,6 +1,6 @@
 ---
 name: add-feature
-description: Add a feature using strict TDD with E2E verification. Use when implementing new functionality.
+description: Adds a feature using strict TDD with E2E verification. Use when implementing new functionality, adding capabilities, or building new screens and components.
 ---
 
 # Add Feature — Full TDD + E2E Verification

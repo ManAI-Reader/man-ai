@@ -1,6 +1,6 @@
 ---
 name: instrumented-testing
-description: Use when writing or debugging Android instrumented tests (Compose UI tests or UiAutomator E2E tests), especially when tests are flaky, use Thread.sleep, have StaleObjectException, or fail intermittently on CI
+description: Provides anti-flakiness patterns for Android instrumented tests (Compose UI and UiAutomator). Use when writing or debugging instrumented tests, especially when tests are flaky, use Thread.sleep, have StaleObjectException, or fail intermittently on CI.
 ---
 
 # Instrumented Testing — Anti-Flakiness Guide
