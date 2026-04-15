@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0] - 2026-04-15
+
+### Added
+
+- Rename manga from library selection mode
+- Separate tap-to-navigate preferences for portrait and landscape
+- PROCESS_TEXT actions in OCR text selection toolbar for external dictionary and translation apps
+- Per-architecture APK builds via ABI split
+
+### Fixed
+
+- Wrong OCR text shown when tapping balloons in webtoon mode
+- OcrBottomSheet content overlapping display cutout in landscape
+- Pinch-to-zoom targeting screen center instead of pinch point
+- Webtoon last-page reading progress not saved or restored correctly
+- Balloon taps passing through the reader bottom bar
+- Pager showing wrong page regions on pre-composed adjacent pages
+- PDF fallback rendering jank from main thread blocking
+- Fullscreen persisting after exiting immersive mode with back gesture
+- Crash when installing older APK with lower database version
+- Release crash due to missing ProGuard keep rule for ONNX Runtime
+
 ## [0.7.0] - 2026-03-16
 
 ### Added
