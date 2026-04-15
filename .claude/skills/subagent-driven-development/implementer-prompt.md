@@ -26,13 +26,33 @@ Task tool (general-purpose):
 
     **Ask them now.** Raise any concerns before starting work.
 
+    ## Build/Test Protocol — CRITICAL
+
+    You MUST NOT run any Gradle, build, or test commands yourself.
+    Multiple agents share the same build directory — parallel Gradle
+    runs corrupt the build cache and cause cascading failures.
+
+    When you need a build or test result (e.g., to verify RED or GREEN):
+    1. STOP your current work
+    2. Return a message starting with `GRADLE_REQUEST:` followed by:
+       - The exact command to run
+       - What you expect (e.g., "expect FAIL — class not found")
+    3. The orchestrator will run it and send you the output
+    4. Continue your work based on the output
+
+    Example:
+    ```
+    GRADLE_REQUEST: cd android && ./gradlew test --tests "com.example.MyTest" 2>&1 | tail -20
+    Expected: FAIL — MyClass not found (RED phase of TDD)
+    ```
+
     ## Your Job
 
     Once you're clear on requirements:
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
-    3. Verify implementation works
-    4. Commit your work
+    3. Request build/test verification from orchestrator (do NOT run yourself)
+    4. Do NOT commit (orchestrator handles commits)
     5. Self-review (see below)
     6. Report back
 
