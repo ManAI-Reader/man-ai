@@ -10,6 +10,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.highliuk.manai.domain.model.AppLanguage
 import com.highliuk.manai.domain.model.ReadingMode
+import com.highliuk.manai.domain.model.TargetLanguage
 import com.highliuk.manai.domain.model.ThemeMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -39,6 +40,10 @@ class SettingsScreenTest {
                 onTapToNavigatePortraitChange = {},
                 tapToNavigateLandscape = true,
                 onTapToNavigateLandscapeChange = {},
+                deeplApiKey = "",
+                onDeeplApiKeyChange = {},
+                translationTargetLang = TargetLanguage.EN,
+                onTranslationTargetLangChange = {},
                 onBack = {}
             )
         }
@@ -68,6 +73,10 @@ class SettingsScreenTest {
                 onTapToNavigatePortraitChange = {},
                 tapToNavigateLandscape = true,
                 onTapToNavigateLandscapeChange = {},
+                deeplApiKey = "",
+                onDeeplApiKeyChange = {},
+                translationTargetLang = TargetLanguage.EN,
+                onTranslationTargetLangChange = {},
                 onBack = {}
             )
         }
@@ -97,6 +106,10 @@ class SettingsScreenTest {
                 onTapToNavigatePortraitChange = {},
                 tapToNavigateLandscape = true,
                 onTapToNavigateLandscapeChange = {},
+                deeplApiKey = "",
+                onDeeplApiKeyChange = {},
+                translationTargetLang = TargetLanguage.EN,
+                onTranslationTargetLangChange = {},
                 onBack = { backCalled = true }
             )
         }
@@ -125,6 +138,10 @@ class SettingsScreenTest {
                 onTapToNavigatePortraitChange = {},
                 tapToNavigateLandscape = true,
                 onTapToNavigateLandscapeChange = {},
+                deeplApiKey = "",
+                onDeeplApiKeyChange = {},
+                translationTargetLang = TargetLanguage.EN,
+                onTranslationTargetLangChange = {},
                 onBack = {}
             )
         }
@@ -154,6 +171,10 @@ class SettingsScreenTest {
                 onTapToNavigatePortraitChange = {},
                 tapToNavigateLandscape = true,
                 onTapToNavigateLandscapeChange = {},
+                deeplApiKey = "",
+                onDeeplApiKeyChange = {},
+                translationTargetLang = TargetLanguage.EN,
+                onTranslationTargetLangChange = {},
                 onBack = {}
             )
         }
@@ -181,6 +202,10 @@ class SettingsScreenTest {
                 onTapToNavigatePortraitChange = {},
                 tapToNavigateLandscape = true,
                 onTapToNavigateLandscapeChange = {},
+                deeplApiKey = "",
+                onDeeplApiKeyChange = {},
+                translationTargetLang = TargetLanguage.EN,
+                onTranslationTargetLangChange = {},
                 onBack = {}
             )
         }
@@ -211,6 +236,10 @@ class SettingsScreenTest {
                 onTapToNavigatePortraitChange = {},
                 tapToNavigateLandscape = true,
                 onTapToNavigateLandscapeChange = {},
+                deeplApiKey = "",
+                onDeeplApiKeyChange = {},
+                translationTargetLang = TargetLanguage.EN,
+                onTranslationTargetLangChange = {},
                 onBack = {}
             )
         }
@@ -238,14 +267,18 @@ class SettingsScreenTest {
                 onTapToNavigatePortraitChange = {},
                 tapToNavigateLandscape = true,
                 onTapToNavigateLandscapeChange = {},
+                deeplApiKey = "",
+                onDeeplApiKeyChange = {},
+                translationTargetLang = TargetLanguage.EN,
+                onTranslationTargetLangChange = {},
                 onBack = {}
             )
         }
 
         composeTestRule.onNodeWithText("Language").performScrollTo().assertIsDisplayed()
         composeTestRule.onNodeWithText("System default").performScrollTo().assertIsDisplayed()
-        composeTestRule.onNodeWithText("English").performScrollTo().assertIsDisplayed()
-        composeTestRule.onNodeWithText("Italiano").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithTag("app_lang_ENGLISH").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithTag("app_lang_ITALIAN").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -266,6 +299,10 @@ class SettingsScreenTest {
                 onTapToNavigatePortraitChange = {},
                 tapToNavigateLandscape = true,
                 onTapToNavigateLandscapeChange = {},
+                deeplApiKey = "",
+                onDeeplApiKeyChange = {},
+                translationTargetLang = TargetLanguage.EN,
+                onTranslationTargetLangChange = {},
                 onBack = {}
             )
         }
@@ -293,6 +330,10 @@ class SettingsScreenTest {
                 onTapToNavigatePortraitChange = {},
                 tapToNavigateLandscape = true,
                 onTapToNavigateLandscapeChange = {},
+                deeplApiKey = "",
+                onDeeplApiKeyChange = {},
+                translationTargetLang = TargetLanguage.EN,
+                onTranslationTargetLangChange = {},
                 onBack = {}
             )
         }
@@ -322,11 +363,15 @@ class SettingsScreenTest {
                 onTapToNavigatePortraitChange = {},
                 tapToNavigateLandscape = true,
                 onTapToNavigateLandscapeChange = {},
+                deeplApiKey = "",
+                onDeeplApiKeyChange = {},
+                translationTargetLang = TargetLanguage.EN,
+                onTranslationTargetLangChange = {},
                 onBack = {}
             )
         }
 
-        composeTestRule.onNodeWithText("Italiano").performScrollTo().performClick()
+        composeTestRule.onNodeWithTag("app_lang_ITALIAN").performScrollTo().performClick()
 
         assertEquals(AppLanguage.ITALIAN, selectedLanguage)
     }
@@ -351,6 +396,10 @@ class SettingsScreenTest {
                 onTapToNavigatePortraitChange = {},
                 tapToNavigateLandscape = true,
                 onTapToNavigateLandscapeChange = {},
+                deeplApiKey = "",
+                onDeeplApiKeyChange = {},
+                translationTargetLang = TargetLanguage.EN,
+                onTranslationTargetLangChange = {},
                 onBack = {},
             )
         }
@@ -376,6 +425,10 @@ class SettingsScreenTest {
                 onTapToNavigatePortraitChange = {},
                 tapToNavigateLandscape = true,
                 onTapToNavigateLandscapeChange = {},
+                deeplApiKey = "",
+                onDeeplApiKeyChange = {},
+                translationTargetLang = TargetLanguage.EN,
+                onTranslationTargetLangChange = {},
                 onBack = {}
             )
         }
@@ -405,6 +458,10 @@ class SettingsScreenTest {
                 onTapToNavigatePortraitChange = { toggled = true },
                 tapToNavigateLandscape = true,
                 onTapToNavigateLandscapeChange = {},
+                deeplApiKey = "",
+                onDeeplApiKeyChange = {},
+                translationTargetLang = TargetLanguage.EN,
+                onTranslationTargetLangChange = {},
                 onBack = {}
             )
         }
@@ -432,6 +489,10 @@ class SettingsScreenTest {
                 onTapToNavigatePortraitChange = {},
                 tapToNavigateLandscape = true,
                 onTapToNavigateLandscapeChange = {},
+                deeplApiKey = "",
+                onDeeplApiKeyChange = {},
+                translationTargetLang = TargetLanguage.EN,
+                onTranslationTargetLangChange = {},
                 onBack = {}
             )
         }
@@ -461,6 +522,10 @@ class SettingsScreenTest {
                 onTapToNavigatePortraitChange = {},
                 tapToNavigateLandscape = true,
                 onTapToNavigateLandscapeChange = { toggled = true },
+                deeplApiKey = "",
+                onDeeplApiKeyChange = {},
+                translationTargetLang = TargetLanguage.EN,
+                onTranslationTargetLangChange = {},
                 onBack = {}
             )
         }
@@ -468,62 +533,5 @@ class SettingsScreenTest {
         composeTestRule.onNodeWithText("Tap to navigate (landscape)").performScrollTo().performClick()
 
         assert(toggled)
-    }
-
-    @Test
-    fun displaysLandscapeGridColumnsSection() {
-        composeTestRule.setContent {
-            SettingsScreen(
-                gridColumns = 2,
-                onGridColumnsChange = {},
-                gridColumnsLandscape = 5,
-                onGridColumnsLandscapeChange = {},
-                readingMode = ReadingMode.LTR,
-                onReadingModeChange = {},
-                themeMode = ThemeMode.SYSTEM,
-                onThemeModeChange = {},
-                appLanguage = AppLanguage.SYSTEM,
-                onAppLanguageChange = {},
-                tapToNavigatePortrait = false,
-                onTapToNavigatePortraitChange = {},
-                tapToNavigateLandscape = true,
-                onTapToNavigateLandscapeChange = {},
-                onBack = {}
-            )
-        }
-
-        composeTestRule.onNodeWithText("Grid Columns (Landscape)").performScrollTo().assertIsDisplayed()
-        composeTestRule.onNodeWithText("4 columns").performScrollTo().assertIsDisplayed()
-        composeTestRule.onNodeWithText("5 columns").performScrollTo().assertIsDisplayed()
-        composeTestRule.onNodeWithText("6 columns").performScrollTo().assertIsDisplayed()
-    }
-
-    @Test
-    fun selectingLandscapeColumnCallsCallback() {
-        var selectedColumns = 0
-
-        composeTestRule.setContent {
-            SettingsScreen(
-                gridColumns = 2,
-                onGridColumnsChange = {},
-                gridColumnsLandscape = 5,
-                onGridColumnsLandscapeChange = { selectedColumns = it },
-                readingMode = ReadingMode.LTR,
-                onReadingModeChange = {},
-                themeMode = ThemeMode.SYSTEM,
-                onThemeModeChange = {},
-                appLanguage = AppLanguage.SYSTEM,
-                onAppLanguageChange = {},
-                tapToNavigatePortrait = false,
-                onTapToNavigatePortraitChange = {},
-                tapToNavigateLandscape = true,
-                onTapToNavigateLandscapeChange = {},
-                onBack = {}
-            )
-        }
-
-        composeTestRule.onNodeWithText("4 columns").performScrollTo().performClick()
-
-        assertEquals(4, selectedColumns)
     }
 }

@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.highliuk.manai.domain.model.AppLanguage
 import com.highliuk.manai.domain.model.ReadingMode
+import com.highliuk.manai.domain.model.TargetLanguage
 import com.highliuk.manai.domain.model.ThemeMode
 import com.highliuk.manai.domain.repository.UserPreferencesRepository
 import kotlinx.coroutines.flow.Flow
@@ -52,6 +53,9 @@ class UserPreferencesRepositoryImpl @Inject constructor(
 
         val TAP_TO_NAVIGATE_LANDSCAPE = booleanPreferencesKey("tap_to_navigate_landscape")
         const val DEFAULT_TAP_TO_NAVIGATE_LANDSCAPE = true
+
+        val TRANSLATION_TARGET_LANG = stringPreferencesKey("translation_target_lang")
+        val DEFAULT_TRANSLATION_TARGET_LANG = TargetLanguage.EN
     }
 
     override val gridColumns: Flow<Int> = dataStore.data.map { preferences ->
@@ -175,6 +179,21 @@ class UserPreferencesRepositoryImpl @Inject constructor(
     override suspend fun setTapToNavigateLandscape(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[TAP_TO_NAVIGATE_LANDSCAPE] = enabled
+        }
+    }
+
+    override val translationTargetLang: Flow<TargetLanguage> = dataStore.data.map { preferences ->
+        val stored = preferences[TRANSLATION_TARGET_LANG]
+        if (stored != null) {
+            TargetLanguage.fromCode(stored)
+        } else {
+            DEFAULT_TRANSLATION_TARGET_LANG
+        }
+    }
+
+    override suspend fun setTranslationTargetLang(lang: TargetLanguage) {
+        dataStore.edit { preferences ->
+            preferences[TRANSLATION_TARGET_LANG] = lang.code
         }
     }
 }

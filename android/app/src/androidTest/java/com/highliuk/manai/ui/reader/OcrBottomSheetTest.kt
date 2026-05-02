@@ -2,8 +2,10 @@ package com.highliuk.manai.ui.reader
 
 import android.content.ClipboardManager
 import android.content.Context
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -14,6 +16,7 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import com.highliuk.manai.domain.model.PageRegion
+import com.highliuk.manai.ui.reader.ReaderViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -143,6 +146,101 @@ class OcrBottomSheetTest {
         // Share intent opens a chooser — wait for it then dismiss
         device.wait(Until.hasObject(By.res("android:id/chooser_header")), 3000)
         device.pressBack()
+    }
+
+    @Test
+    fun translateButtonIsDisplayedWhenTextPresent() {
+        val region = PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "テスト")
+
+        composeTestRule.setContent {
+            OcrBottomSheet(region = region, onDismiss = {})
+        }
+
+        composeTestRule.onNodeWithContentDescription("Translate").assertIsDisplayed()
+    }
+
+    @Test
+    fun translateButtonClickCallsCallback() {
+        var clicked = false
+        val region = PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "テスト")
+
+        composeTestRule.mainClock.autoAdvance = false
+        composeTestRule.setContent {
+            OcrBottomSheet(
+                region = region,
+                onTranslateClick = { clicked = true },
+                onDismiss = {},
+            )
+        }
+        composeTestRule.mainClock.advanceTimeBy(1000)
+        composeTestRule.mainClock.autoAdvance = true
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithContentDescription("Translate").performClick()
+        composeTestRule.waitForIdle()
+
+        assertTrue("Translate callback should be invoked", clicked)
+    }
+
+    @Test
+    fun translatedStateShowsTranslationText() {
+        val region = PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "テスト")
+
+        composeTestRule.setContent {
+            OcrBottomSheet(
+                region = region,
+                translationState = ReaderViewModel.TranslationState.Translated("Test"),
+                onDismiss = {},
+            )
+        }
+
+        composeTestRule.onNodeWithTag("translation_text").assertIsDisplayed()
+    }
+
+    @Test
+    fun loadingStateShowsProgressIndicator() {
+        val region = PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "テスト")
+
+        composeTestRule.setContent {
+            OcrBottomSheet(
+                region = region,
+                translationState = ReaderViewModel.TranslationState.Loading,
+                onDismiss = {},
+            )
+        }
+
+        composeTestRule.onNodeWithTag("translation_loading").assertIsDisplayed()
+    }
+
+    @Test
+    fun errorStateShowsErrorMessage() {
+        val region = PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "テスト")
+
+        composeTestRule.setContent {
+            OcrBottomSheet(
+                region = region,
+                translationState = ReaderViewModel.TranslationState.Error("Network error"),
+                onDismiss = {},
+            )
+        }
+
+        composeTestRule.onNodeWithTag("translation_error").assertIsDisplayed()
+    }
+
+    @Test
+    fun errorStateDoesNotShowDuplicateRetryButton() {
+        val region = PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "テスト")
+
+        composeTestRule.setContent {
+            OcrBottomSheet(
+                region = region,
+                translationState = ReaderViewModel.TranslationState.Error("Network error"),
+                onDismiss = {},
+            )
+        }
+
+        // No "Retry" button — user retries via the persistent Translate button in the row above.
+        composeTestRule.onAllNodesWithContentDescription("Retry").assertCountEquals(0)
     }
 
     private fun setUpSheetAndLongPress(testText: String) {

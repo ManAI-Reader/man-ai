@@ -2,11 +2,14 @@ package com.highliuk.manai.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.highliuk.manai.data.translation.DeepLCredentialsManager
 import com.highliuk.manai.domain.model.AppLanguage
 import com.highliuk.manai.domain.model.ReadingMode
+import com.highliuk.manai.domain.model.TargetLanguage
 import com.highliuk.manai.domain.model.ThemeMode
 import com.highliuk.manai.domain.repository.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -15,7 +18,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val credentialsManager: DeepLCredentialsManager,
 ) : ViewModel() {
 
     val gridColumns: StateFlow<Int> = userPreferencesRepository.gridColumns
@@ -87,6 +91,29 @@ class SettingsViewModel @Inject constructor(
     fun setTapToNavigateLandscape(enabled: Boolean) {
         viewModelScope.launch {
             userPreferencesRepository.setTapToNavigateLandscape(enabled)
+        }
+    }
+
+    val translationTargetLang: StateFlow<TargetLanguage> =
+        userPreferencesRepository.translationTargetLang
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TargetLanguage.EN)
+
+    fun setTranslationTargetLang(lang: TargetLanguage) {
+        viewModelScope.launch {
+            userPreferencesRepository.setTranslationTargetLang(lang)
+        }
+    }
+
+    private val _deeplApiKey = MutableStateFlow(credentialsManager.getApiKey().orEmpty())
+    val deeplApiKey: StateFlow<String> = _deeplApiKey
+
+    fun setDeeplApiKey(key: String) {
+        if (key.isBlank()) {
+            credentialsManager.clearApiKey()
+            _deeplApiKey.value = ""
+        } else {
+            credentialsManager.saveApiKey(key)
+            _deeplApiKey.value = key
         }
     }
 }

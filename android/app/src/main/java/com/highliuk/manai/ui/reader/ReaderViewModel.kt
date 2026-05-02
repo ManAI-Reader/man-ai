@@ -11,8 +11,10 @@ import com.highliuk.manai.domain.model.Manga
 import com.highliuk.manai.domain.model.PagePipelineState
 import com.highliuk.manai.domain.model.PageRegion
 import com.highliuk.manai.domain.model.ReadingMode
+import com.highliuk.manai.domain.model.TranslationResult
 import com.highliuk.manai.domain.repository.MangaRepository
 import com.highliuk.manai.domain.repository.OcrCacheRepository
+import com.highliuk.manai.domain.repository.TranslationRepository
 import com.highliuk.manai.domain.repository.UserPreferencesRepository
 import com.highliuk.manai.domain.usecase.ProcessPageUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -47,6 +49,7 @@ class ReaderViewModel @Inject constructor(
     private val pdfPageRenderer: PdfPageRenderer,
     debugStateHolder: PipelineDebugStateHolder,
     debugEventHolder: DebugMlEventHolder,
+    private val translationRepository: TranslationRepository,
 ) : ViewModel() {
 
     val debugPipelineStates: StateFlow<Map<Int, PagePipelineState>> = debugStateHolder.states
@@ -78,6 +81,16 @@ class ReaderViewModel @Inject constructor(
 
     private val _selectedRegion = MutableStateFlow<PageRegion?>(null)
     val selectedRegion: StateFlow<PageRegion?> = _selectedRegion.asStateFlow()
+
+    sealed interface TranslationState {
+        data object Idle : TranslationState
+        data object Loading : TranslationState
+        data class Translated(val text: String) : TranslationState
+        data class Error(val message: String) : TranslationState
+    }
+
+    private val _translationState = MutableStateFlow<TranslationState>(TranslationState.Idle)
+    val translationState: StateFlow<TranslationState> = _translationState.asStateFlow()
 
     private val _visiblePages = MutableStateFlow<List<Int>>(emptyList())
 
@@ -131,13 +144,39 @@ class ReaderViewModel @Inject constructor(
 
     fun onRegionTapped(region: PageRegion) {
         _selectedRegion.value = region
+        _translationState.value = TranslationState.Idle
         if (region.ocrText == null) {
             launchPipeline(region.pageIndex, priorityRegionIndex = region.regionIndex)
+        } else {
+            viewModelScope.launch {
+                val cached = translationRepository.getCachedTranslation(
+                    mangaId, region.pageIndex, region.regionIndex, region.ocrText
+                )
+                if (cached != null) {
+                    _translationState.value = TranslationState.Translated(cached)
+                }
+            }
         }
     }
 
     fun dismissBottomSheet() {
         _selectedRegion.value = null
+        _translationState.value = TranslationState.Idle
+    }
+
+    fun translateSelectedRegion() {
+        val region = _selectedRegion.value ?: return
+        val text = region.ocrText ?: return
+        _translationState.value = TranslationState.Loading
+        viewModelScope.launch {
+            val result = translationRepository.translate(
+                mangaId, region.pageIndex, region.regionIndex, text
+            )
+            _translationState.value = when (result) {
+                is TranslationResult.Success -> TranslationState.Translated(result.text)
+                is TranslationResult.Error -> TranslationState.Error(result.message)
+            }
+        }
     }
 
     internal fun launchPipeline(pageIndex: Int, priorityRegionIndex: Int? = null) {

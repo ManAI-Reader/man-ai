@@ -2,6 +2,7 @@ package com.highliuk.manai.domain.repository
 
 import com.highliuk.manai.domain.model.AppLanguage
 import com.highliuk.manai.domain.model.ReadingMode
+import com.highliuk.manai.domain.model.TargetLanguage
 import com.highliuk.manai.domain.model.ThemeMode
 import kotlinx.coroutines.flow.Flow
 
@@ -32,4 +33,7 @@ interface UserPreferencesRepository {
 
     val tapToNavigateLandscape: Flow<Boolean>
     suspend fun setTapToNavigateLandscape(enabled: Boolean)
+
+    val translationTargetLang: Flow<TargetLanguage>
+    suspend fun setTranslationTargetLang(lang: TargetLanguage)
 }

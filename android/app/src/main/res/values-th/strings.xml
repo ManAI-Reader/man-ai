@@ -80,4 +80,14 @@
     <!-- PDF thumbnail -->
     <string name="pdf_thumbnail">ภาพขนาดย่อ PDF</string>
     <string name="pdf_placeholder">ตัวยึดตำแหน่ง PDF</string>
+
+    <string name="translate_text">แปล</string>
+    <string name="translation_loading">กำลังแปล…</string>
+    <string name="retry">ลองอีกครั้ง</string>
+
+    <!-- Translation -->
+    <string name="translation_section">การแปล</string>
+    <string name="deepl_api_key">คีย์ API ของ DeepL</string>
+    <string name="deepl_api_key_hint">ป้อนคีย์ API ของ DeepL</string>
+    <string name="translation_target_language">ภาษาปลายทาง</string>
 </resources>

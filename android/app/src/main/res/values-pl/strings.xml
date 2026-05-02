@@ -89,4 +89,14 @@
     <!-- PDF thumbnail -->
     <string name="pdf_thumbnail">Miniatura PDF</string>
     <string name="pdf_placeholder">Symbol zastępczy PDF</string>
+
+    <string name="translate_text">Przetłumacz</string>
+    <string name="translation_loading">Tłumaczenie…</string>
+    <string name="retry">Ponów</string>
+
+    <!-- Translation -->
+    <string name="translation_section">Tłumaczenie</string>
+    <string name="deepl_api_key">Klucz API DeepL</string>
+    <string name="deepl_api_key_hint">Wprowadź klucz API DeepL</string>
+    <string name="translation_target_language">Język docelowy</string>
 </resources>

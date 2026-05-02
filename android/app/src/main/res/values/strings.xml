@@ -83,4 +83,14 @@
     <!-- PDF thumbnail -->
     <string name="pdf_thumbnail">PDF thumbnail</string>
     <string name="pdf_placeholder">PDF placeholder</string>
+
+    <string name="translate_text">Translate</string>
+    <string name="translation_loading">Translating…</string>
+    <string name="retry">Retry</string>
+
+    <!-- Translation settings -->
+    <string name="translation_section">Translation</string>
+    <string name="deepl_api_key">DeepL API Key</string>
+    <string name="deepl_api_key_hint">Enter your DeepL API key</string>
+    <string name="translation_target_language">Target Language</string>
 </resources>

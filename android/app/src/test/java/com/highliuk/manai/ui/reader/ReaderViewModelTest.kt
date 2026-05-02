@@ -9,8 +9,10 @@ import com.highliuk.manai.domain.model.Manga
 import com.highliuk.manai.domain.model.PagePipelineState
 import com.highliuk.manai.domain.model.PageRegion
 import com.highliuk.manai.domain.model.ReadingMode
+import com.highliuk.manai.domain.model.TranslationResult
 import com.highliuk.manai.domain.repository.MangaRepository
 import com.highliuk.manai.domain.repository.OcrCacheRepository
+import com.highliuk.manai.domain.repository.TranslationRepository
 import com.highliuk.manai.domain.repository.UserPreferencesRepository
 import com.highliuk.manai.domain.usecase.ProcessPageUseCase
 import android.graphics.Bitmap
@@ -44,6 +46,7 @@ class ReaderViewModelTest {
     private val userPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
     private val processPageUseCase = mockk<ProcessPageUseCase>(relaxed = true)
     private val ocrCache = mockk<OcrCacheRepository>(relaxed = true)
+    private val translationRepository = mockk<TranslationRepository>(relaxed = true)
     private val pdfPageRenderer = mockk<PdfPageRenderer>(relaxed = true)
     private val debugStateHolder = PipelineDebugStateHolder()
     private val debugEventHolder = DebugMlEventHolder()
@@ -70,7 +73,7 @@ class ReaderViewModelTest {
         return ReaderViewModel(
             savedStateHandle, repository, userPreferencesRepository,
             processPageUseCase, ocrCache, pdfPageRenderer,
-            debugStateHolder, debugEventHolder,
+            debugStateHolder, debugEventHolder, translationRepository,
         )
     }
 
@@ -528,5 +531,105 @@ class ReaderViewModelTest {
             readingModeFlow.value = ReadingMode.WEBTOON
             assertEquals(ReadingMode.WEBTOON, awaitItem())
         }
+    }
+
+    @Test
+    fun `translationState starts as Idle`() = runTest(testDispatcher) {
+        coEvery { repository.getMangaById(1L) } returns flowOf(null)
+        every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+        val viewModel = createViewModel(1L)
+
+        assertEquals(ReaderViewModel.TranslationState.Idle, viewModel.translationState.value)
+    }
+
+    @Test
+    fun `translateSelectedRegion moves to Loading then Translated`() = runTest(testDispatcher) {
+        coEvery { repository.getMangaById(1L) } returns flowOf(null)
+        every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+        coEvery {
+            translationRepository.getCachedTranslation(any(), any(), any(), any())
+        } returns null
+        coEvery {
+            translationRepository.translate(1L, 0, 0, "テスト")
+        } returns TranslationResult.Success("Test")
+
+        val viewModel = createViewModel(1L)
+        val region = PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "テスト", pageIndex = 0)
+        viewModel.onRegionTapped(region)
+
+        viewModel.translationState.test {
+            val current = awaitItem()
+            viewModel.translateSelectedRegion()
+            if (current == ReaderViewModel.TranslationState.Idle) {
+                assertEquals(ReaderViewModel.TranslationState.Loading, awaitItem())
+            }
+            assertEquals(
+                ReaderViewModel.TranslationState.Translated("Test"),
+                awaitItem()
+            )
+        }
+    }
+
+    @Test
+    fun `translateSelectedRegion moves to Error on failure`() = runTest(testDispatcher) {
+        coEvery { repository.getMangaById(1L) } returns flowOf(null)
+        every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+        coEvery {
+            translationRepository.getCachedTranslation(any(), any(), any(), any())
+        } returns null
+        coEvery {
+            translationRepository.translate(1L, 0, 0, "テスト")
+        } returns TranslationResult.Error("API key missing")
+
+        val viewModel = createViewModel(1L)
+        val region = PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "テスト", pageIndex = 0)
+        viewModel.onRegionTapped(region)
+
+        viewModel.translateSelectedRegion()
+        testScheduler.advanceUntilIdle()
+
+        val state = viewModel.translationState.value
+        assertEquals(ReaderViewModel.TranslationState.Error("API key missing"), state)
+    }
+
+    @Test
+    fun `dismissBottomSheet resets translationState to Idle`() = runTest(testDispatcher) {
+        coEvery { repository.getMangaById(1L) } returns flowOf(null)
+        every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+        coEvery {
+            translationRepository.getCachedTranslation(any(), any(), any(), any())
+        } returns null
+        coEvery {
+            translationRepository.translate(any(), any(), any(), any())
+        } returns TranslationResult.Success("Test")
+
+        val viewModel = createViewModel(1L)
+        val region = PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "テスト", pageIndex = 0)
+        viewModel.onRegionTapped(region)
+        viewModel.translateSelectedRegion()
+        testScheduler.advanceUntilIdle()
+
+        viewModel.dismissBottomSheet()
+
+        assertEquals(ReaderViewModel.TranslationState.Idle, viewModel.translationState.value)
+    }
+
+    @Test
+    fun `onRegionTapped loads cached translation automatically`() = runTest(testDispatcher) {
+        coEvery { repository.getMangaById(1L) } returns flowOf(null)
+        every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+        coEvery {
+            translationRepository.getCachedTranslation(1L, 0, 0, "テスト")
+        } returns "Test"
+
+        val viewModel = createViewModel(1L)
+        val region = PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "テスト", pageIndex = 0)
+        viewModel.onRegionTapped(region)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(
+            ReaderViewModel.TranslationState.Translated("Test"),
+            viewModel.translationState.value
+        )
     }
 }

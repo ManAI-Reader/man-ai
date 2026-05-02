@@ -114,6 +114,8 @@ fun ReaderScreen(
     debugPipelineStates: Map<Int, PagePipelineState> = emptyMap(),
     visiblePagesRegions: Map<Int, List<PageRegion>> = emptyMap(),
     onVisiblePagesChanged: (List<Int>) -> Unit = {},
+    translationState: ReaderViewModel.TranslationState = ReaderViewModel.TranslationState.Idle,
+    onTranslateClick: () -> Unit = {},
 ) {
     val isRtl = readingMode == ReadingMode.RTL
     val isWebtoon = readingMode == ReadingMode.WEBTOON
@@ -324,7 +326,13 @@ fun ReaderScreen(
             }
             val liveRegion = sourceRegions.find { it.regionIndex == selectedRegion.regionIndex }
                 ?: selectedRegion
-            OcrBottomSheet(region = liveRegion, fontScale = ocrFontScale, onDismiss = onDismissBottomSheet)
+            OcrBottomSheet(
+                region = liveRegion,
+                fontScale = ocrFontScale,
+                onDismiss = onDismissBottomSheet,
+                translationState = translationState,
+                onTranslateClick = onTranslateClick,
+            )
         }
 
         if (showGoToPageDialog) {

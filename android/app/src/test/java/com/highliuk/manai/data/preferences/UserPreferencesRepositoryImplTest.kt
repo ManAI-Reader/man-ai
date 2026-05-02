@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.highliuk.manai.domain.model.AppLanguage
 import com.highliuk.manai.domain.model.ReadingMode
+import com.highliuk.manai.domain.model.TargetLanguage
 import com.highliuk.manai.domain.model.ThemeMode
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -362,5 +363,34 @@ class UserPreferencesRepositoryImplTest {
         repository.setOcrFontScale(5.0f)
 
         assertEquals(3.0f, repository.ocrFontScale.first(), 1e-4f)
+    }
+
+    @Test
+    fun `translationTargetLang emits default value EN`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        val result = repository.translationTargetLang.first()
+
+        assertEquals(TargetLanguage.EN, result)
+    }
+
+    @Test
+    fun `setTranslationTargetLang persists IT value`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        repository.setTranslationTargetLang(TargetLanguage.IT)
+
+        assertEquals(TargetLanguage.IT, repository.translationTargetLang.first())
+    }
+
+    @Test
+    fun `translationTargetLang with invalid stored value defaults to EN`() = runTest(testDispatcher) {
+        val dataStore = createDataStore()
+        dataStore.edit { preferences ->
+            preferences[stringPreferencesKey("translation_target_lang")] = "INVALID"
+        }
+        val repository = UserPreferencesRepositoryImpl(dataStore)
+
+        assertEquals(TargetLanguage.EN, repository.translationTargetLang.first())
     }
 }

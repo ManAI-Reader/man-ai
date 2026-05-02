@@ -1,13 +1,16 @@
 package com.highliuk.manai.ui.settings
 
 import app.cash.turbine.test
+import com.highliuk.manai.data.translation.DeepLCredentialsManager
 import com.highliuk.manai.domain.model.AppLanguage
 import com.highliuk.manai.domain.model.ReadingMode
+import com.highliuk.manai.domain.model.TargetLanguage
 import com.highliuk.manai.domain.model.ThemeMode
 import com.highliuk.manai.domain.repository.UserPreferencesRepository
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +28,8 @@ class SettingsViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private val userPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
+    private val translationTargetLangFlow = MutableStateFlow(TargetLanguage.EN)
+    private val credentialsManager = mockk<DeepLCredentialsManager>(relaxed = true)
     private val gridColumnsFlow = MutableStateFlow(2)
     private val readingModeFlow = MutableStateFlow(ReadingMode.LTR)
     private val themeModeFlow = MutableStateFlow(ThemeMode.SYSTEM)
@@ -45,6 +50,7 @@ class SettingsViewModelTest {
         every { userPreferencesRepository.ocrFontScale } returns ocrFontScaleFlow
         every { userPreferencesRepository.tapToNavigatePortrait } returns tapToNavigatePortraitFlow
         every { userPreferencesRepository.tapToNavigateLandscape } returns tapToNavigateLandscapeFlow
+        every { userPreferencesRepository.translationTargetLang } returns translationTargetLangFlow
     }
 
     @After
@@ -52,7 +58,7 @@ class SettingsViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel() = SettingsViewModel(userPreferencesRepository)
+    private fun createViewModel() = SettingsViewModel(userPreferencesRepository, credentialsManager)
 
     @Test
     fun `gridColumns emits current preference value`() = runTest(testDispatcher) {
@@ -220,5 +226,53 @@ class SettingsViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         coVerify { userPreferencesRepository.setGridColumnsLandscape(4) }
+    }
+
+    @Test
+    fun `translationTargetLang emits current preference value`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.translationTargetLang.test {
+            assertEquals(TargetLanguage.EN, awaitItem())
+            translationTargetLangFlow.value = TargetLanguage.IT
+            assertEquals(TargetLanguage.IT, awaitItem())
+        }
+    }
+
+    @Test
+    fun `setTranslationTargetLang updates preference`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.setTranslationTargetLang(TargetLanguage.IT)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify { userPreferencesRepository.setTranslationTargetLang(TargetLanguage.IT) }
+    }
+
+    @Test
+    fun `deeplApiKey emits value from credentials manager`() = runTest(testDispatcher) {
+        every { credentialsManager.getApiKey() } returns "test-key"
+
+        val viewModel = createViewModel()
+
+        assertEquals("test-key", viewModel.deeplApiKey.value)
+    }
+
+    @Test
+    fun `setDeeplApiKey saves key via credentials manager`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.setDeeplApiKey("new-key")
+
+        verify { credentialsManager.saveApiKey("new-key") }
+    }
+
+    @Test
+    fun `setDeeplApiKey clears when blank`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.setDeeplApiKey("")
+
+        verify { credentialsManager.clearApiKey() }
     }
 }

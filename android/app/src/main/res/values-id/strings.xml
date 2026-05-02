@@ -80,4 +80,14 @@
     <!-- PDF thumbnail -->
     <string name="pdf_thumbnail">Thumbnail PDF</string>
     <string name="pdf_placeholder">Placeholder PDF</string>
+
+    <string name="translate_text">Terjemahkan</string>
+    <string name="translation_loading">Menerjemahkan…</string>
+    <string name="retry">Coba lagi</string>
+
+    <!-- Translation -->
+    <string name="translation_section">Terjemahan</string>
+    <string name="deepl_api_key">Kunci API DeepL</string>
+    <string name="deepl_api_key_hint">Masukkan kunci API DeepL Anda</string>
+    <string name="translation_target_language">Bahasa Tujuan</string>
 </resources>

@@ -38,7 +38,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -83,6 +85,8 @@ fun OcrBottomSheet(
     fontScale: Float = 1.5f,
     onDismiss: () -> Unit,
     cutoutInsets: WindowInsets = WindowInsets.displayCutout,
+    translationState: ReaderViewModel.TranslationState = ReaderViewModel.TranslationState.Idle,
+    onTranslateClick: () -> Unit = {},
 ) {
     val context = LocalContext.current
     var visible by remember { mutableStateOf(false) }
@@ -237,6 +241,52 @@ fun OcrBottomSheet(
                                     contentDescription = stringResource(R.string.share_text),
                                 )
                             }
+                            IconButton(
+                                onClick = onTranslateClick,
+                            ) {
+                                Icon(
+                                    Icons.Default.Translate,
+                                    contentDescription = stringResource(R.string.translate_text),
+                                )
+                            }
+                        }
+                        when (translationState) {
+                            is ReaderViewModel.TranslationState.Loading -> {
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .padding(top = 12.dp)
+                                        .testTag("translation_loading"),
+                                )
+                                Text(
+                                    text = stringResource(R.string.translation_loading),
+                                    modifier = Modifier.padding(top = 8.dp),
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                            }
+                            is ReaderViewModel.TranslationState.Translated -> {
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 12.dp),
+                                )
+                                Text(
+                                    text = translationState.text,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontSize = MaterialTheme.typography.bodyLarge.fontSize * fontScale,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("translation_text"),
+                                )
+                            }
+                            is ReaderViewModel.TranslationState.Error -> {
+                                Text(
+                                    text = translationState.message,
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier
+                                        .padding(top = 12.dp)
+                                        .testTag("translation_error"),
+                                )
+                            }
+                            is ReaderViewModel.TranslationState.Idle -> { /* no-op */ }
                         }
                     }
                 }

@@ -80,4 +80,14 @@
     <!-- PDF thumbnail -->
     <string name="pdf_thumbnail">PDF缩略图</string>
     <string name="pdf_placeholder">PDF占位图</string>
+
+    <string name="translate_text">翻译</string>
+    <string name="translation_loading">翻译中…</string>
+    <string name="retry">重试</string>
+
+    <!-- Translation -->
+    <string name="translation_section">翻译</string>
+    <string name="deepl_api_key">DeepL API 密钥</string>
+    <string name="deepl_api_key_hint">输入你的 DeepL API 密钥</string>
+    <string name="translation_target_language">目标语言</string>
 </resources>
