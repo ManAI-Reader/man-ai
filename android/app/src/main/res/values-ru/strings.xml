@@ -89,4 +89,14 @@
     <!-- PDF thumbnail -->
     <string name="pdf_thumbnail">Миниатюра PDF</string>
     <string name="pdf_placeholder">Заглушка PDF</string>
+
+    <string name="translate_text">Перевести</string>
+    <string name="translation_loading">Перевод…</string>
+    <string name="retry">Повторить</string>
+
+    <!-- Translation -->
+    <string name="translation_section">Перевод</string>
+    <string name="deepl_api_key">API-ключ DeepL</string>
+    <string name="deepl_api_key_hint">Введите ваш API-ключ DeepL</string>
+    <string name="translation_target_language">Язык перевода</string>
 </resources>

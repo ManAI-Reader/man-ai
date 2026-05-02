@@ -23,6 +23,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -202,6 +203,7 @@ fun ManAiNavHost(
                             tapToNavigateLandscape,
                         )
                         val visiblePagesRegions by viewModel.visiblePagesRegions.collectAsState()
+                        val translationState by viewModel.translationState.collectAsStateWithLifecycle()
 
                         if (BuildConfig.DEBUG_ML) {
                             val context = LocalContext.current
@@ -248,6 +250,8 @@ fun ManAiNavHost(
                                 debugPipelineStates = if (BuildConfig.DEBUG_ML) debugPipelineStates else emptyMap(),
                                 visiblePagesRegions = visiblePagesRegions,
                                 onVisiblePagesChanged = viewModel::onVisiblePagesChanged,
+                                translationState = translationState,
+                                onTranslateClick = { viewModel.translateSelectedRegion() },
                             )
                         }
                     }
@@ -288,6 +292,8 @@ fun ManAiNavHost(
                     val ocrFontScale by viewModel.ocrFontScale.collectAsState()
                     val tapToNavigatePortrait by viewModel.tapToNavigatePortrait.collectAsState()
                     val tapToNavigateLandscape by viewModel.tapToNavigateLandscape.collectAsState()
+                    val deeplApiKey by viewModel.deeplApiKey.collectAsState()
+                    val translationTargetLang by viewModel.translationTargetLang.collectAsState()
 
                     SettingsScreen(
                         gridColumns = gridColumns,
@@ -314,6 +320,10 @@ fun ManAiNavHost(
                         onTapToNavigatePortraitChange = { viewModel.setTapToNavigatePortrait(it) },
                         tapToNavigateLandscape = tapToNavigateLandscape,
                         onTapToNavigateLandscapeChange = { viewModel.setTapToNavigateLandscape(it) },
+                        deeplApiKey = deeplApiKey,
+                        onDeeplApiKeyChange = viewModel::setDeeplApiKey,
+                        translationTargetLang = translationTargetLang,
+                        onTranslationTargetLangChange = viewModel::setTranslationTargetLang,
                         onBack = { navController.popBackStack() }
                     )
                 }

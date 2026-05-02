@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.room)
     alias(libs.plugins.detekt)
+    alias(libs.plugins.kotlin.serialization)
     jacoco
 }
 
@@ -336,7 +337,18 @@ dependencies {
     // ONNX Runtime
     implementation(libs.onnxruntime.android)
 
+    // Networking (Ktor)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.kotlinx.serialization.json)
+
+    // Security
+    implementation(libs.security.crypto)
+
     // Unit tests
+    testImplementation(libs.ktor.client.mock)
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
     testImplementation(libs.coroutines.test)

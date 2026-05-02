@@ -10,10 +10,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
@@ -22,6 +25,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -29,6 +36,8 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.intl.LocaleList as ComposeLocaleList
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -36,6 +45,7 @@ import androidx.compose.ui.unit.em
 import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.AppLanguage
 import com.highliuk.manai.domain.model.ReadingMode
+import com.highliuk.manai.domain.model.TargetLanguage
 import com.highliuk.manai.domain.model.ThemeMode
 
 private val languageLabelRes: Map<AppLanguage, Int> = mapOf(
@@ -78,8 +88,13 @@ fun SettingsScreen(
     onTapToNavigatePortraitChange: (Boolean) -> Unit,
     tapToNavigateLandscape: Boolean,
     onTapToNavigateLandscapeChange: (Boolean) -> Unit,
+    deeplApiKey: String = "",
+    onDeeplApiKeyChange: (String) -> Unit = {},
+    translationTargetLang: TargetLanguage = TargetLanguage.EN,
+    onTranslationTargetLangChange: (TargetLanguage) -> Unit = {},
     onBack: () -> Unit
 ) {
+    var apiKeyVisible by remember { mutableStateOf(false) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -266,7 +281,8 @@ fun SettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { onAppLanguageChange(language) }
-                        .padding(vertical = 8.dp),
+                        .padding(vertical = 8.dp)
+                        .testTag("app_lang_${language.name}"),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     RadioButton(
@@ -306,6 +322,78 @@ fun SettingsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp),
+            )
+
+            TranslationSection(
+                deeplApiKey = deeplApiKey,
+                onDeeplApiKeyChange = onDeeplApiKeyChange,
+                translationTargetLang = translationTargetLang,
+                onTranslationTargetLangChange = onTranslationTargetLangChange,
+                apiKeyVisible = apiKeyVisible,
+                onApiKeyVisibleChange = { apiKeyVisible = it },
+            )
+        }
+    }
+}
+
+@Composable
+private fun TranslationSection(
+    deeplApiKey: String,
+    onDeeplApiKeyChange: (String) -> Unit,
+    translationTargetLang: TargetLanguage,
+    onTranslationTargetLangChange: (TargetLanguage) -> Unit,
+    apiKeyVisible: Boolean,
+    onApiKeyVisibleChange: (Boolean) -> Unit,
+) {
+    Text(
+        text = stringResource(R.string.translation_section),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
+    )
+
+    OutlinedTextField(
+        value = deeplApiKey,
+        onValueChange = onDeeplApiKeyChange,
+        label = { Text(stringResource(R.string.deepl_api_key)) },
+        placeholder = { Text(stringResource(R.string.deepl_api_key_hint)) },
+        visualTransformation = if (apiKeyVisible) VisualTransformation.None
+            else PasswordVisualTransformation(),
+        trailingIcon = {
+            IconButton(onClick = { onApiKeyVisibleChange(!apiKeyVisible) }) {
+                Icon(
+                    imageVector = if (apiKeyVisible) Icons.Default.VisibilityOff
+                        else Icons.Default.Visibility,
+                    contentDescription = null,
+                )
+            }
+        },
+        singleLine = true,
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("deepl_api_key_field"),
+    )
+
+    Text(
+        text = stringResource(R.string.translation_target_language),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+    )
+    TargetLanguage.entries.forEach { lang ->
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onTranslationTargetLangChange(lang) }
+                .padding(vertical = 8.dp)
+                .testTag("target_lang_${lang.code}"),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            RadioButton(
+                selected = translationTargetLang == lang,
+                onClick = { onTranslationTargetLangChange(lang) }
+            )
+            Text(
+                text = lang.displayName,
+                modifier = Modifier.padding(start = 8.dp)
             )
         }
     }

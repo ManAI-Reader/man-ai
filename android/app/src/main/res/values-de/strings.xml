@@ -83,4 +83,14 @@
     <!-- PDF thumbnail -->
     <string name="pdf_thumbnail">PDF-Vorschaubild</string>
     <string name="pdf_placeholder">PDF-Platzhalter</string>
+
+    <string name="translate_text">Übersetzen</string>
+    <string name="translation_loading">Wird übersetzt…</string>
+    <string name="retry">Wiederholen</string>
+
+    <!-- Translation -->
+    <string name="translation_section">Übersetzung</string>
+    <string name="deepl_api_key">DeepL API-Schlüssel</string>
+    <string name="deepl_api_key_hint">Gib deinen DeepL API-Schlüssel ein</string>
+    <string name="translation_target_language">Zielsprache</string>
 </resources>

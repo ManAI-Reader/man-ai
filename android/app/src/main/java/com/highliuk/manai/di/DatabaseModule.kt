@@ -6,6 +6,7 @@ import androidx.room.Room
 import com.highliuk.manai.data.local.ManAiDatabase
 import com.highliuk.manai.data.local.dao.MangaDao
 import com.highliuk.manai.data.local.dao.PageOcrResultDao
+import com.highliuk.manai.data.local.dao.TranslationResultDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,6 +26,8 @@ object DatabaseModule {
                 ManAiDatabase.MIGRATION_2_3,
                 ManAiDatabase.MIGRATION_3_4,
                 ManAiDatabase.MIGRATION_4_3,
+                ManAiDatabase.MIGRATION_4_5,
+                ManAiDatabase.MIGRATION_5_4,
                 ManAiDatabase.MIGRATION_3_2,
                 ManAiDatabase.MIGRATION_2_1
             )
@@ -37,6 +40,10 @@ object DatabaseModule {
     @Provides
     fun providePageOcrResultDao(database: ManAiDatabase): PageOcrResultDao =
         database.pageOcrResultDao()
+
+    @Provides
+    fun provideTranslationResultDao(database: ManAiDatabase): TranslationResultDao =
+        database.translationResultDao()
 
     @Provides
     fun provideContentResolver(@ApplicationContext context: Context): ContentResolver =

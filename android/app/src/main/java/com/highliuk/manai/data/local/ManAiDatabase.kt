@@ -6,17 +6,20 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.highliuk.manai.data.local.dao.MangaDao
 import com.highliuk.manai.data.local.dao.PageOcrResultDao
+import com.highliuk.manai.data.local.dao.TranslationResultDao
 import com.highliuk.manai.data.local.entity.MangaEntity
 import com.highliuk.manai.data.local.entity.PageOcrResultEntity
+import com.highliuk.manai.data.local.entity.TranslationResultEntity
 
 @Database(
-    entities = [MangaEntity::class, PageOcrResultEntity::class],
-    version = 4,
+    entities = [MangaEntity::class, PageOcrResultEntity::class, TranslationResultEntity::class],
+    version = 5,
     exportSchema = true,
 )
 abstract class ManAiDatabase : RoomDatabase() {
     abstract fun mangaDao(): MangaDao
     abstract fun pageOcrResultDao(): PageOcrResultDao
+    abstract fun translationResultDao(): TranslationResultDao
 
     companion object {
         val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -67,6 +70,35 @@ abstract class ManAiDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("DROP INDEX IF EXISTS index_page_ocr_result_mangaId_pageIndex")
                 db.execSQL("DROP TABLE IF EXISTS page_ocr_result")
+            }
+        }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS translation_result (" +
+                        "mangaId INTEGER NOT NULL, " +
+                        "pageIndex INTEGER NOT NULL, " +
+                        "regionIndex INTEGER NOT NULL, " +
+                        "provider TEXT NOT NULL, " +
+                        "sourceText TEXT NOT NULL, " +
+                        "translatedText TEXT NOT NULL, " +
+                        "targetLang TEXT NOT NULL, " +
+                        "timestamp INTEGER NOT NULL, " +
+                        "PRIMARY KEY(mangaId, pageIndex, regionIndex, provider), " +
+                        "FOREIGN KEY(mangaId) REFERENCES manga(id) ON DELETE CASCADE)"
+                )
+                db.execSQL(
+                    "CREATE INDEX index_translation_result_mangaId_pageIndex " +
+                        "ON translation_result(mangaId, pageIndex)"
+                )
+            }
+        }
+
+        val MIGRATION_5_4 = object : Migration(5, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP INDEX IF EXISTS index_translation_result_mangaId_pageIndex")
+                db.execSQL("DROP TABLE IF EXISTS translation_result")
             }
         }
 

@@ -80,4 +80,14 @@
     <!-- PDF thumbnail -->
     <string name="pdf_thumbnail">PDFサムネイル</string>
     <string name="pdf_placeholder">PDFプレースホルダー</string>
+
+    <string name="translate_text">翻訳</string>
+    <string name="translation_loading">翻訳中…</string>
+    <string name="retry">再試行</string>
+
+    <!-- Translation -->
+    <string name="translation_section">翻訳</string>
+    <string name="deepl_api_key">DeepL APIキー</string>
+    <string name="deepl_api_key_hint">DeepLのAPIキーを入力してください</string>
+    <string name="translation_target_language">翻訳先の言語</string>
 </resources>
