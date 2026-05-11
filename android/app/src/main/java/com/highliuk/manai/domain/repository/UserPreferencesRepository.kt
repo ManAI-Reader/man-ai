@@ -36,4 +36,7 @@ interface UserPreferencesRepository {
 
     val translationTargetLang: Flow<TargetLanguage>
     suspend fun setTranslationTargetLang(lang: TargetLanguage)
+
+    val showFurigana: Flow<Boolean>
+    suspend fun setShowFurigana(enabled: Boolean)
 }

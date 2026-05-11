@@ -21,6 +21,8 @@
     <string name="tap_to_navigate_portrait_description">Tippen Sie auf die Ränder, um im Hochformat die Seite zu wechseln</string>
     <string name="tap_to_navigate_landscape">Tippen zum Navigieren (Querformat)</string>
     <string name="tap_to_navigate_landscape_description">Tippen Sie auf die Ränder, um im Querformat die Seite zu wechseln</string>
+    <string name="show_furigana">Furigana</string>
+    <string name="show_furigana_description">Lesungen über Kanji im OCR-Text anzeigen</string>
     <string name="reading_mode_webtoon">Webtoon</string>
 
     <!-- Theme mode -->

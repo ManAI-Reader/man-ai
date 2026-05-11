@@ -22,6 +22,8 @@
     <string name="tap_to_navigate_portrait_description">Tap edges to change page in portrait mode</string>
     <string name="tap_to_navigate_landscape">Tap to navigate (landscape)</string>
     <string name="tap_to_navigate_landscape_description">Tap edges to change page in landscape mode</string>
+    <string name="show_furigana">Furigana</string>
+    <string name="show_furigana_description">Show readings above kanji in OCR text</string>
 
     <!-- Theme mode -->
     <string name="theme_mode">Theme</string>

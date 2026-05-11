@@ -104,6 +104,15 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    val showFurigana: StateFlow<Boolean> = userPreferencesRepository.showFurigana
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun setShowFurigana(enabled: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.setShowFurigana(enabled)
+        }
+    }
+
     private val _deeplApiKey = MutableStateFlow(credentialsManager.getApiKey().orEmpty())
     val deeplApiKey: StateFlow<String> = _deeplApiKey
 

@@ -21,6 +21,8 @@
     <string name="tap_to_navigate_portrait_description">แตะขอบเพื่อเปลี่ยนหน้าในโหมดแนวตั้ง</string>
     <string name="tap_to_navigate_landscape">แตะเพื่อเปลี่ยนหน้า (แนวนอน)</string>
     <string name="tap_to_navigate_landscape_description">แตะขอบเพื่อเปลี่ยนหน้าในโหมดแนวนอน</string>
+    <string name="show_furigana">ฟุริงานะ</string>
+    <string name="show_furigana_description">แสดงการอ่านเหนือคันจิในข้อความ OCR</string>
 
     <!-- Theme mode -->
     <string name="theme_mode">ธีม</string>

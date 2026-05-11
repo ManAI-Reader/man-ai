@@ -69,6 +69,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.highliuk.manai.R
+import com.highliuk.manai.domain.model.FuriganaToken
 import com.highliuk.manai.domain.model.PageRegion
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -85,6 +86,7 @@ fun OcrBottomSheet(
     fontScale: Float = 1.5f,
     onDismiss: () -> Unit,
     cutoutInsets: WindowInsets = WindowInsets.displayCutout,
+    furiganaTokens: List<FuriganaToken>? = null,
     translationState: ReaderViewModel.TranslationState = ReaderViewModel.TranslationState.Idle,
     onTranslateClick: () -> Unit = {},
 ) {
@@ -185,7 +187,7 @@ fun OcrBottomSheet(
                                 SelectableOcrTextView(ctx.findActivity() ?: ctx).apply {
                                     id = android.view.View.generateViewId()
                                     setTextIsSelectable(true)
-                                    setLineSpacing(0f, 1.5f)
+                                    setLineSpacing(0f, 1.0f)
                                     textLocales = LocaleList(Locale("ja"))
                                     layoutParams = ViewGroup.LayoutParams(
                                         ViewGroup.LayoutParams.MATCH_PARENT,
@@ -194,7 +196,11 @@ fun OcrBottomSheet(
                                 }
                             },
                             update = { view ->
-                                view.text = region.ocrText
+                                val spannable = furiganaTokens?.let { tokens ->
+                                    val allParts = tokens.flatMap { it.parts }
+                                    buildFuriganaSpannable(allParts)
+                                }
+                                view.text = spannable ?: region.ocrText
                                 view.setTextColor(textColor.toArgb())
                                 view.setTextSize(
                                     TypedValue.COMPLEX_UNIT_SP,

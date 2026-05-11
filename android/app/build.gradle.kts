@@ -347,13 +347,15 @@ dependencies {
     // Security
     implementation(libs.security.crypto)
 
+    // Kuromoji (Japanese tokenizer)
+    implementation(libs.kuromoji.ipadic)
+
     // Unit tests
     testImplementation(libs.ktor.client.mock)
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
     testImplementation(libs.coroutines.test)
     testImplementation(libs.turbine)
-
     // Instrumented tests
     androidTestImplementation(libs.junit.ext)
     androidTestImplementation(libs.espresso.core)

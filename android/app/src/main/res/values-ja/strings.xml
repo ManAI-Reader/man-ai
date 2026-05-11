@@ -20,6 +20,8 @@
     <string name="tap_to_navigate_portrait_description">縦向きモードで端をタップしてページを切り替え</string>
     <string name="tap_to_navigate_landscape">タップでページ移動（横向き）</string>
     <string name="tap_to_navigate_landscape_description">横向きモードで端をタップしてページを切り替え</string>
+    <string name="show_furigana">ふりがな</string>
+    <string name="show_furigana_description">OCRテキストの漢字の上に読みを表示</string>
     <string name="reading_mode_webtoon">Webtoon</string>
 
     <!-- Theme mode -->

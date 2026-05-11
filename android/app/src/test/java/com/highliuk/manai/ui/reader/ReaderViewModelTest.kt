@@ -14,6 +14,11 @@ import com.highliuk.manai.domain.repository.MangaRepository
 import com.highliuk.manai.domain.repository.OcrCacheRepository
 import com.highliuk.manai.domain.repository.TranslationRepository
 import com.highliuk.manai.domain.repository.UserPreferencesRepository
+import com.highliuk.manai.domain.furigana.KanjiReadingsDataSource
+import com.highliuk.manai.domain.ml.JapaneseTokenizer
+import com.highliuk.manai.domain.model.FuriganaPart
+import com.highliuk.manai.domain.model.FuriganaToken
+import com.highliuk.manai.domain.usecase.ParseFuriganaUseCase
 import com.highliuk.manai.domain.usecase.ProcessPageUseCase
 import android.graphics.Bitmap
 import io.mockk.clearMocks
@@ -53,6 +58,10 @@ class ReaderViewModelTest {
     private val readingModeFlow = MutableStateFlow(ReadingMode.LTR)
     private val tapToNavigatePortraitFlow = MutableStateFlow(false)
     private val tapToNavigateLandscapeFlow = MutableStateFlow(true)
+    private val showFuriganaFlow = MutableStateFlow(false)
+    private val japaneseTokenizer = mockk<JapaneseTokenizer>(relaxed = true)
+    private val kanjiReadingsDataSource = mockk<KanjiReadingsDataSource>(relaxed = true)
+    private val parseFuriganaUseCase = mockk<ParseFuriganaUseCase>(relaxed = true)
 
     @Before
     fun setUp() {
@@ -61,6 +70,7 @@ class ReaderViewModelTest {
         every { userPreferencesRepository.ocrFontScale } returns MutableStateFlow(1.5f)
         every { userPreferencesRepository.tapToNavigatePortrait } returns tapToNavigatePortraitFlow
         every { userPreferencesRepository.tapToNavigateLandscape } returns tapToNavigateLandscapeFlow
+        every { userPreferencesRepository.showFurigana } returns showFuriganaFlow
     }
 
     @After
@@ -74,6 +84,7 @@ class ReaderViewModelTest {
             savedStateHandle, repository, userPreferencesRepository,
             processPageUseCase, ocrCache, pdfPageRenderer,
             debugStateHolder, debugEventHolder, translationRepository,
+            japaneseTokenizer, kanjiReadingsDataSource, parseFuriganaUseCase,
         )
     }
 
@@ -612,6 +623,72 @@ class ReaderViewModelTest {
         viewModel.dismissBottomSheet()
 
         assertEquals(ReaderViewModel.TranslationState.Idle, viewModel.translationState.value)
+    }
+
+    @Test
+    fun `showFurigana reflects preference`() = runTest(testDispatcher) {
+        coEvery { repository.getMangaById(1L) } returns flowOf(null)
+        every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+        val viewModel = createViewModel(1L)
+
+        viewModel.showFurigana.test {
+            assertEquals(false, awaitItem())
+            showFuriganaFlow.value = true
+            assertEquals(true, awaitItem())
+        }
+    }
+
+    @Test
+    fun `init eagerly initializes tokenizer and loads readings`() = runTest(testDispatcher) {
+        coEvery { repository.getMangaById(1L) } returns flowOf(null)
+        every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+        createViewModel(1L)
+        testScheduler.advanceUntilIdle()
+
+        coVerify { japaneseTokenizer.init() }
+        coVerify { kanjiReadingsDataSource.load() }
+    }
+
+    @Test
+    fun `onRegionTapped with furigana on emits furigana tokens`() = runTest(testDispatcher) {
+        coEvery { repository.getMangaById(1L) } returns flowOf(null)
+        every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+        coEvery { translationRepository.getCachedTranslation(any(), any(), any(), any()) } returns null
+        showFuriganaFlow.value = true
+        val expectedTokens = listOf(
+            FuriganaToken("食べる", "タベル", listOf(
+                FuriganaPart.kanji("食", "た"),
+                FuriganaPart.kana("べ"),
+                FuriganaPart.kana("る")
+            ))
+        )
+        every { parseFuriganaUseCase("食べる") } returns expectedTokens
+
+        val viewModel = createViewModel(1L)
+        testScheduler.advanceUntilIdle()
+
+        val region = PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "食べる")
+        viewModel.onRegionTapped(region)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(expectedTokens, viewModel.furiganaTokens.value)
+    }
+
+    @Test
+    fun `onRegionTapped with furigana off keeps furigana tokens null`() = runTest(testDispatcher) {
+        coEvery { repository.getMangaById(1L) } returns flowOf(null)
+        every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+        coEvery { translationRepository.getCachedTranslation(any(), any(), any(), any()) } returns null
+        showFuriganaFlow.value = false
+
+        val viewModel = createViewModel(1L)
+        testScheduler.advanceUntilIdle()
+
+        val region = PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "食べる")
+        viewModel.onRegionTapped(region)
+        testScheduler.advanceUntilIdle()
+
+        assertNull(viewModel.furiganaTokens.value)
     }
 
     @Test

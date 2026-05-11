@@ -88,6 +88,8 @@ fun SettingsScreen(
     onTapToNavigatePortraitChange: (Boolean) -> Unit,
     tapToNavigateLandscape: Boolean,
     onTapToNavigateLandscapeChange: (Boolean) -> Unit,
+    showFurigana: Boolean = false,
+    onShowFuriganaChange: (Boolean) -> Unit = {},
     deeplApiKey: String = "",
     onDeeplApiKeyChange: (String) -> Unit = {},
     translationTargetLang: TargetLanguage = TargetLanguage.EN,
@@ -239,6 +241,30 @@ fun SettingsScreen(
                 Switch(
                     checked = tapToNavigateLandscape,
                     onCheckedChange = onTapToNavigateLandscapeChange
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onShowFuriganaChange(!showFurigana) }
+                    .padding(vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.show_furigana),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = stringResource(R.string.show_furigana_description),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = showFurigana,
+                    onCheckedChange = onShowFuriganaChange
                 )
             }
 

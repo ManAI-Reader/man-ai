@@ -12,11 +12,16 @@ import com.highliuk.manai.domain.model.PagePipelineState
 import com.highliuk.manai.domain.model.PageRegion
 import com.highliuk.manai.domain.model.ReadingMode
 import com.highliuk.manai.domain.model.TranslationResult
+import com.highliuk.manai.domain.furigana.KanjiReadingsDataSource
+import com.highliuk.manai.domain.ml.JapaneseTokenizer
+import com.highliuk.manai.domain.model.FuriganaToken
 import com.highliuk.manai.domain.repository.MangaRepository
 import com.highliuk.manai.domain.repository.OcrCacheRepository
 import com.highliuk.manai.domain.repository.TranslationRepository
 import com.highliuk.manai.domain.repository.UserPreferencesRepository
+import com.highliuk.manai.domain.usecase.ParseFuriganaUseCase
 import com.highliuk.manai.domain.usecase.ProcessPageUseCase
+import kotlinx.coroutines.Dispatchers
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
@@ -50,6 +55,9 @@ class ReaderViewModel @Inject constructor(
     debugStateHolder: PipelineDebugStateHolder,
     debugEventHolder: DebugMlEventHolder,
     private val translationRepository: TranslationRepository,
+    private val japaneseTokenizer: JapaneseTokenizer,
+    private val kanjiReadingsDataSource: KanjiReadingsDataSource,
+    private val parseFuriganaUseCase: ParseFuriganaUseCase,
 ) : ViewModel() {
 
     val debugPipelineStates: StateFlow<Map<Int, PagePipelineState>> = debugStateHolder.states
@@ -68,6 +76,12 @@ class ReaderViewModel @Inject constructor(
 
     val tapToNavigateLandscape: StateFlow<Boolean> = userPreferencesRepository.tapToNavigateLandscape
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
+    val showFurigana: StateFlow<Boolean> = userPreferencesRepository.showFurigana
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    private val _furiganaTokens = MutableStateFlow<List<FuriganaToken>?>(null)
+    val furiganaTokens: StateFlow<List<FuriganaToken>?> = _furiganaTokens.asStateFlow()
 
     val manga: StateFlow<Manga?> = repository.getMangaById(mangaId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -114,6 +128,13 @@ class ReaderViewModel @Inject constructor(
     private val pipelineJobs = mutableMapOf<Int, Job>()
 
     init {
+        viewModelScope.launch(Dispatchers.IO) {
+            japaneseTokenizer.init()
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            kanjiReadingsDataSource.load()
+        }
+
         viewModelScope.launch {
             val loadedManga = manga.filterNotNull().first()
             _currentPage.value = loadedManga.lastReadPage
@@ -145,6 +166,8 @@ class ReaderViewModel @Inject constructor(
     fun onRegionTapped(region: PageRegion) {
         _selectedRegion.value = region
         _translationState.value = TranslationState.Idle
+        _furiganaTokens.value = null
+        parseFurigana(region.ocrText)
         if (region.ocrText == null) {
             launchPipeline(region.pageIndex, priorityRegionIndex = region.regionIndex)
         } else {
@@ -162,6 +185,18 @@ class ReaderViewModel @Inject constructor(
     fun dismissBottomSheet() {
         _selectedRegion.value = null
         _translationState.value = TranslationState.Idle
+        _furiganaTokens.value = null
+    }
+
+    private fun parseFurigana(ocrText: String?) {
+        if (!showFurigana.value || ocrText == null) return
+        viewModelScope.launch {
+            try {
+                _furiganaTokens.value = parseFuriganaUseCase(ocrText)
+            } catch (_: Exception) {
+                _furiganaTokens.value = null
+            }
+        }
     }
 
     fun translateSelectedRegion() {

@@ -38,6 +38,7 @@ class SettingsViewModelTest {
     private val tapToNavigatePortraitFlow = MutableStateFlow(false)
     private val tapToNavigateLandscapeFlow = MutableStateFlow(true)
     private val gridColumnsLandscapeFlow = MutableStateFlow(5)
+    private val showFuriganaFlow = MutableStateFlow(false)
 
     @Before
     fun setUp() {
@@ -51,6 +52,7 @@ class SettingsViewModelTest {
         every { userPreferencesRepository.tapToNavigatePortrait } returns tapToNavigatePortraitFlow
         every { userPreferencesRepository.tapToNavigateLandscape } returns tapToNavigateLandscapeFlow
         every { userPreferencesRepository.translationTargetLang } returns translationTargetLangFlow
+        every { userPreferencesRepository.showFurigana } returns showFuriganaFlow
     }
 
     @After
@@ -274,5 +276,26 @@ class SettingsViewModelTest {
         viewModel.setDeeplApiKey("")
 
         verify { credentialsManager.clearApiKey() }
+    }
+
+    @Test
+    fun `showFurigana emits current preference value`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.showFurigana.test {
+            assertEquals(false, awaitItem())
+            showFuriganaFlow.value = true
+            assertEquals(true, awaitItem())
+        }
+    }
+
+    @Test
+    fun `setShowFurigana updates preference`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.setShowFurigana(true)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify { userPreferencesRepository.setShowFurigana(true) }
     }
 }

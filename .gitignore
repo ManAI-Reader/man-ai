@@ -54,6 +54,7 @@ obj/
 
 # ML models (downloaded via scripts/download-models.sh)
 android/app/src/main/assets/models/
+android/app/src/main/assets/kanji_readings.csv
 
 # detekt CLI (downloaded per-machine via setup script)
 .claude/hooks/detekt-cli-*.jar

@@ -23,6 +23,8 @@
     <string name="tap_to_navigate_portrait_description">Нажмите на края для смены страницы в книжном режиме</string>
     <string name="tap_to_navigate_landscape">Нажатие для навигации (альбомная)</string>
     <string name="tap_to_navigate_landscape_description">Нажмите на края для смены страницы в альбомном режиме</string>
+    <string name="show_furigana">Фуригана</string>
+    <string name="show_furigana_description">Показывать чтения над кандзи в тексте OCR</string>
     <string name="reading_mode_webtoon">Webtoon</string>
 
     <!-- Theme mode -->
