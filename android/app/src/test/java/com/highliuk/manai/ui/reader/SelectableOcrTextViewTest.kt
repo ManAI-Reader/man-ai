@@ -29,6 +29,60 @@ class SelectableOcrTextViewTest {
         ),
     )
 
+    // --- resolveTappedCharOffset tests ---
+
+    @Test
+    fun tappedCharOffsetReturnsPreviousCharWhenTapFallsOnItsRightHalf() {
+        // Layout has chars A[0..10), B[10..20), C[20..30), D[30..40).
+        // Tap on right half of B (tapX=18) → Android's getOffsetForHorizontal
+        // returns cursor offset 2 (cursor after B). The right edge of B
+        // (= left edge of C = getPrimaryHorizontal(2)) is 20.
+        // The actually-tapped char is B (index 1), not C (index 2).
+        val result = SelectableOcrTextView.resolveTappedCharOffset(
+            cursorOffset = 2,
+            tapX = 18f,
+            cursorOffsetX = 20f,
+        )
+        assertEquals(1, result)
+    }
+
+    @Test
+    fun tappedCharOffsetReturnsCursorOffsetWhenTapFallsOnLeftHalf() {
+        // Tap on left half of B (tapX=11). Cursor offset = 1 (cursor before B),
+        // cursorOffsetX = getPrimaryHorizontal(1) = 10. Tap is to the right of
+        // that edge → tapped char is B (index 1).
+        val result = SelectableOcrTextView.resolveTappedCharOffset(
+            cursorOffset = 1,
+            tapX = 11f,
+            cursorOffsetX = 10f,
+        )
+        assertEquals(1, result)
+    }
+
+    @Test
+    fun tappedCharOffsetReturnsZeroWhenCursorOffsetIsZero() {
+        // Tap on first char's left half: cursor offset clamps to 0.
+        val result = SelectableOcrTextView.resolveTappedCharOffset(
+            cursorOffset = 0,
+            tapX = 2f,
+            cursorOffsetX = 0f,
+        )
+        assertEquals(0, result)
+    }
+
+    @Test
+    fun tappedCharOffsetReturnsLastCharWhenTapOnRightHalfOfLastChar() {
+        // 4-char text, tap on right half of D (tapX=38). Cursor offset = 4
+        // (cursor after D), cursorOffsetX = getPrimaryHorizontal(4) = 40.
+        // Tapped char is D (index 3).
+        val result = SelectableOcrTextView.resolveTappedCharOffset(
+            cursorOffset = 4,
+            tapX = 38f,
+            cursorOffsetX = 40f,
+        )
+        assertEquals(3, result)
+    }
+
     // --- computeWordSelectionAdjustment tests ---
 
     @Test

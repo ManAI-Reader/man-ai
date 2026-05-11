@@ -58,14 +58,27 @@ class SelectableOcrTextView(context: Context) : TextView(context) {
     }
 
     private fun getCharOffset(e: MotionEvent): Int {
-        val x = e.x.toInt() - totalPaddingLeft + scrollX
+        val x = (e.x.toInt() - totalPaddingLeft + scrollX).toFloat()
         val y = e.y.toInt() - totalPaddingTop + scrollY
         val currentLayout = layout ?: return 0
         val line = currentLayout.getLineForVertical(y)
-        return currentLayout.getOffsetForHorizontal(line, x.toFloat())
+        val cursorOffset = currentLayout.getOffsetForHorizontal(line, x)
+        val cursorOffsetX = currentLayout.getPrimaryHorizontal(cursorOffset)
+        return resolveTappedCharOffset(cursorOffset, x, cursorOffsetX)
     }
 
     companion object {
+        // `Layout.getOffsetForHorizontal` returns a cursor-insertion offset, not
+        // the index of the glyph that was touched: a tap on the right half of a
+        // char lands on the cursor position AFTER it. Map that back to the
+        // tapped char by checking whether the tap is to the left of the cursor's
+        // own left edge.
+        fun resolveTappedCharOffset(
+            cursorOffset: Int,
+            tapX: Float,
+            cursorOffsetX: Float,
+        ): Int = if (cursorOffset > 0 && tapX < cursorOffsetX) cursorOffset - 1 else cursorOffset
+
         fun wordBoundaryFromTokens(
             offset: Int,
             tokens: List<FuriganaToken>,
