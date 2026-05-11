@@ -10,6 +10,7 @@ class KuromojiTokenizer @Inject constructor() : JapaneseTokenizer {
     private lateinit var tokenizer: Tokenizer
 
     override suspend fun init() {
+        if (::tokenizer.isInitialized) return
         tokenizer = Tokenizer()
     }
 

@@ -4,6 +4,7 @@ import com.highliuk.manai.domain.ml.TokenizerResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Test
 
@@ -42,5 +43,20 @@ class KuromojiTokenizerTest {
         assertEquals(1, results.size)
         assertEquals("食堂", results[0].surface)
         assertEquals("ショクドウ", results[0].reading)
+    }
+
+    @Test
+    fun `init is idempotent - underlying Tokenizer is not recreated on repeated calls`() = runTest {
+        val sut = KuromojiTokenizer()
+        val field = KuromojiTokenizer::class.java.getDeclaredField("tokenizer")
+            .apply { isAccessible = true }
+
+        sut.init()
+        val first = field.get(sut)
+        sut.init()
+        sut.init()
+        val later = field.get(sut)
+
+        assertSame(first, later)
     }
 }
