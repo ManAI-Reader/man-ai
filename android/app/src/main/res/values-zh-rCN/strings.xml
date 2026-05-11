@@ -21,6 +21,8 @@
     <string name="tap_to_navigate_portrait_description">在竖屏模式下点击边缘翻页</string>
     <string name="tap_to_navigate_landscape">点击翻页（横屏）</string>
     <string name="tap_to_navigate_landscape_description">在横屏模式下点击边缘翻页</string>
+    <string name="show_furigana">假名注音</string>
+    <string name="show_furigana_description">在OCR文本中的汉字上方显示读音</string>
 
     <!-- Theme mode -->
     <string name="theme_mode">主题</string>

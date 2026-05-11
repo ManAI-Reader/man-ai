@@ -56,6 +56,9 @@ class UserPreferencesRepositoryImpl @Inject constructor(
 
         val TRANSLATION_TARGET_LANG = stringPreferencesKey("translation_target_lang")
         val DEFAULT_TRANSLATION_TARGET_LANG = TargetLanguage.EN
+
+        val SHOW_FURIGANA = booleanPreferencesKey("show_furigana")
+        const val DEFAULT_SHOW_FURIGANA = false
     }
 
     override val gridColumns: Flow<Int> = dataStore.data.map { preferences ->
@@ -194,6 +197,16 @@ class UserPreferencesRepositoryImpl @Inject constructor(
     override suspend fun setTranslationTargetLang(lang: TargetLanguage) {
         dataStore.edit { preferences ->
             preferences[TRANSLATION_TARGET_LANG] = lang.code
+        }
+    }
+
+    override val showFurigana: Flow<Boolean> = dataStore.data.map { preferences ->
+        preferences[SHOW_FURIGANA] ?: DEFAULT_SHOW_FURIGANA
+    }
+
+    override suspend fun setShowFurigana(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[SHOW_FURIGANA] = enabled
         }
     }
 }

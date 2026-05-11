@@ -161,7 +161,7 @@ fun HorizontalPagerViewer(
                 modifier = Modifier
                     .fillMaxSize()
                     .testTag("reader_zoom_container")
-                    .pointerInput(tapToNavigate) {
+                    .pointerInput(tapToNavigate, pageRegions) {
                         detectTapGestures(
                             onTap = { offset ->
                                 handleTapWithRegions(

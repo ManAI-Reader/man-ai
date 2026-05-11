@@ -20,6 +20,8 @@
     <string name="tap_to_navigate_portrait_description">세로 모드에서 가장자리를 탭하여 페이지 전환</string>
     <string name="tap_to_navigate_landscape">탭하여 페이지 이동 (가로)</string>
     <string name="tap_to_navigate_landscape_description">가로 모드에서 가장자리를 탭하여 페이지 전환</string>
+    <string name="show_furigana">후리가나</string>
+    <string name="show_furigana_description">OCR 텍스트에서 한자 위에 읽기 표시</string>
     <string name="reading_mode_webtoon">Webtoon</string>
 
     <!-- Theme mode -->

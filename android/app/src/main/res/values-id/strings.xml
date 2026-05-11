@@ -20,6 +20,8 @@
     <string name="tap_to_navigate_portrait_description">Ketuk tepi untuk mengganti halaman dalam mode potret</string>
     <string name="tap_to_navigate_landscape">Ketuk untuk navigasi (lanskap)</string>
     <string name="tap_to_navigate_landscape_description">Ketuk tepi untuk mengganti halaman dalam mode lanskap</string>
+    <string name="show_furigana">Furigana</string>
+    <string name="show_furigana_description">Tampilkan cara baca di atas kanji dalam teks OCR</string>
     <string name="reading_mode_webtoon">Webtoon</string>
 
     <!-- Theme mode -->

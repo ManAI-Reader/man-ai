@@ -114,6 +114,7 @@ fun ReaderScreen(
     debugPipelineStates: Map<Int, PagePipelineState> = emptyMap(),
     visiblePagesRegions: Map<Int, List<PageRegion>> = emptyMap(),
     onVisiblePagesChanged: (List<Int>) -> Unit = {},
+    furiganaTokens: List<com.highliuk.manai.domain.model.FuriganaToken>? = null,
     translationState: ReaderViewModel.TranslationState = ReaderViewModel.TranslationState.Idle,
     onTranslateClick: () -> Unit = {},
 ) {
@@ -330,6 +331,7 @@ fun ReaderScreen(
                 region = liveRegion,
                 fontScale = ocrFontScale,
                 onDismiss = onDismissBottomSheet,
+                furiganaTokens = furiganaTokens,
                 translationState = translationState,
                 onTranslateClick = onTranslateClick,
             )

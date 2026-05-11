@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Creates atomic git commits with pre-commit verification (detekt, unit tests, instrumented tests). Use when committing changes to the repository.
+description: Creates atomic git commits with pre-commit verification (detekt, unit tests). Use when committing changes to the repository.
 allowed-tools: Bash(git *)
 ---
 
@@ -15,11 +15,8 @@ Create atomic git commits for the current changes.
 - Always end with `Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>`
 - Do NOT push unless the user explicitly asks
 - Before committing, verify `./gradlew detekt` passes (the PostToolUse hook catches issues per-file, but run full project detekt before commit as final check)
-- Before committing, run **both** test suites:
-  - `cd android && ./gradlew testDebugUnitTest` — unit tests (JVM)
-  - `cd android && ./gradlew connectedIsolatedAndroidTest` — instrumented tests (emulator)
-  - If no emulator is running, warn the user and ask to start one before committing
-  - **NEVER skip instrumented tests** — unit tests alone miss Compose UI and device-level regressions
+- Before committing, run unit tests: `cd android && ./gradlew testDebugUnitTest`
+- Do **NOT** run instrumented tests (`connectedIsolatedAndroidTest`) before commit — they take too long locally and run in CI
 
 ## Steps
 

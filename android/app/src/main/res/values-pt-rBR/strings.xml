@@ -21,6 +21,8 @@
     <string name="tap_to_navigate_portrait_description">Toque nas bordas para mudar de página no modo retrato</string>
     <string name="tap_to_navigate_landscape">Tocar para navegar (paisagem)</string>
     <string name="tap_to_navigate_landscape_description">Toque nas bordas para mudar de página no modo paisagem</string>
+    <string name="show_furigana">Furigana</string>
+    <string name="show_furigana_description">Mostrar leituras acima dos kanji no texto OCR</string>
     <string name="reading_mode_webtoon">Webtoon</string>
 
     <!-- Theme mode -->

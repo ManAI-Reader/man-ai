@@ -204,6 +204,7 @@ fun ManAiNavHost(
                         )
                         val visiblePagesRegions by viewModel.visiblePagesRegions.collectAsState()
                         val translationState by viewModel.translationState.collectAsStateWithLifecycle()
+                        val furiganaTokens by viewModel.furiganaTokens.collectAsState()
 
                         if (BuildConfig.DEBUG_ML) {
                             val context = LocalContext.current
@@ -250,6 +251,7 @@ fun ManAiNavHost(
                                 debugPipelineStates = if (BuildConfig.DEBUG_ML) debugPipelineStates else emptyMap(),
                                 visiblePagesRegions = visiblePagesRegions,
                                 onVisiblePagesChanged = viewModel::onVisiblePagesChanged,
+                                furiganaTokens = furiganaTokens,
                                 translationState = translationState,
                                 onTranslateClick = { viewModel.translateSelectedRegion() },
                             )
@@ -294,6 +296,7 @@ fun ManAiNavHost(
                     val tapToNavigateLandscape by viewModel.tapToNavigateLandscape.collectAsState()
                     val deeplApiKey by viewModel.deeplApiKey.collectAsState()
                     val translationTargetLang by viewModel.translationTargetLang.collectAsState()
+                    val showFurigana by viewModel.showFurigana.collectAsState()
 
                     SettingsScreen(
                         gridColumns = gridColumns,
@@ -320,6 +323,8 @@ fun ManAiNavHost(
                         onTapToNavigatePortraitChange = { viewModel.setTapToNavigatePortrait(it) },
                         tapToNavigateLandscape = tapToNavigateLandscape,
                         onTapToNavigateLandscapeChange = { viewModel.setTapToNavigateLandscape(it) },
+                        showFurigana = showFurigana,
+                        onShowFuriganaChange = viewModel::setShowFurigana,
                         deeplApiKey = deeplApiKey,
                         onDeeplApiKeyChange = viewModel::setDeeplApiKey,
                         translationTargetLang = translationTargetLang,
