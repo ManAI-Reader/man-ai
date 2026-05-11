@@ -201,6 +201,7 @@ fun OcrBottomSheet(
                                     buildFuriganaSpannable(allParts)
                                 }
                                 view.text = spannable ?: region.ocrText
+                                view.furiganaTokens = furiganaTokens.orEmpty()
                                 view.setTextColor(textColor.toArgb())
                                 view.setTextSize(
                                     TypedValue.COMPLEX_UNIT_SP,

@@ -6,8 +6,11 @@ import android.text.Spannable
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.widget.TextView
+import com.highliuk.manai.domain.model.FuriganaToken
 
 class SelectableOcrTextView(context: Context) : TextView(context) {
+
+    var furiganaTokens: List<FuriganaToken> = emptyList()
 
     private var pendingWordSelection = false
     private var touchedOffset = 0
@@ -43,7 +46,7 @@ class SelectableOcrTextView(context: Context) : TextView(context) {
             touchedOffset = touchedOffset,
             nativeSelStart = selStart,
             nativeSelEnd = selEnd,
-            textLength = text.length,
+            tokens = furiganaTokens,
         )
         val spannable = text as? Spannable
         if (adjustment != null && spannable != null) {
@@ -63,10 +66,19 @@ class SelectableOcrTextView(context: Context) : TextView(context) {
     }
 
     companion object {
-        fun mockWordBoundary(offset: Int, textLength: Int): Pair<Int, Int> {
-            val start = (offset - 1).coerceAtLeast(0)
-            val end = (offset + 2).coerceAtMost(textLength)
-            return start to end
+        fun wordBoundaryFromTokens(
+            offset: Int,
+            tokens: List<FuriganaToken>,
+        ): Pair<Int, Int>? {
+            var cursor = 0
+            for (token in tokens) {
+                val end = cursor + token.surface.length
+                if (offset in cursor until end) {
+                    return cursor to end
+                }
+                cursor = end
+            }
+            return null
         }
 
         fun computeWordSelectionAdjustment(
@@ -74,11 +86,11 @@ class SelectableOcrTextView(context: Context) : TextView(context) {
             touchedOffset: Int,
             nativeSelStart: Int,
             nativeSelEnd: Int,
-            textLength: Int,
+            tokens: List<FuriganaToken>,
         ): Pair<Int, Int>? {
             if (!pending || nativeSelStart == nativeSelEnd) return null
-            val (start, end) = mockWordBoundary(touchedOffset, textLength)
-            return if (start == nativeSelStart && end == nativeSelEnd) null else start to end
+            val boundary = wordBoundaryFromTokens(touchedOffset, tokens)
+            return boundary?.takeUnless { it.first == nativeSelStart && it.second == nativeSelEnd }
         }
     }
 }
