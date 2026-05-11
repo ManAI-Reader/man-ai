@@ -21,9 +21,12 @@ import com.highliuk.manai.domain.repository.TranslationRepository
 import com.highliuk.manai.domain.repository.UserPreferencesRepository
 import com.highliuk.manai.domain.usecase.ParseFuriganaUseCase
 import com.highliuk.manai.domain.usecase.ProcessPageUseCase
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -127,13 +130,19 @@ class ReaderViewModel @Inject constructor(
 
     private val pipelineJobs = mutableMapOf<Int, Job>()
 
+    private val tokenizerReady: Deferred<Unit> = viewModelScope.async(
+        context = Dispatchers.IO,
+        start = CoroutineStart.LAZY,
+    ) { japaneseTokenizer.init() }
+
+    private val kanjiReadingsReady: Deferred<Unit> = viewModelScope.async(
+        context = Dispatchers.IO,
+        start = CoroutineStart.LAZY,
+    ) { kanjiReadingsDataSource.load() }
+
     init {
-        viewModelScope.launch(Dispatchers.IO) {
-            japaneseTokenizer.init()
-        }
-        viewModelScope.launch(Dispatchers.IO) {
-            kanjiReadingsDataSource.load()
-        }
+        tokenizerReady.start()
+        kanjiReadingsReady.start()
 
         viewModelScope.launch {
             val loadedManga = manga.filterNotNull().first()
@@ -192,6 +201,8 @@ class ReaderViewModel @Inject constructor(
         if (!showFurigana.value || ocrText == null) return
         viewModelScope.launch {
             try {
+                tokenizerReady.await()
+                kanjiReadingsReady.await()
                 _furiganaTokens.value = parseFuriganaUseCase(ocrText)
             } catch (_: Exception) {
                 _furiganaTokens.value = null
