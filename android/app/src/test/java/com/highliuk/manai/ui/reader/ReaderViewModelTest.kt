@@ -15,6 +15,7 @@ import com.highliuk.manai.domain.repository.OcrCacheRepository
 import com.highliuk.manai.domain.repository.TranslationRepository
 import com.highliuk.manai.domain.repository.UserPreferencesRepository
 import com.highliuk.manai.domain.furigana.KanjiReadingsDataSource
+import com.highliuk.manai.domain.logging.Logger
 import com.highliuk.manai.domain.ml.JapaneseTokenizer
 import com.highliuk.manai.domain.model.FuriganaPart
 import com.highliuk.manai.domain.model.FuriganaToken
@@ -26,6 +27,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -62,6 +64,7 @@ class ReaderViewModelTest {
     private val japaneseTokenizer = mockk<JapaneseTokenizer>(relaxed = true)
     private val kanjiReadingsDataSource = mockk<KanjiReadingsDataSource>(relaxed = true)
     private val parseFuriganaUseCase = mockk<ParseFuriganaUseCase>(relaxed = true)
+    private val logger = mockk<Logger>(relaxed = true)
 
     @Before
     fun setUp() {
@@ -84,7 +87,7 @@ class ReaderViewModelTest {
             savedStateHandle, repository, userPreferencesRepository,
             processPageUseCase, ocrCache, pdfPageRenderer,
             debugStateHolder, debugEventHolder, translationRepository,
-            japaneseTokenizer, kanjiReadingsDataSource, parseFuriganaUseCase,
+            japaneseTokenizer, kanjiReadingsDataSource, parseFuriganaUseCase, logger,
         )
     }
 
@@ -672,6 +675,26 @@ class ReaderViewModelTest {
         testScheduler.advanceUntilIdle()
 
         assertEquals(expectedTokens, viewModel.furiganaTokens.value)
+    }
+
+    @Test
+    fun `furigana parse failure keeps tokens null and logs the exception`() = runTest(testDispatcher) {
+        coEvery { repository.getMangaById(1L) } returns flowOf(null)
+        every { ocrCache.observeRegions(any(), any()) } returns flowOf(emptyList())
+        coEvery { translationRepository.getCachedTranslation(any(), any(), any(), any()) } returns null
+        showFuriganaFlow.value = true
+        val failure = RuntimeException("kuromoji dictionaries not found")
+        every { parseFuriganaUseCase("食べる") } throws failure
+
+        val viewModel = createViewModel(1L)
+        testScheduler.advanceUntilIdle()
+
+        val region = PageRegion(0, 0.1f, 0.1f, 0.5f, 0.5f, 0.9f, "食べる")
+        viewModel.onRegionTapped(region)
+        testScheduler.advanceUntilIdle()
+
+        assertNull(viewModel.furiganaTokens.value)
+        verify { logger.e(any(), any(), failure) }
     }
 
     @Test

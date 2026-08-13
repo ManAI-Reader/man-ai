@@ -16,6 +16,7 @@ import com.highliuk.manai.domain.furigana.KanjiReadingsDataSource
 import com.highliuk.manai.domain.ml.JapaneseTokenizer
 import com.highliuk.manai.domain.model.FuriganaToken
 import com.highliuk.manai.domain.repository.MangaRepository
+import com.highliuk.manai.domain.logging.Logger
 import com.highliuk.manai.domain.repository.OcrCacheRepository
 import com.highliuk.manai.domain.repository.TranslationRepository
 import com.highliuk.manai.domain.repository.UserPreferencesRepository
@@ -61,6 +62,7 @@ class ReaderViewModel @Inject constructor(
     private val japaneseTokenizer: JapaneseTokenizer,
     private val kanjiReadingsDataSource: KanjiReadingsDataSource,
     private val parseFuriganaUseCase: ParseFuriganaUseCase,
+    private val logger: Logger,
 ) : ViewModel() {
 
     val debugPipelineStates: StateFlow<Map<Int, PagePipelineState>> = debugStateHolder.states
@@ -204,7 +206,8 @@ class ReaderViewModel @Inject constructor(
                 tokenizerReady.await()
                 kanjiReadingsReady.await()
                 _furiganaTokens.value = parseFuriganaUseCase(ocrText)
-            } catch (_: Exception) {
+            } catch (expected: Exception) {
+                logger.e("ReaderViewModel", "Furigana parsing failed", expected)
                 _furiganaTokens.value = null
             }
         }
