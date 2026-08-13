@@ -92,4 +92,5 @@
     <string name="deepl_api_key">DeepL API 密钥</string>
     <string name="deepl_api_key_hint">输入你的 DeepL API 密钥</string>
     <string name="translation_target_language">目标语言</string>
+    <string name="app_version_info">版本 %1$s (%2$d)</string>
 </resources>

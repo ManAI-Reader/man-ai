@@ -15,6 +15,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.filters.SdkSuppress
+import com.highliuk.manai.BuildConfig
 import com.highliuk.manai.MainActivity
 import com.highliuk.manai.data.local.ManAiDatabase
 import com.highliuk.manai.data.local.dao.MangaDao
@@ -178,6 +179,18 @@ class ManAiNavHostTest {
         composeTestRule.onNodeWithText("Reading Mode").performScrollTo().assertIsDisplayed()
         composeTestRule.onNodeWithText("Theme").performScrollTo().assertIsDisplayed()
         composeTestRule.onNodeWithText("Language").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun settings_showsAppVersionInfoAtBottom() {
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithContentDescription("Settings").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(500)
+
+        val expected = "Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+        composeTestRule.onNodeWithText(expected).performScrollTo().assertIsDisplayed()
     }
 
     @Test

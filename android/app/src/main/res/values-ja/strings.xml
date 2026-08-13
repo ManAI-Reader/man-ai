@@ -92,4 +92,5 @@
     <string name="deepl_api_key">DeepL APIキー</string>
     <string name="deepl_api_key_hint">DeepLのAPIキーを入力してください</string>
     <string name="translation_target_language">翻訳先の言語</string>
+    <string name="app_version_info">バージョン %1$s (%2$d)</string>
 </resources>

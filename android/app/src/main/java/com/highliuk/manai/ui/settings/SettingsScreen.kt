@@ -39,9 +39,11 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.intl.LocaleList as ComposeLocaleList
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
+import com.highliuk.manai.BuildConfig
 import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.AppLanguage
 import com.highliuk.manai.domain.model.ReadingMode
@@ -94,6 +96,8 @@ fun SettingsScreen(
     onDeeplApiKeyChange: (String) -> Unit = {},
     translationTargetLang: TargetLanguage = TargetLanguage.EN,
     onTranslationTargetLangChange: (TargetLanguage) -> Unit = {},
+    versionName: String = BuildConfig.VERSION_NAME,
+    versionCode: Int = BuildConfig.VERSION_CODE,
     onBack: () -> Unit
 ) {
     var apiKeyVisible by remember { mutableStateOf(false) }
@@ -357,6 +361,16 @@ fun SettingsScreen(
                 onTranslationTargetLangChange = onTranslationTargetLangChange,
                 apiKeyVisible = apiKeyVisible,
                 onApiKeyVisibleChange = { apiKeyVisible = it },
+            )
+
+            Text(
+                text = stringResource(R.string.app_version_info, versionName, versionCode),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 32.dp, bottom = 8.dp)
             )
         }
     }

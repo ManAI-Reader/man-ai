@@ -503,6 +503,37 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun displaysAppVersionInfoAtBottom() {
+        composeTestRule.setContent {
+            SettingsScreen(
+                gridColumns = 2,
+                onGridColumnsChange = {},
+                gridColumnsLandscape = 5,
+                onGridColumnsLandscapeChange = {},
+                readingMode = ReadingMode.LTR,
+                onReadingModeChange = {},
+                themeMode = ThemeMode.SYSTEM,
+                onThemeModeChange = {},
+                appLanguage = AppLanguage.SYSTEM,
+                onAppLanguageChange = {},
+                tapToNavigatePortrait = false,
+                onTapToNavigatePortraitChange = {},
+                tapToNavigateLandscape = true,
+                onTapToNavigateLandscapeChange = {},
+                deeplApiKey = "",
+                onDeeplApiKeyChange = {},
+                translationTargetLang = TargetLanguage.EN,
+                onTranslationTargetLangChange = {},
+                versionName = "1.2.3",
+                versionCode = 42,
+                onBack = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("Version 1.2.3 (42)").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
     fun tappingLandscapeSwitchCallsCallback() {
         var toggled = false
 
