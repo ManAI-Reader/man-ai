@@ -280,6 +280,21 @@ tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
     }
 }
 
+// kanji_readings.csv is gitignored and generated from KANJIDIC2 (CI does this
+// automatically). Without it the furigana pipeline fails silently at runtime,
+// so refuse to build an APK that would ship broken.
+tasks.register("verifyKanjiReadingsAsset") {
+    val asset = layout.projectDirectory.file("src/main/assets/kanji_readings.csv").asFile
+    doLast {
+        check(asset.exists()) {
+            "Missing asset ${asset.name}: furigana would fail silently at runtime. " +
+                "Generate it from the repo root with: python3 scripts/generate-kanji-readings.py"
+        }
+    }
+}
+
+tasks.named("preBuild") { dependsOn("verifyKanjiReadingsAsset") }
+
 tasks.register("printDetektClasspath") {
     dependsOn("compileDebugKotlin")
     doLast {
