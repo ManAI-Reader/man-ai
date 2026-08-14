@@ -51,6 +51,9 @@ import com.highliuk.manai.ui.home.RenameMangaDialog
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import com.highliuk.manai.BuildConfig
+import com.highliuk.manai.domain.model.PageRegion
+import com.highliuk.manai.domain.model.PromptTemplate
+import com.highliuk.manai.ui.chat.ChatLauncherViewModel
 import com.highliuk.manai.ui.reader.ReaderScreen
 import com.highliuk.manai.ui.reader.ReaderViewModel
 import com.highliuk.manai.ui.settings.SettingsScreen
@@ -206,6 +209,15 @@ fun ManAiNavHost(
                         val translationState by viewModel.translationState.collectAsStateWithLifecycle()
                         val furiganaTokens by viewModel.furiganaTokens.collectAsState()
 
+                        val chatLauncher: ChatLauncherViewModel = hiltViewModel()
+                        val promptTemplates by chatLauncher.promptTemplates
+                            .collectAsStateWithLifecycle()
+                        LaunchedEffect(chatLauncher) {
+                            chatLauncher.navigateToChat.collect { id ->
+                                navController.navigate("chat/$id")
+                            }
+                        }
+
                         if (BuildConfig.DEBUG_ML) {
                             val context = LocalContext.current
                             LaunchedEffect(Unit) {
@@ -254,6 +266,25 @@ fun ManAiNavHost(
                                 furiganaTokens = furiganaTokens,
                                 translationState = translationState,
                                 onTranslateClick = { viewModel.translateSelectedRegion() },
+                                promptTemplates = promptTemplates,
+                                onPromptClick = { template ->
+                                    chatLauncher.launchPromptConversation(
+                                        template = template,
+                                        region = selectedRegion,
+                                        mangaId = m.id,
+                                        selection = null,
+                                        translationState = translationState,
+                                    )
+                                },
+                                onPromptWithSelection = { template, selection ->
+                                    chatLauncher.launchPromptConversation(
+                                        template = template,
+                                        region = selectedRegion,
+                                        mangaId = m.id,
+                                        selection = selection,
+                                        translationState = translationState,
+                                    )
+                                },
                             )
                         }
                     }
@@ -335,6 +366,23 @@ fun ManAiNavHost(
             }
         }
     }
+}
+
+private fun ChatLauncherViewModel.launchPromptConversation(
+    template: PromptTemplate,
+    region: PageRegion?,
+    mangaId: Long,
+    selection: String?,
+    translationState: ReaderViewModel.TranslationState,
+) {
+    if (region == null) return
+    startConversation(
+        template = template,
+        region = region,
+        mangaId = mangaId,
+        selection = selection,
+        translation = (translationState as? ReaderViewModel.TranslationState.Translated)?.text,
+    )
 }
 
 private fun resolveTapToNavigate(

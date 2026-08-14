@@ -24,8 +24,11 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.displayCutout
@@ -36,9 +39,12 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -69,8 +75,10 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.highliuk.manai.R
+import com.highliuk.manai.domain.chat.PromptTemplateRenderer
 import com.highliuk.manai.domain.model.FuriganaToken
 import com.highliuk.manai.domain.model.PageRegion
+import com.highliuk.manai.domain.model.PromptTemplate
 import java.util.Locale
 import kotlin.math.roundToInt
 import androidx.compose.ui.unit.max
@@ -89,6 +97,9 @@ fun OcrBottomSheet(
     furiganaTokens: List<FuriganaToken>? = null,
     translationState: ReaderViewModel.TranslationState = ReaderViewModel.TranslationState.Idle,
     onTranslateClick: () -> Unit = {},
+    promptTemplates: List<PromptTemplate> = emptyList(),
+    onPromptClick: (PromptTemplate) -> Unit = {},
+    onPromptWithSelection: (PromptTemplate, String) -> Unit = { _, _ -> },
 ) {
     val context = LocalContext.current
     var visible by remember { mutableStateOf(false) }
@@ -181,6 +192,10 @@ fun OcrBottomSheet(
                         val textColor = MaterialTheme.colorScheme.onSurface
                         val textSizeSp =
                             (MaterialTheme.typography.bodyLarge.fontSize * fontScale).value
+                        val hasTranslation =
+                            translationState is ReaderViewModel.TranslationState.Translated
+                        val visibleTemplates =
+                            visiblePromptTemplates(promptTemplates, hasTranslation)
 
                         AndroidView(
                             factory = { ctx ->
@@ -207,6 +222,11 @@ fun OcrBottomSheet(
                                     TypedValue.COMPLEX_UNIT_SP,
                                     textSizeSp,
                                 )
+                                view.selectionPrompts = visibleTemplates.map { it.id to it.name }
+                                view.onPromptSelected = { promptId, selected ->
+                                    visibleTemplates.firstOrNull { it.id == promptId }
+                                        ?.let { onPromptWithSelection(it, selected) }
+                                }
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -257,6 +277,10 @@ fun OcrBottomSheet(
                                 )
                             }
                         }
+                        PromptTemplateChips(
+                            templates = visibleTemplates,
+                            onPromptClick = onPromptClick,
+                        )
                         when (translationState) {
                             is ReaderViewModel.TranslationState.Loading -> {
                                 CircularProgressIndicator(
@@ -300,6 +324,44 @@ fun OcrBottomSheet(
             }
         }
     }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun PromptTemplateChips(
+    templates: List<PromptTemplate>,
+    onPromptClick: (PromptTemplate) -> Unit,
+) {
+    if (templates.isEmpty()) return
+    FlowRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp)
+            .testTag("prompt_chips"),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        templates.forEach { template ->
+            AssistChip(
+                onClick = { onPromptClick(template) },
+                label = { Text(template.name) },
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.AutoAwesome,
+                        contentDescription = null,
+                        modifier = Modifier.size(AssistChipDefaults.IconSize),
+                    )
+                },
+                modifier = Modifier.testTag("prompt_chip_${template.id}"),
+            )
+        }
+    }
+}
+
+internal fun visiblePromptTemplates(
+    templates: List<PromptTemplate>,
+    hasTranslation: Boolean,
+): List<PromptTemplate> = templates.filter {
+    PromptTemplateRenderer.isAvailable(it.template, hasTranslation)
 }
 
 private fun Context.findActivity(): Activity? {

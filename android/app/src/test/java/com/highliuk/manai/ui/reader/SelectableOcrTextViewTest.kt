@@ -205,4 +205,84 @@ class SelectableOcrTextViewTest {
         )
         assertEquals(null, result)
     }
+
+    // --- promptMenuItemId / promptIdForMenuItem tests ---
+
+    private val samplePrompts = listOf(10L to "Explain", 20L to "Grammar", 30L to "Nuance")
+
+    @Test
+    fun promptMenuItemIdRoundTripsThroughPromptIdForMenuItem() {
+        samplePrompts.forEachIndexed { index, (promptId, _) ->
+            val menuItemId = SelectableOcrTextView.promptMenuItemId(index)
+            assertEquals(promptId, SelectableOcrTextView.promptIdForMenuItem(menuItemId, samplePrompts))
+        }
+    }
+
+    @Test
+    fun promptIdForMenuItemReturnsNullForOutOfRangeIds() {
+        val beyondLast = SelectableOcrTextView.promptMenuItemId(samplePrompts.size)
+        assertEquals(null, SelectableOcrTextView.promptIdForMenuItem(beyondLast, samplePrompts))
+
+        val beforeFirst = SelectableOcrTextView.promptMenuItemId(0) - 1
+        assertEquals(null, SelectableOcrTextView.promptIdForMenuItem(beforeFirst, samplePrompts))
+    }
+
+    @Test
+    fun promptIdForMenuItemMustResolveAgainstMenuSnapshotNotMutatedList() {
+        // The action-mode menu is built from a snapshot of the prompt list.
+        // If the live list grows while the menu is open (e.g. a translation
+        // completes), resolving the clicked index against the mutated list
+        // would dispatch the wrong prompt — only the snapshot is correct.
+        val snapshot = listOf(10L to "Explain", 20L to "Grammar")
+        val mutated = listOf(99L to "Compare") + snapshot
+
+        val clickedItemId = SelectableOcrTextView.promptMenuItemId(1)
+
+        assertEquals(20L, SelectableOcrTextView.promptIdForMenuItem(clickedItemId, snapshot))
+        // Same item id against the mutated list resolves to a different prompt:
+        assertEquals(10L, SelectableOcrTextView.promptIdForMenuItem(clickedItemId, mutated))
+    }
+
+    @Test
+    fun promptIdForMenuItemReturnsNullForEmptyPrompts() {
+        val menuItemId = SelectableOcrTextView.promptMenuItemId(0)
+        assertEquals(null, SelectableOcrTextView.promptIdForMenuItem(menuItemId, emptyList()))
+    }
+
+    // --- safeSelection tests ---
+
+    @Test
+    fun safeSelectionReturnsOrderedBoundsForNormalSelection() {
+        assertEquals(2 to 5, SelectableOcrTextView.safeSelection(2, 5, 10))
+    }
+
+    @Test
+    fun safeSelectionReordersInvertedBounds() {
+        assertEquals(2 to 5, SelectableOcrTextView.safeSelection(5, 2, 10))
+    }
+
+    @Test
+    fun safeSelectionClampsNegativeStartToZero() {
+        assertEquals(0 to 3, SelectableOcrTextView.safeSelection(-1, 3, 10))
+    }
+
+    @Test
+    fun safeSelectionClampsEndOverflowToTextLength() {
+        assertEquals(2 to 10, SelectableOcrTextView.safeSelection(2, 15, 10))
+    }
+
+    @Test
+    fun safeSelectionReturnsNullForEmptySelection() {
+        assertEquals(null, SelectableOcrTextView.safeSelection(3, 3, 10))
+    }
+
+    @Test
+    fun safeSelectionReturnsNullWhenBothBoundsInvalid() {
+        assertEquals(null, SelectableOcrTextView.safeSelection(-5, -1, 10))
+    }
+
+    @Test
+    fun safeSelectionReturnsNullForEmptyText() {
+        assertEquals(null, SelectableOcrTextView.safeSelection(0, 4, 0))
+    }
 }

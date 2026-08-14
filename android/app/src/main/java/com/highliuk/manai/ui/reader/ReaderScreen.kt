@@ -42,6 +42,7 @@ import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.Manga
 import com.highliuk.manai.domain.model.PagePipelineState
 import com.highliuk.manai.domain.model.PageRegion
+import com.highliuk.manai.domain.model.PromptTemplate
 import com.highliuk.manai.domain.model.ReadingMode
 import com.highliuk.manai.ui.navigation.LocalAnimatedVisibilityScope
 import com.highliuk.manai.ui.navigation.LocalSharedTransitionScope
@@ -117,6 +118,9 @@ fun ReaderScreen(
     furiganaTokens: List<com.highliuk.manai.domain.model.FuriganaToken>? = null,
     translationState: ReaderViewModel.TranslationState = ReaderViewModel.TranslationState.Idle,
     onTranslateClick: () -> Unit = {},
+    promptTemplates: List<PromptTemplate> = emptyList(),
+    onPromptClick: (PromptTemplate) -> Unit = {},
+    onPromptWithSelection: (PromptTemplate, String) -> Unit = { _, _ -> },
 ) {
     val isRtl = readingMode == ReadingMode.RTL
     val isWebtoon = readingMode == ReadingMode.WEBTOON
@@ -334,6 +338,9 @@ fun ReaderScreen(
                 furiganaTokens = furiganaTokens,
                 translationState = translationState,
                 onTranslateClick = onTranslateClick,
+                promptTemplates = promptTemplates,
+                onPromptClick = onPromptClick,
+                onPromptWithSelection = onPromptWithSelection,
             )
         }
 
