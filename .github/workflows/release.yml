@@ -28,6 +28,18 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Cache kanji readings CSV
+        uses: actions/cache@v4
+        with:
+          path: android/app/src/main/assets/kanji_readings.csv
+          key: kanji-readings-${{ hashFiles('scripts/generate-kanji-readings.py') }}
+
+      - name: Generate kanji readings CSV
+        run: |
+          if [ ! -f "$GITHUB_WORKSPACE/android/app/src/main/assets/kanji_readings.csv" ]; then
+            python3 "$GITHUB_WORKSPACE/scripts/generate-kanji-readings.py"
+          fi
+
       - name: Run detekt and unit tests
         run: ./gradlew detekt testDebugUnitTest
 
