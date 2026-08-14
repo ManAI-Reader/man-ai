@@ -96,4 +96,10 @@
     <string name="deepl_api_key_hint">Inserisci la tua chiave API DeepL</string>
     <string name="translation_target_language">Lingua di destinazione</string>
     <string name="app_version_info">Versione %1$s (%2$d)</string>
+
+    <!-- AI prompt templates -->
+    <string name="prompt_default_grammar">Spiega la grammatica</string>
+    <string name="prompt_default_vocabulary">Vocabolario</string>
+    <string name="prompt_default_word">Spiega questa parola</string>
+    <string name="prompt_default_translation_check">Verifica traduzione</string>
 </resources>

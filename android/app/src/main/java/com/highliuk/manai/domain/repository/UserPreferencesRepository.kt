@@ -39,4 +39,13 @@ interface UserPreferencesRepository {
 
     val showFurigana: Flow<Boolean>
     suspend fun setShowFurigana(enabled: Boolean)
+
+    val llmBaseUrl: Flow<String>
+    suspend fun setLlmBaseUrl(url: String)
+
+    val llmModel: Flow<String>
+    suspend fun setLlmModel(model: String)
+
+    val promptDefaultsSeeded: Flow<Boolean>
+    suspend fun setPromptDefaultsSeeded()
 }

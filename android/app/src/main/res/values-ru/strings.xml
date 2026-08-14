@@ -102,4 +102,10 @@
     <string name="deepl_api_key_hint">Введите ваш API-ключ DeepL</string>
     <string name="translation_target_language">Язык перевода</string>
     <string name="app_version_info">Версия %1$s (%2$d)</string>
+
+    <!-- AI prompt templates -->
+    <string name="prompt_default_grammar">Объяснить грамматику</string>
+    <string name="prompt_default_vocabulary">Лексика</string>
+    <string name="prompt_default_word">Объяснить это слово</string>
+    <string name="prompt_default_translation_check">Проверить перевод</string>
 </resources>

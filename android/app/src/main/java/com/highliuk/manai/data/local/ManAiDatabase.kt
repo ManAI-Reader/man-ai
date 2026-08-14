@@ -4,22 +4,42 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.highliuk.manai.data.local.dao.ChatMessageDao
+import com.highliuk.manai.data.local.dao.ConversationDao
 import com.highliuk.manai.data.local.dao.MangaDao
+import com.highliuk.manai.data.local.dao.MemoryEntryDao
 import com.highliuk.manai.data.local.dao.PageOcrResultDao
+import com.highliuk.manai.data.local.dao.PromptTemplateDao
 import com.highliuk.manai.data.local.dao.TranslationResultDao
+import com.highliuk.manai.data.local.entity.ChatMessageEntity
+import com.highliuk.manai.data.local.entity.ConversationEntity
 import com.highliuk.manai.data.local.entity.MangaEntity
+import com.highliuk.manai.data.local.entity.MemoryEntryEntity
 import com.highliuk.manai.data.local.entity.PageOcrResultEntity
+import com.highliuk.manai.data.local.entity.PromptTemplateEntity
 import com.highliuk.manai.data.local.entity.TranslationResultEntity
 
 @Database(
-    entities = [MangaEntity::class, PageOcrResultEntity::class, TranslationResultEntity::class],
-    version = 5,
+    entities = [
+        MangaEntity::class,
+        PageOcrResultEntity::class,
+        TranslationResultEntity::class,
+        ConversationEntity::class,
+        ChatMessageEntity::class,
+        PromptTemplateEntity::class,
+        MemoryEntryEntity::class,
+    ],
+    version = 6,
     exportSchema = true,
 )
 abstract class ManAiDatabase : RoomDatabase() {
     abstract fun mangaDao(): MangaDao
     abstract fun pageOcrResultDao(): PageOcrResultDao
     abstract fun translationResultDao(): TranslationResultDao
+    abstract fun conversationDao(): ConversationDao
+    abstract fun chatMessageDao(): ChatMessageDao
+    abstract fun promptTemplateDao(): PromptTemplateDao
+    abstract fun memoryEntryDao(): MemoryEntryDao
 
     companion object {
         val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -99,6 +119,58 @@ abstract class ManAiDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("DROP INDEX IF EXISTS index_translation_result_mangaId_pageIndex")
                 db.execSQL("DROP TABLE IF EXISTS translation_result")
+            }
+        }
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS conversation (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "title TEXT NOT NULL, " +
+                        "mangaId INTEGER, " +
+                        "pageIndex INTEGER, " +
+                        "regionIndex INTEGER, " +
+                        "createdAt INTEGER NOT NULL, " +
+                        "updatedAt INTEGER NOT NULL, " +
+                        "FOREIGN KEY(mangaId) REFERENCES manga(id) ON DELETE SET NULL)"
+                )
+                db.execSQL("CREATE INDEX index_conversation_mangaId ON conversation(mangaId)")
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS chat_message (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "conversationId INTEGER NOT NULL, " +
+                        "role TEXT NOT NULL, " +
+                        "content TEXT NOT NULL, " +
+                        "timestamp INTEGER NOT NULL, " +
+                        "FOREIGN KEY(conversationId) REFERENCES conversation(id) ON DELETE CASCADE)"
+                )
+                db.execSQL(
+                    "CREATE INDEX index_chat_message_conversationId ON chat_message(conversationId)"
+                )
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS prompt_template (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "name TEXT NOT NULL, " +
+                        "template TEXT NOT NULL, " +
+                        "sortOrder INTEGER NOT NULL DEFAULT 0)"
+                )
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS memory_entry (" +
+                        "title TEXT PRIMARY KEY NOT NULL, " +
+                        "content TEXT NOT NULL, " +
+                        "updatedAt INTEGER NOT NULL)"
+                )
+            }
+        }
+
+        val MIGRATION_6_5 = object : Migration(6, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS chat_message")
+                db.execSQL("DROP INDEX IF EXISTS index_conversation_mangaId")
+                db.execSQL("DROP TABLE IF EXISTS conversation")
+                db.execSQL("DROP TABLE IF EXISTS prompt_template")
+                db.execSQL("DROP TABLE IF EXISTS memory_entry")
             }
         }
 

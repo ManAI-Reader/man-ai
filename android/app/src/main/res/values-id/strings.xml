@@ -93,4 +93,10 @@
     <string name="deepl_api_key_hint">Masukkan kunci API DeepL Anda</string>
     <string name="translation_target_language">Bahasa Tujuan</string>
     <string name="app_version_info">Versi %1$s (%2$d)</string>
+
+    <!-- AI prompt templates -->
+    <string name="prompt_default_grammar">Jelaskan tata bahasa</string>
+    <string name="prompt_default_vocabulary">Kosakata</string>
+    <string name="prompt_default_word">Jelaskan kata ini</string>
+    <string name="prompt_default_translation_check">Periksa terjemahan</string>
 </resources>

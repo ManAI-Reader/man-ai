@@ -93,4 +93,10 @@
     <string name="deepl_api_key_hint">ป้อนคีย์ API ของ DeepL</string>
     <string name="translation_target_language">ภาษาปลายทาง</string>
     <string name="app_version_info">เวอร์ชัน %1$s (%2$d)</string>
+
+    <!-- AI prompt templates -->
+    <string name="prompt_default_grammar">อธิบายไวยากรณ์</string>
+    <string name="prompt_default_vocabulary">คำศัพท์</string>
+    <string name="prompt_default_word">อธิบายคำนี้</string>
+    <string name="prompt_default_translation_check">ตรวจสอบคำแปล</string>
 </resources>

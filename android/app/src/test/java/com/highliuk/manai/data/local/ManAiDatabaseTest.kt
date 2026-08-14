@@ -75,6 +75,33 @@ class ManAiDatabaseTest {
     }
 
     @Test
+    fun `migration 5 to 6 creates agent tables`() {
+        ManAiDatabase.MIGRATION_5_6.migrate(db)
+
+        verifyOrder {
+            db.execSQL(match { it.contains("CREATE TABLE IF NOT EXISTS conversation") })
+            db.execSQL(match { it.contains("CREATE INDEX index_conversation_mangaId") })
+            db.execSQL(match { it.contains("CREATE TABLE IF NOT EXISTS chat_message") })
+            db.execSQL(match { it.contains("CREATE INDEX index_chat_message_conversationId") })
+            db.execSQL(match { it.contains("CREATE TABLE IF NOT EXISTS prompt_template") })
+            db.execSQL(match { it.contains("CREATE TABLE IF NOT EXISTS memory_entry") })
+        }
+    }
+
+    @Test
+    fun `migration 6 to 5 drops agent tables`() {
+        ManAiDatabase.MIGRATION_6_5.migrate(db)
+
+        verifyOrder {
+            db.execSQL("DROP TABLE IF EXISTS chat_message")
+            db.execSQL("DROP INDEX IF EXISTS index_conversation_mangaId")
+            db.execSQL("DROP TABLE IF EXISTS conversation")
+            db.execSQL("DROP TABLE IF EXISTS prompt_template")
+            db.execSQL("DROP TABLE IF EXISTS memory_entry")
+        }
+    }
+
+    @Test
     fun `migration 2 to 1 removes lastReadPage via backup table`() {
         ManAiDatabase.MIGRATION_2_1.migrate(db)
 

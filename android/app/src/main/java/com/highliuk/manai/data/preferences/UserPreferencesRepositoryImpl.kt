@@ -59,6 +59,15 @@ class UserPreferencesRepositoryImpl @Inject constructor(
 
         val SHOW_FURIGANA = booleanPreferencesKey("show_furigana")
         const val DEFAULT_SHOW_FURIGANA = false
+
+        val LLM_BASE_URL = stringPreferencesKey("llm_base_url")
+        const val DEFAULT_LLM_BASE_URL = "https://api.groq.com/openai/v1"
+
+        val LLM_MODEL = stringPreferencesKey("llm_model")
+        const val DEFAULT_LLM_MODEL = "llama-3.3-70b-versatile"
+
+        val PROMPT_DEFAULTS_SEEDED = booleanPreferencesKey("prompt_defaults_seeded")
+        const val DEFAULT_PROMPT_DEFAULTS_SEEDED = false
     }
 
     override val gridColumns: Flow<Int> = dataStore.data.map { preferences ->
@@ -207,6 +216,36 @@ class UserPreferencesRepositoryImpl @Inject constructor(
     override suspend fun setShowFurigana(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[SHOW_FURIGANA] = enabled
+        }
+    }
+
+    override val llmBaseUrl: Flow<String> = dataStore.data.map { preferences ->
+        preferences[LLM_BASE_URL] ?: DEFAULT_LLM_BASE_URL
+    }
+
+    override suspend fun setLlmBaseUrl(url: String) {
+        dataStore.edit { preferences ->
+            preferences[LLM_BASE_URL] = url
+        }
+    }
+
+    override val llmModel: Flow<String> = dataStore.data.map { preferences ->
+        preferences[LLM_MODEL] ?: DEFAULT_LLM_MODEL
+    }
+
+    override suspend fun setLlmModel(model: String) {
+        dataStore.edit { preferences ->
+            preferences[LLM_MODEL] = model
+        }
+    }
+
+    override val promptDefaultsSeeded: Flow<Boolean> = dataStore.data.map { preferences ->
+        preferences[PROMPT_DEFAULTS_SEEDED] ?: DEFAULT_PROMPT_DEFAULTS_SEEDED
+    }
+
+    override suspend fun setPromptDefaultsSeeded() {
+        dataStore.edit { preferences ->
+            preferences[PROMPT_DEFAULTS_SEEDED] = true
         }
     }
 }
