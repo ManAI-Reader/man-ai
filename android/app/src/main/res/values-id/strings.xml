@@ -99,4 +99,10 @@
     <string name="prompt_default_vocabulary">Kosakata</string>
     <string name="prompt_default_word">Jelaskan kata ini</string>
     <string name="prompt_default_translation_check">Periksa terjemahan</string>
+
+    <!-- Chat -->
+    <string name="chat_input_hint">Tanyakan tentang kalimat ini…</string>
+    <string name="send_message">Kirim</string>
+    <string name="jump_to_source">Buka halaman sumber</string>
+    <string name="chat_error_generic">Terjadi kesalahan</string>
 </resources>

@@ -108,4 +108,10 @@
     <string name="prompt_default_vocabulary">Лексика</string>
     <string name="prompt_default_word">Объяснить это слово</string>
     <string name="prompt_default_translation_check">Проверить перевод</string>
+
+    <!-- Chat -->
+    <string name="chat_input_hint">Спросите об этом предложении…</string>
+    <string name="send_message">Отправить</string>
+    <string name="jump_to_source">Открыть исходную страницу</string>
+    <string name="chat_error_generic">Что-то пошло не так</string>
 </resources>

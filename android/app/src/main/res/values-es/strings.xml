@@ -102,4 +102,10 @@
     <string name="prompt_default_vocabulary">Vocabulario</string>
     <string name="prompt_default_word">Explicar esta palabra</string>
     <string name="prompt_default_translation_check">Comprobar la traducción</string>
+
+    <!-- Chat -->
+    <string name="chat_input_hint">Pregunta sobre esta frase…</string>
+    <string name="send_message">Enviar</string>
+    <string name="jump_to_source">Abrir página de origen</string>
+    <string name="chat_error_generic">Algo salió mal</string>
 </resources>

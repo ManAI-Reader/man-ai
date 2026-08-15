@@ -99,4 +99,10 @@
     <string name="prompt_default_vocabulary">語彙</string>
     <string name="prompt_default_word">この単語を解説</string>
     <string name="prompt_default_translation_check">翻訳をチェック</string>
+
+    <!-- Chat -->
+    <string name="chat_input_hint">この文について質問…</string>
+    <string name="send_message">送信</string>
+    <string name="jump_to_source">元のページを開く</string>
+    <string name="chat_error_generic">問題が発生しました</string>
 </resources>

@@ -81,8 +81,12 @@ class ReaderViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel(mangaId: Long = 1L): ReaderViewModel {
-        val savedStateHandle = SavedStateHandle(mapOf("mangaId" to mangaId))
+    private fun createViewModel(mangaId: Long = 1L, page: Int? = null): ReaderViewModel {
+        val args = buildMap<String, Any> {
+            put("mangaId", mangaId)
+            if (page != null) put("page", page)
+        }
+        val savedStateHandle = SavedStateHandle(args)
         return ReaderViewModel(
             savedStateHandle, repository, userPreferencesRepository,
             processPageUseCase, ocrCache, pdfPageRenderer,
@@ -136,6 +140,45 @@ class ReaderViewModelTest {
             assertEquals(0, awaitItem())
             assertEquals(42, awaitItem())
         }
+    }
+
+    @Test
+    fun `page argument overrides lastReadPage`() = runTest(testDispatcher) {
+        val manga = Manga(
+            id = 1, uri = "uri1", title = "Test", pageCount = 100, lastReadPage = 42
+        )
+        coEvery { repository.getMangaById(1L) } returns flowOf(manga)
+
+        val viewModel = createViewModel(1L, page = 7)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(7, viewModel.currentPage.value)
+    }
+
+    @Test
+    fun `page argument beyond pageCount is clamped to last page`() = runTest(testDispatcher) {
+        val manga = Manga(
+            id = 1, uri = "uri1", title = "Test", pageCount = 10, lastReadPage = 2
+        )
+        coEvery { repository.getMangaById(1L) } returns flowOf(manga)
+
+        val viewModel = createViewModel(1L, page = 999)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(9, viewModel.currentPage.value)
+    }
+
+    @Test
+    fun `page argument of -1 falls back to lastReadPage`() = runTest(testDispatcher) {
+        val manga = Manga(
+            id = 1, uri = "uri1", title = "Test", pageCount = 100, lastReadPage = 42
+        )
+        coEvery { repository.getMangaById(1L) } returns flowOf(manga)
+
+        val viewModel = createViewModel(1L, page = -1)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(42, viewModel.currentPage.value)
     }
 
     @Test

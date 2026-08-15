@@ -39,6 +39,8 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -54,6 +56,8 @@ import com.highliuk.manai.BuildConfig
 import com.highliuk.manai.domain.model.PageRegion
 import com.highliuk.manai.domain.model.PromptTemplate
 import com.highliuk.manai.ui.chat.ChatLauncherViewModel
+import com.highliuk.manai.ui.chat.ChatScreen
+import com.highliuk.manai.ui.chat.ChatViewModel
 import com.highliuk.manai.ui.reader.ReaderScreen
 import com.highliuk.manai.ui.reader.ReaderViewModel
 import com.highliuk.manai.ui.settings.SettingsScreen
@@ -182,8 +186,14 @@ fun ManAiNavHost(
                     }
                 }
                 composable(
-                    "reader/{mangaId}",
-                    arguments = listOf(navArgument("mangaId") { type = NavType.LongType }),
+                    "reader/{mangaId}?page={page}",
+                    arguments = listOf(
+                        navArgument("mangaId") { type = NavType.LongType },
+                        navArgument("page") {
+                            type = NavType.IntType
+                            defaultValue = -1
+                        },
+                    ),
                     enterTransition = { fadeIn(tween(300)) },
                     exitTransition = { fadeOut(tween(300)) },
                     popEnterTransition = { fadeIn(tween(300)) },
@@ -289,6 +299,7 @@ fun ManAiNavHost(
                         }
                     }
                 }
+                chatDestination(navController)
                 composable(
                     "settings",
                     enterTransition = {
@@ -365,6 +376,44 @@ fun ManAiNavHost(
                 }
             }
         }
+    }
+}
+
+private fun NavGraphBuilder.chatDestination(navController: NavHostController) {
+    composable(
+        "chat/{conversationId}",
+        arguments = listOf(navArgument("conversationId") { type = NavType.LongType }),
+        enterTransition = { fadeIn(tween(300)) },
+        exitTransition = { fadeOut(tween(300)) },
+        popEnterTransition = { fadeIn(tween(300)) },
+        popExitTransition = { fadeOut(tween(300)) },
+    ) {
+        val viewModel: ChatViewModel = hiltViewModel()
+        val conversation by viewModel.conversation.collectAsStateWithLifecycle()
+        val messages by viewModel.messages.collectAsStateWithLifecycle()
+        val streamingText by viewModel.streamingText.collectAsStateWithLifecycle()
+        val isGenerating by viewModel.isGenerating.collectAsStateWithLifecycle()
+        val error by viewModel.error.collectAsStateWithLifecycle()
+
+        ChatScreen(
+            conversation = conversation,
+            messages = messages,
+            streamingText = streamingText,
+            isGenerating = isGenerating,
+            error = error,
+            onSend = viewModel::sendMessage,
+            onRetry = viewModel::retry,
+            onJumpToSource = {
+                conversation?.let { c ->
+                    if (c.mangaId != null && c.pageIndex != null) {
+                        navController.navigate("reader/${c.mangaId}?page=${c.pageIndex}") {
+                            popUpTo("reader/{mangaId}?page={page}") { inclusive = true }
+                        }
+                    }
+                }
+            },
+            onBack = { navController.popBackStack() },
+        )
     }
 }
 
