@@ -97,6 +97,26 @@
     <string name="translation_target_language">Target Language</string>
     <string name="app_version_info">Version %1$s (%2$d)</string>
 
+    <!-- AI Assistant settings -->
+    <string name="ai_section">AI Assistant</string>
+    <string name="llm_api_key">API Key</string>
+    <string name="llm_api_key_hint">Enter your API key (e.g. Groq)</string>
+    <string name="llm_base_url">API Base URL</string>
+    <string name="llm_base_url_placeholder" translatable="false">https://api.groq.com/openai/v1</string>
+    <string name="llm_model">Model</string>
+    <string name="manage_prompts">Manage prompts</string>
+
+    <!-- Prompt management -->
+    <string name="prompts_title">Prompts</string>
+    <string name="add_prompt">Add prompt</string>
+    <string name="edit_prompt">Edit prompt</string>
+    <string name="prompt_name">Name</string>
+    <string name="prompt_template">Prompt text</string>
+    <string name="prompt_placeholders_hint">Placeholders: {text} = balloon text, {selection} = selected text, {translation} = translation</string>
+    <string name="prompt_name_required">Name and prompt text are required</string>
+    <string name="delete_prompt_confirm">Delete this prompt?</string>
+    <string name="no_prompts">No prompts yet</string>
+
     <!-- AI prompt templates -->
     <string name="prompt_default_grammar">Explain grammar</string>
     <string name="prompt_default_vocabulary">Vocabulary</string>

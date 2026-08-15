@@ -1,6 +1,7 @@
 package com.highliuk.manai.ui.settings
 
 import app.cash.turbine.test
+import com.highliuk.manai.data.llm.LlmCredentialsManager
 import com.highliuk.manai.data.translation.DeepLCredentialsManager
 import com.highliuk.manai.domain.model.AppLanguage
 import com.highliuk.manai.domain.model.ReadingMode
@@ -30,6 +31,9 @@ class SettingsViewModelTest {
     private val userPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
     private val translationTargetLangFlow = MutableStateFlow(TargetLanguage.EN)
     private val credentialsManager = mockk<DeepLCredentialsManager>(relaxed = true)
+    private val llmCredentialsManager = mockk<LlmCredentialsManager>(relaxed = true)
+    private val llmBaseUrlFlow = MutableStateFlow("https://api.groq.com/openai/v1")
+    private val llmModelFlow = MutableStateFlow("llama-3.3-70b-versatile")
     private val gridColumnsFlow = MutableStateFlow(2)
     private val readingModeFlow = MutableStateFlow(ReadingMode.LTR)
     private val themeModeFlow = MutableStateFlow(ThemeMode.SYSTEM)
@@ -53,6 +57,8 @@ class SettingsViewModelTest {
         every { userPreferencesRepository.tapToNavigateLandscape } returns tapToNavigateLandscapeFlow
         every { userPreferencesRepository.translationTargetLang } returns translationTargetLangFlow
         every { userPreferencesRepository.showFurigana } returns showFuriganaFlow
+        every { userPreferencesRepository.llmBaseUrl } returns llmBaseUrlFlow
+        every { userPreferencesRepository.llmModel } returns llmModelFlow
     }
 
     @After
@@ -60,7 +66,8 @@ class SettingsViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel() = SettingsViewModel(userPreferencesRepository, credentialsManager)
+    private fun createViewModel() =
+        SettingsViewModel(userPreferencesRepository, credentialsManager, llmCredentialsManager)
 
     @Test
     fun `gridColumns emits current preference value`() = runTest(testDispatcher) {
@@ -276,6 +283,80 @@ class SettingsViewModelTest {
         viewModel.setDeeplApiKey("")
 
         verify { credentialsManager.clearApiKey() }
+    }
+
+    @Test
+    fun `llmApiKey emits value from credentials manager`() = runTest(testDispatcher) {
+        every { llmCredentialsManager.getApiKey() } returns "llm-key"
+
+        val viewModel = createViewModel()
+
+        assertEquals("llm-key", viewModel.llmApiKey.value)
+    }
+
+    @Test
+    fun `setLlmApiKey saves key via credentials manager`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.setLlmApiKey("new-llm-key")
+
+        verify { llmCredentialsManager.saveApiKey("new-llm-key") }
+        assertEquals("new-llm-key", viewModel.llmApiKey.value)
+    }
+
+    @Test
+    fun `setLlmApiKey clears when blank`() = runTest(testDispatcher) {
+        every { llmCredentialsManager.getApiKey() } returns "old-key"
+        val viewModel = createViewModel()
+
+        viewModel.setLlmApiKey("")
+
+        verify { llmCredentialsManager.clearApiKey() }
+        assertEquals("", viewModel.llmApiKey.value)
+    }
+
+    @Test
+    fun `llmBaseUrl seeds from stored preference`() = runTest(testDispatcher) {
+        llmBaseUrlFlow.value = "https://stored.example.com/v1"
+
+        val viewModel = createViewModel()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals("https://stored.example.com/v1", viewModel.llmBaseUrl.value)
+    }
+
+    @Test
+    fun `setLlmBaseUrl updates flow synchronously and persists`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.setLlmBaseUrl("https://example.com/v1")
+
+        assertEquals("https://example.com/v1", viewModel.llmBaseUrl.value)
+        testDispatcher.scheduler.advanceUntilIdle()
+        coVerify { userPreferencesRepository.setLlmBaseUrl("https://example.com/v1") }
+    }
+
+    @Test
+    fun `llmModel seeds from stored preference`() = runTest(testDispatcher) {
+        llmModelFlow.value = "stored-model"
+
+        val viewModel = createViewModel()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals("stored-model", viewModel.llmModel.value)
+    }
+
+    @Test
+    fun `setLlmModel updates flow synchronously and persists`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.setLlmModel("gemma2-9b-it")
+
+        assertEquals("gemma2-9b-it", viewModel.llmModel.value)
+        testDispatcher.scheduler.advanceUntilIdle()
+        coVerify { userPreferencesRepository.setLlmModel("gemma2-9b-it") }
     }
 
     @Test

@@ -97,6 +97,25 @@
     <string name="translation_target_language">Idioma de destino</string>
     <string name="app_version_info">Versión %1$s (%2$d)</string>
 
+    <!-- AI Assistant settings -->
+    <string name="ai_section">Asistente de IA</string>
+    <string name="llm_api_key">Clave API</string>
+    <string name="llm_api_key_hint">Introduce tu clave API (p. ej. Groq)</string>
+    <string name="llm_base_url">URL base de la API</string>
+    <string name="llm_model">Modelo</string>
+    <string name="manage_prompts">Gestionar prompts</string>
+
+    <!-- Prompt management -->
+    <string name="prompts_title">Prompts</string>
+    <string name="add_prompt">Añadir prompt</string>
+    <string name="edit_prompt">Editar prompt</string>
+    <string name="prompt_name">Nombre</string>
+    <string name="prompt_template">Texto del prompt</string>
+    <string name="prompt_placeholders_hint">Marcadores: {text} = texto del bocadillo, {selection} = texto seleccionado, {translation} = traducción</string>
+    <string name="prompt_name_required">El nombre y el texto del prompt son obligatorios</string>
+    <string name="delete_prompt_confirm">¿Eliminar este prompt?</string>
+    <string name="no_prompts">Aún no hay prompts</string>
+
     <!-- AI prompt templates -->
     <string name="prompt_default_grammar">Explicar la gramática</string>
     <string name="prompt_default_vocabulary">Vocabulario</string>

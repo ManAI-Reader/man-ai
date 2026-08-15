@@ -94,6 +94,25 @@
     <string name="translation_target_language">目标语言</string>
     <string name="app_version_info">版本 %1$s (%2$d)</string>
 
+    <!-- AI Assistant settings -->
+    <string name="ai_section">AI 助手</string>
+    <string name="llm_api_key">API 密钥</string>
+    <string name="llm_api_key_hint">输入你的 API 密钥（例如 Groq）</string>
+    <string name="llm_base_url">API 基础 URL</string>
+    <string name="llm_model">模型</string>
+    <string name="manage_prompts">管理提示词</string>
+
+    <!-- Prompt management -->
+    <string name="prompts_title">提示词</string>
+    <string name="add_prompt">添加提示词</string>
+    <string name="edit_prompt">编辑提示词</string>
+    <string name="prompt_name">名称</string>
+    <string name="prompt_template">提示词内容</string>
+    <string name="prompt_placeholders_hint">占位符：{text} = 气泡文本，{selection} = 选中文本，{translation} = 翻译</string>
+    <string name="prompt_name_required">名称和提示词内容为必填项</string>
+    <string name="delete_prompt_confirm">删除此提示词？</string>
+    <string name="no_prompts">暂无提示词</string>
+
     <!-- AI prompt templates -->
     <string name="prompt_default_grammar">解释语法</string>
     <string name="prompt_default_vocabulary">词汇</string>

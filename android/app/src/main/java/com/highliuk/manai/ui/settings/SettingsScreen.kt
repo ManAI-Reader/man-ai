@@ -22,6 +22,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
@@ -96,11 +97,19 @@ fun SettingsScreen(
     onDeeplApiKeyChange: (String) -> Unit = {},
     translationTargetLang: TargetLanguage = TargetLanguage.EN,
     onTranslationTargetLangChange: (TargetLanguage) -> Unit = {},
+    llmApiKey: String = "",
+    onLlmApiKeyChange: (String) -> Unit = {},
+    llmBaseUrl: String = "",
+    onLlmBaseUrlChange: (String) -> Unit = {},
+    llmModel: String = "",
+    onLlmModelChange: (String) -> Unit = {},
+    onManagePromptsClick: () -> Unit = {},
     versionName: String = BuildConfig.VERSION_NAME,
     versionCode: Int = BuildConfig.VERSION_CODE,
     onBack: () -> Unit
 ) {
     var apiKeyVisible by remember { mutableStateOf(false) }
+    var llmApiKeyVisible by remember { mutableStateOf(false) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -363,6 +372,18 @@ fun SettingsScreen(
                 onApiKeyVisibleChange = { apiKeyVisible = it },
             )
 
+            AiSection(
+                llmApiKey = llmApiKey,
+                onLlmApiKeyChange = onLlmApiKeyChange,
+                llmBaseUrl = llmBaseUrl,
+                onLlmBaseUrlChange = onLlmBaseUrlChange,
+                llmModel = llmModel,
+                onLlmModelChange = onLlmModelChange,
+                onManagePromptsClick = onManagePromptsClick,
+                apiKeyVisible = llmApiKeyVisible,
+                onApiKeyVisibleChange = { llmApiKeyVisible = it },
+            )
+
             Text(
                 text = stringResource(R.string.app_version_info, versionName, versionCode),
                 style = MaterialTheme.typography.bodySmall,
@@ -436,5 +457,76 @@ private fun TranslationSection(
                 modifier = Modifier.padding(start = 8.dp)
             )
         }
+    }
+}
+
+@Composable
+private fun AiSection(
+    llmApiKey: String,
+    onLlmApiKeyChange: (String) -> Unit,
+    llmBaseUrl: String,
+    onLlmBaseUrlChange: (String) -> Unit,
+    llmModel: String,
+    onLlmModelChange: (String) -> Unit,
+    onManagePromptsClick: () -> Unit,
+    apiKeyVisible: Boolean,
+    onApiKeyVisibleChange: (Boolean) -> Unit,
+) {
+    Text(
+        text = stringResource(R.string.ai_section),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
+    )
+
+    OutlinedTextField(
+        value = llmApiKey,
+        onValueChange = onLlmApiKeyChange,
+        label = { Text(stringResource(R.string.llm_api_key)) },
+        placeholder = { Text(stringResource(R.string.llm_api_key_hint)) },
+        visualTransformation = if (apiKeyVisible) VisualTransformation.None
+            else PasswordVisualTransformation(),
+        trailingIcon = {
+            IconButton(onClick = { onApiKeyVisibleChange(!apiKeyVisible) }) {
+                Icon(
+                    imageVector = if (apiKeyVisible) Icons.Default.VisibilityOff
+                        else Icons.Default.Visibility,
+                    contentDescription = null,
+                )
+            }
+        },
+        singleLine = true,
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("llm_api_key_field"),
+    )
+
+    OutlinedTextField(
+        value = llmBaseUrl,
+        onValueChange = onLlmBaseUrlChange,
+        label = { Text(stringResource(R.string.llm_base_url)) },
+        placeholder = { Text(stringResource(R.string.llm_base_url_placeholder)) },
+        singleLine = true,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp)
+            .testTag("llm_base_url_field"),
+    )
+
+    OutlinedTextField(
+        value = llmModel,
+        onValueChange = onLlmModelChange,
+        label = { Text(stringResource(R.string.llm_model)) },
+        singleLine = true,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp)
+            .testTag("llm_model_field"),
+    )
+
+    TextButton(
+        onClick = onManagePromptsClick,
+        modifier = Modifier.padding(top = 8.dp),
+    ) {
+        Text(stringResource(R.string.manage_prompts))
     }
 }

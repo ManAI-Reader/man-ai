@@ -58,6 +58,8 @@ import com.highliuk.manai.domain.model.PromptTemplate
 import com.highliuk.manai.ui.chat.ChatLauncherViewModel
 import com.highliuk.manai.ui.chat.ChatScreen
 import com.highliuk.manai.ui.chat.ChatViewModel
+import com.highliuk.manai.ui.prompts.PromptListScreen
+import com.highliuk.manai.ui.prompts.PromptListViewModel
 import com.highliuk.manai.ui.reader.ReaderScreen
 import com.highliuk.manai.ui.reader.ReaderViewModel
 import com.highliuk.manai.ui.settings.SettingsScreen
@@ -339,6 +341,9 @@ fun ManAiNavHost(
                     val deeplApiKey by viewModel.deeplApiKey.collectAsState()
                     val translationTargetLang by viewModel.translationTargetLang.collectAsState()
                     val showFurigana by viewModel.showFurigana.collectAsState()
+                    val llmApiKey by viewModel.llmApiKey.collectAsState()
+                    val llmBaseUrl by viewModel.llmBaseUrl.collectAsState()
+                    val llmModel by viewModel.llmModel.collectAsState()
 
                     SettingsScreen(
                         gridColumns = gridColumns,
@@ -371,6 +376,61 @@ fun ManAiNavHost(
                         onDeeplApiKeyChange = viewModel::setDeeplApiKey,
                         translationTargetLang = translationTargetLang,
                         onTranslationTargetLangChange = viewModel::setTranslationTargetLang,
+                        llmApiKey = llmApiKey,
+                        onLlmApiKeyChange = viewModel::setLlmApiKey,
+                        llmBaseUrl = llmBaseUrl,
+                        onLlmBaseUrlChange = viewModel::setLlmBaseUrl,
+                        llmModel = llmModel,
+                        onLlmModelChange = viewModel::setLlmModel,
+                        onManagePromptsClick = { navController.navigate("prompts") },
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+                composable(
+                    "prompts",
+                    enterTransition = {
+                        slideInHorizontally(
+                            initialOffsetX = { it },
+                            animationSpec = tween(300, easing = FastOutSlowInEasing)
+                        )
+                    },
+                    exitTransition = {
+                        slideOutHorizontally(
+                            targetOffsetX = { it },
+                            animationSpec = tween(300, easing = FastOutSlowInEasing)
+                        )
+                    },
+                    popEnterTransition = {
+                        slideInHorizontally(
+                            initialOffsetX = { it },
+                            animationSpec = tween(300, easing = FastOutSlowInEasing)
+                        )
+                    },
+                    popExitTransition = {
+                        slideOutHorizontally(
+                            targetOffsetX = { it },
+                            animationSpec = tween(300, easing = FastOutSlowInEasing)
+                        )
+                    }
+                ) {
+                    val viewModel: PromptListViewModel = hiltViewModel()
+                    val templates by viewModel.templates.collectAsState()
+                    val editing by viewModel.editing.collectAsState()
+                    val editError by viewModel.editError.collectAsState()
+                    val pendingDelete by viewModel.pendingDelete.collectAsState()
+
+                    PromptListScreen(
+                        templates = templates,
+                        editing = editing,
+                        editError = editError,
+                        pendingDelete = pendingDelete,
+                        onAddClick = viewModel::requestNew,
+                        onEditClick = viewModel::requestEdit,
+                        onDeleteClick = viewModel::requestDelete,
+                        onSave = viewModel::saveTemplate,
+                        onDismissEdit = viewModel::dismissEdit,
+                        onConfirmDelete = viewModel::confirmDelete,
+                        onDismissDelete = viewModel::dismissDelete,
                         onBack = { navController.popBackStack() }
                     )
                 }

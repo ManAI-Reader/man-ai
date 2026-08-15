@@ -97,6 +97,25 @@
     <string name="translation_target_language">Zielsprache</string>
     <string name="app_version_info">Version %1$s (%2$d)</string>
 
+    <!-- AI Assistant settings -->
+    <string name="ai_section">KI-Assistent</string>
+    <string name="llm_api_key">API-Schlüssel</string>
+    <string name="llm_api_key_hint">Gib deinen API-Schlüssel ein (z. B. Groq)</string>
+    <string name="llm_base_url">API-Basis-URL</string>
+    <string name="llm_model">Modell</string>
+    <string name="manage_prompts">Prompts verwalten</string>
+
+    <!-- Prompt management -->
+    <string name="prompts_title">Prompts</string>
+    <string name="add_prompt">Prompt hinzufügen</string>
+    <string name="edit_prompt">Prompt bearbeiten</string>
+    <string name="prompt_name">Name</string>
+    <string name="prompt_template">Prompt-Text</string>
+    <string name="prompt_placeholders_hint">Platzhalter: {text} = Sprechblasentext, {selection} = ausgewählter Text, {translation} = Übersetzung</string>
+    <string name="prompt_name_required">Name und Prompt-Text sind erforderlich</string>
+    <string name="delete_prompt_confirm">Diesen Prompt löschen?</string>
+    <string name="no_prompts">Noch keine Prompts</string>
+
     <!-- AI prompt templates -->
     <string name="prompt_default_grammar">Grammatik erklären</string>
     <string name="prompt_default_vocabulary">Vokabular</string>

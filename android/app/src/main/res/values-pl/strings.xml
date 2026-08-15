@@ -103,6 +103,25 @@
     <string name="translation_target_language">Język docelowy</string>
     <string name="app_version_info">Wersja %1$s (%2$d)</string>
 
+    <!-- AI Assistant settings -->
+    <string name="ai_section">Asystent AI</string>
+    <string name="llm_api_key">Klucz API</string>
+    <string name="llm_api_key_hint">Wprowadź swój klucz API (np. Groq)</string>
+    <string name="llm_base_url">Bazowy URL API</string>
+    <string name="llm_model">Model</string>
+    <string name="manage_prompts">Zarządzaj promptami</string>
+
+    <!-- Prompt management -->
+    <string name="prompts_title">Prompty</string>
+    <string name="add_prompt">Dodaj prompt</string>
+    <string name="edit_prompt">Edytuj prompt</string>
+    <string name="prompt_name">Nazwa</string>
+    <string name="prompt_template">Treść promptu</string>
+    <string name="prompt_placeholders_hint">Symbole zastępcze: {text} = tekst dymku, {selection} = zaznaczony tekst, {translation} = tłumaczenie</string>
+    <string name="prompt_name_required">Nazwa i treść promptu są wymagane</string>
+    <string name="delete_prompt_confirm">Usunąć ten prompt?</string>
+    <string name="no_prompts">Brak promptów</string>
+
     <!-- AI prompt templates -->
     <string name="prompt_default_grammar">Wyjaśnij gramatykę</string>
     <string name="prompt_default_vocabulary">Słownictwo</string>

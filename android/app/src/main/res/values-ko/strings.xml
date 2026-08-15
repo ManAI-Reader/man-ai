@@ -94,6 +94,25 @@
     <string name="translation_target_language">번역 언어</string>
     <string name="app_version_info">버전 %1$s (%2$d)</string>
 
+    <!-- AI Assistant settings -->
+    <string name="ai_section">AI 어시스턴트</string>
+    <string name="llm_api_key">API 키</string>
+    <string name="llm_api_key_hint">API 키를 입력하세요 (예: Groq)</string>
+    <string name="llm_base_url">API 기본 URL</string>
+    <string name="llm_model">모델</string>
+    <string name="manage_prompts">프롬프트 관리</string>
+
+    <!-- Prompt management -->
+    <string name="prompts_title">프롬프트</string>
+    <string name="add_prompt">프롬프트 추가</string>
+    <string name="edit_prompt">프롬프트 편집</string>
+    <string name="prompt_name">이름</string>
+    <string name="prompt_template">프롬프트 내용</string>
+    <string name="prompt_placeholders_hint">자리 표시자: {text} = 말풍선 텍스트, {selection} = 선택한 텍스트, {translation} = 번역</string>
+    <string name="prompt_name_required">이름과 프롬프트 내용은 필수입니다</string>
+    <string name="delete_prompt_confirm">이 프롬프트를 삭제할까요?</string>
+    <string name="no_prompts">아직 프롬프트가 없습니다</string>
+
     <!-- AI prompt templates -->
     <string name="prompt_default_grammar">문법 설명</string>
     <string name="prompt_default_vocabulary">어휘</string>

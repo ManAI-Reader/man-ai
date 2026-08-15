@@ -2,6 +2,7 @@ package com.highliuk.manai.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.highliuk.manai.data.llm.LlmCredentialsManager
 import com.highliuk.manai.data.translation.DeepLCredentialsManager
 import com.highliuk.manai.domain.model.AppLanguage
 import com.highliuk.manai.domain.model.ReadingMode
@@ -12,6 +13,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -20,6 +23,7 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val credentialsManager: DeepLCredentialsManager,
+    private val llmCredentialsManager: LlmCredentialsManager,
 ) : ViewModel() {
 
     val gridColumns: StateFlow<Int> = userPreferencesRepository.gridColumns
@@ -123,6 +127,46 @@ class SettingsViewModel @Inject constructor(
         } else {
             credentialsManager.saveApiKey(key)
             _deeplApiKey.value = key
+        }
+    }
+
+    private val _llmApiKey = MutableStateFlow(llmCredentialsManager.getApiKey().orEmpty())
+    val llmApiKey: StateFlow<String> = _llmApiKey
+
+    fun setLlmApiKey(key: String) {
+        if (key.isBlank()) {
+            llmCredentialsManager.clearApiKey()
+            _llmApiKey.value = ""
+        } else {
+            llmCredentialsManager.saveApiKey(key)
+            _llmApiKey.value = key
+        }
+    }
+
+    private val _llmBaseUrl = MutableStateFlow(UserPreferencesRepository.DEFAULT_LLM_BASE_URL)
+    val llmBaseUrl: StateFlow<String> = _llmBaseUrl.asStateFlow()
+
+    private val _llmModel = MutableStateFlow(UserPreferencesRepository.DEFAULT_LLM_MODEL)
+    val llmModel: StateFlow<String> = _llmModel.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            _llmBaseUrl.value = userPreferencesRepository.llmBaseUrl.first()
+            _llmModel.value = userPreferencesRepository.llmModel.first()
+        }
+    }
+
+    fun setLlmBaseUrl(url: String) {
+        _llmBaseUrl.value = url
+        viewModelScope.launch {
+            userPreferencesRepository.setLlmBaseUrl(url)
+        }
+    }
+
+    fun setLlmModel(model: String) {
+        _llmModel.value = model
+        viewModelScope.launch {
+            userPreferencesRepository.setLlmModel(model)
         }
     }
 }

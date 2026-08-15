@@ -61,10 +61,10 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         const val DEFAULT_SHOW_FURIGANA = false
 
         val LLM_BASE_URL = stringPreferencesKey("llm_base_url")
-        const val DEFAULT_LLM_BASE_URL = "https://api.groq.com/openai/v1"
+        const val DEFAULT_LLM_BASE_URL = UserPreferencesRepository.DEFAULT_LLM_BASE_URL
 
         val LLM_MODEL = stringPreferencesKey("llm_model")
-        const val DEFAULT_LLM_MODEL = "llama-3.3-70b-versatile"
+        const val DEFAULT_LLM_MODEL = UserPreferencesRepository.DEFAULT_LLM_MODEL
 
         val PROMPT_DEFAULTS_SEEDED = booleanPreferencesKey("prompt_defaults_seeded")
         const val DEFAULT_PROMPT_DEFAULTS_SEEDED = false

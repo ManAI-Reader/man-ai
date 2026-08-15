@@ -7,6 +7,12 @@ import com.highliuk.manai.domain.model.ThemeMode
 import kotlinx.coroutines.flow.Flow
 
 interface UserPreferencesRepository {
+
+    companion object {
+        const val DEFAULT_LLM_BASE_URL = "https://api.groq.com/openai/v1"
+        const val DEFAULT_LLM_MODEL = "llama-3.3-70b-versatile"
+    }
+
     val gridColumns: Flow<Int>
     suspend fun setGridColumns(columns: Int)
 

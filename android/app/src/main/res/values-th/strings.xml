@@ -94,6 +94,25 @@
     <string name="translation_target_language">ภาษาปลายทาง</string>
     <string name="app_version_info">เวอร์ชัน %1$s (%2$d)</string>
 
+    <!-- AI Assistant settings -->
+    <string name="ai_section">ผู้ช่วย AI</string>
+    <string name="llm_api_key">คีย์ API</string>
+    <string name="llm_api_key_hint">ป้อนคีย์ API ของคุณ (เช่น Groq)</string>
+    <string name="llm_base_url">URL พื้นฐานของ API</string>
+    <string name="llm_model">โมเดล</string>
+    <string name="manage_prompts">จัดการพรอมต์</string>
+
+    <!-- Prompt management -->
+    <string name="prompts_title">พรอมต์</string>
+    <string name="add_prompt">เพิ่มพรอมต์</string>
+    <string name="edit_prompt">แก้ไขพรอมต์</string>
+    <string name="prompt_name">ชื่อ</string>
+    <string name="prompt_template">ข้อความพรอมต์</string>
+    <string name="prompt_placeholders_hint">ตัวยึดตำแหน่ง: {text} = ข้อความในบอลลูน, {selection} = ข้อความที่เลือก, {translation} = คำแปล</string>
+    <string name="prompt_name_required">ต้องระบุชื่อและข้อความพรอมต์</string>
+    <string name="delete_prompt_confirm">ลบพรอมต์นี้หรือไม่</string>
+    <string name="no_prompts">ยังไม่มีพรอมต์</string>
+
     <!-- AI prompt templates -->
     <string name="prompt_default_grammar">อธิบายไวยากรณ์</string>
     <string name="prompt_default_vocabulary">คำศัพท์</string>
