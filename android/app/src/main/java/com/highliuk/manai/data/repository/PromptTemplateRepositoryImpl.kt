@@ -17,7 +17,7 @@ import kotlinx.coroutines.sync.withLock
 class PromptTemplateRepositoryImpl(
     private val dao: PromptTemplateDao,
     private val userPreferences: UserPreferencesRepository,
-    private val resolveName: (Int) -> String,
+    private val resolveString: (Int) -> String,
 ) : PromptTemplateRepository {
 
     private val seedMutex = Mutex()
@@ -54,26 +54,14 @@ class PromptTemplateRepositoryImpl(
 
     private fun defaultTemplates(): List<PromptTemplateEntity> = listOf(
         PromptTemplateEntity(
-            name = resolveName(R.string.prompt_default_grammar),
-            template = "Explain the grammar of this sentence from a manga:\n{text}",
+            name = resolveString(R.string.prompt_default_word),
+            template = resolveString(R.string.prompt_template_word),
             sortOrder = 0,
         ),
         PromptTemplateEntity(
-            name = resolveName(R.string.prompt_default_vocabulary),
-            template = "Break down the vocabulary of this manga sentence. " +
-                "For each word give reading and meaning:\n{text}",
+            name = resolveString(R.string.prompt_default_grammar),
+            template = resolveString(R.string.prompt_template_grammar),
             sortOrder = 1,
-        ),
-        PromptTemplateEntity(
-            name = resolveName(R.string.prompt_default_word),
-            template = "In the sentence {text}, explain the meaning, reading and nuance of: {selection}",
-            sortOrder = 2,
-        ),
-        PromptTemplateEntity(
-            name = resolveName(R.string.prompt_default_translation_check),
-            template = "Original manga sentence: {text}\nTranslation: {translation}\n" +
-                "Explain how the translation maps to the original, highlighting anything non-literal.",
-            sortOrder = 3,
         ),
     )
 

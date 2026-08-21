@@ -23,11 +23,11 @@ class PromptTemplateRepositoryImplTest {
 
     private val dao = mockk<PromptTemplateDao>(relaxed = true)
     private val userPreferences = mockk<UserPreferencesRepository>(relaxed = true)
-    private val resolveName: (Int) -> String = { resId -> RESOURCE_NAMES.getValue(resId) }
+    private val resolveString: (Int) -> String = { resId -> RESOURCES.getValue(resId) }
     private val repository = PromptTemplateRepositoryImpl(
         dao = dao,
         userPreferences = userPreferences,
-        resolveName = resolveName,
+        resolveString = resolveString,
     )
 
     @Test
@@ -100,7 +100,7 @@ class PromptTemplateRepositoryImplTest {
     }
 
     @Test
-    fun `observeTemplates seeds four defaults when table empty and flag unset`() = runTest {
+    fun `observeTemplates seeds two defaults when table empty and flag unset`() = runTest {
         every { dao.observeAll() } returns flowOf(emptyList())
         coEvery { dao.count() } returns 0
         every { userPreferences.promptDefaultsSeeded } returns flowOf(false)
@@ -109,29 +109,13 @@ class PromptTemplateRepositoryImplTest {
 
         repository.observeTemplates().first()
 
-        assertEquals(4, inserted.size)
-        assertEquals("Explain grammar", inserted[0].name)
-        assertEquals("Explain the grammar of this sentence from a manga:\n{text}", inserted[0].template)
+        assertEquals(2, inserted.size)
+        assertEquals("Explain this word", inserted[0].name)
+        assertEquals("Word template body 「{selection}」 in 「{text}」", inserted[0].template)
         assertEquals(0, inserted[0].sortOrder)
-        assertEquals("Vocabulary", inserted[1].name)
-        assertEquals(
-            "Break down the vocabulary of this manga sentence. For each word give reading and meaning:\n{text}",
-            inserted[1].template
-        )
+        assertEquals("Explain grammar", inserted[1].name)
+        assertEquals("Grammar template body 「{selection}」 in 「{text}」", inserted[1].template)
         assertEquals(1, inserted[1].sortOrder)
-        assertEquals("Explain this word", inserted[2].name)
-        assertEquals(
-            "In the sentence {text}, explain the meaning, reading and nuance of: {selection}",
-            inserted[2].template
-        )
-        assertEquals(2, inserted[2].sortOrder)
-        assertEquals("Check translation", inserted[3].name)
-        assertEquals(
-            "Original manga sentence: {text}\nTranslation: {translation}\n" +
-                "Explain how the translation maps to the original, highlighting anything non-literal.",
-            inserted[3].template
-        )
-        assertEquals(3, inserted[3].sortOrder)
         coVerify(exactly = 1) { userPreferences.setPromptDefaultsSeeded() }
     }
 
@@ -155,7 +139,7 @@ class PromptTemplateRepositoryImplTest {
         first.join()
         second.join()
 
-        coVerify(exactly = 4) { dao.upsert(any()) }
+        coVerify(exactly = 2) { dao.upsert(any()) }
     }
 
     @Test
@@ -198,11 +182,11 @@ class PromptTemplateRepositoryImplTest {
     }
 
     private companion object {
-        val RESOURCE_NAMES = mapOf(
-            R.string.prompt_default_grammar to "Explain grammar",
-            R.string.prompt_default_vocabulary to "Vocabulary",
+        val RESOURCES = mapOf(
             R.string.prompt_default_word to "Explain this word",
-            R.string.prompt_default_translation_check to "Check translation",
+            R.string.prompt_default_grammar to "Explain grammar",
+            R.string.prompt_template_word to "Word template body 「{selection}」 in 「{text}」",
+            R.string.prompt_template_grammar to "Grammar template body 「{selection}」 in 「{text}」",
         )
     }
 }

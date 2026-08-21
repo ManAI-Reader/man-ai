@@ -44,7 +44,7 @@ object ChatModule {
     ): PromptTemplateRepository = PromptTemplateRepositoryImpl(
         dao = dao,
         userPreferences = userPreferences,
-        resolveName = { resId -> context.getString(resId) },
+        resolveString = { resId -> context.getString(resId) },
     )
 
     @Provides
