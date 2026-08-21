@@ -283,15 +283,6 @@ fun ManAiNavHost(
                                 translationState = translationState,
                                 onTranslateClick = { viewModel.translateSelectedRegion() },
                                 promptTemplates = promptTemplates,
-                                onPromptClick = { template ->
-                                    chatLauncher.launchPromptConversation(
-                                        template = template,
-                                        region = selectedRegion,
-                                        mangaId = m.id,
-                                        selection = null,
-                                        translationState = translationState,
-                                    )
-                                },
                                 onPromptWithSelection = { template, selection ->
                                     chatLauncher.launchPromptConversation(
                                         template = template,

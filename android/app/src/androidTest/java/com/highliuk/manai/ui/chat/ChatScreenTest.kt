@@ -3,12 +3,17 @@ package com.highliuk.manai.ui.chat
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.height
+import androidx.test.espresso.Espresso
 import com.highliuk.manai.domain.model.ChatMessage
 import com.highliuk.manai.domain.model.ChatRole
 import com.highliuk.manai.domain.model.Conversation
@@ -200,6 +205,72 @@ class ChatScreenTest {
         setChatContent(ChatState(conversation))
 
         composeTestRule.onNodeWithTag("jump_to_source").assertDoesNotExist()
+    }
+
+    private fun inputHeight(): Dp =
+        composeTestRule.onNodeWithTag("chat_input").getUnclippedBoundsInRoot().height
+
+    @Test
+    fun inputGrowsWithMultilineTextAndCapsAtFiveLines() {
+        setChatContent(ChatState(conversation))
+
+        val singleLineHeight = inputHeight()
+
+        composeTestRule.onNodeWithTag("chat_input").performTextInput("1\n2\n3")
+        val threeLineHeight = inputHeight()
+        assertTrue(threeLineHeight > singleLineHeight)
+
+        composeTestRule.onNodeWithTag("chat_input").performTextInput("\n4\n5")
+        val fiveLineHeight = inputHeight()
+        assertTrue(fiveLineHeight > threeLineHeight)
+
+        composeTestRule.onNodeWithTag("chat_input").performTextInput("\n6\n7")
+        val sevenLineHeight = inputHeight()
+        assertEquals(fiveLineHeight.value, sevenLineHeight.value, 0.5f)
+    }
+
+    @Test
+    fun messageListStaysVisibleWhileComposingMultilineInput() {
+        setChatContent(
+            ChatState(
+                conversation = conversation,
+                messages = listOf(
+                    ChatMessage(
+                        id = 1L,
+                        conversationId = 1L,
+                        role = ChatRole.USER,
+                        content = "Earlier message",
+                        timestamp = 0L,
+                    ),
+                ),
+            ),
+        )
+
+        composeTestRule.onNodeWithTag("chat_input").performTextInput("1\n2\n3\n4\n5")
+        // The compose test host activity is not edge-to-edge, so an open IME
+        // gets compensated twice (host resize + imePadding) and collapses the
+        // list in a way that cannot happen in the real app. Dismiss the
+        // keyboard and assert the layout with the full-grown input.
+        Espresso.closeSoftKeyboard()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Earlier message").assertIsDisplayed()
+    }
+
+    @Test
+    fun sendButtonAlignsToBottomOfInputBarWithMultilineText() {
+        setChatContent(ChatState(conversation))
+
+        composeTestRule.onNodeWithTag("chat_input").performTextInput("1\n2\n3\n4\n5")
+
+        val inputBounds = composeTestRule.onNodeWithTag("chat_input")
+            .getUnclippedBoundsInRoot()
+        val sendBounds = composeTestRule.onNodeWithContentDescription("Send")
+            .getUnclippedBoundsInRoot()
+
+        // Bottom-aligned: the send button bottom must sit at the input bar
+        // bottom (small tolerance for rounding), not centered ~46dp above it.
+        assertTrue(inputBounds.bottom - sendBounds.bottom <= 8.dp)
     }
 
     @Test

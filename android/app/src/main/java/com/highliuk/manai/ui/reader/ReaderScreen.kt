@@ -121,7 +121,6 @@ fun ReaderScreen(
     translationState: ReaderViewModel.TranslationState = ReaderViewModel.TranslationState.Idle,
     onTranslateClick: () -> Unit = {},
     promptTemplates: List<PromptTemplate> = emptyList(),
-    onPromptClick: (PromptTemplate) -> Unit = {},
     onPromptWithSelection: (PromptTemplate, String) -> Unit = { _, _ -> },
 ) {
     val isRtl = readingMode == ReadingMode.RTL
@@ -347,7 +346,6 @@ fun ReaderScreen(
                 translationState = translationState,
                 onTranslateClick = onTranslateClick,
                 promptTemplates = promptTemplates,
-                onPromptClick = onPromptClick,
                 onPromptWithSelection = onPromptWithSelection,
             )
         }

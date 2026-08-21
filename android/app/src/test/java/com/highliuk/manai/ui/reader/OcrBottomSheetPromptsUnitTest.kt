@@ -15,8 +15,8 @@ class OcrBottomSheetPromptsUnitTest {
     private val grammar = PromptTemplate(id = 3L, name = "Grammar", template = "Grammar of {selection}")
 
     @Test
-    fun keepsAllTemplatesWhenTranslationIsAvailable() {
-        val result = visiblePromptTemplates(
+    fun keepsAllSelectionPromptsWhenTranslationIsAvailable() {
+        val result = selectionPromptTemplates(
             templates = listOf(explain, compare, grammar),
             hasTranslation = true,
         )
@@ -24,8 +24,8 @@ class OcrBottomSheetPromptsUnitTest {
     }
 
     @Test
-    fun hidesTranslationTemplatesWhenTranslationIsMissing() {
-        val result = visiblePromptTemplates(
+    fun hidesTranslationPromptsFromSelectionMenuWhenTranslationIsMissing() {
+        val result = selectionPromptTemplates(
             templates = listOf(explain, compare, grammar),
             hasTranslation = false,
         )
@@ -34,7 +34,7 @@ class OcrBottomSheetPromptsUnitTest {
 
     @Test
     fun returnsEmptyListForEmptyInput() {
-        val result = visiblePromptTemplates(templates = emptyList(), hasTranslation = true)
+        val result = selectionPromptTemplates(templates = emptyList(), hasTranslation = true)
         assertEquals(emptyList<PromptTemplate>(), result)
     }
 }
