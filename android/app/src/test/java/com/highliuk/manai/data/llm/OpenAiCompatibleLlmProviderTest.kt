@@ -5,6 +5,7 @@ import com.highliuk.manai.domain.llm.LlmEvent
 import com.highliuk.manai.domain.llm.LlmMessage
 import com.highliuk.manai.domain.llm.LlmToolSpec
 import com.highliuk.manai.domain.logging.Logger
+import com.highliuk.manai.domain.model.ReasoningLevel
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -16,6 +17,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.IOException
@@ -157,5 +159,35 @@ class OpenAiCompatibleLlmProviderTest {
         assertTrue(body.contains(""""stream":true"""))
         assertTrue(body.contains(""""role":"user""""))
         assertTrue(body.contains(""""name":"memory_read""""))
+    }
+
+    private suspend fun requestBodyFor(reasoning: ReasoningLevel): String {
+        val engine = MockEngine {
+            respond(
+                content = sse("data: [DONE]"),
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, "text/event-stream"),
+            )
+        }
+        provider(engine)
+            .chat(listOf(LlmMessage(LlmMessage.ROLE_USER, "hi")), emptyList(), reasoning)
+            .test {
+                assertEquals(LlmEvent.Completed, awaitItem())
+                awaitComplete()
+            }
+        return engine.requestHistory.single().body.toByteArray().decodeToString()
+    }
+
+    @Test
+    fun `request body contains reasoning_effort for every non-default level`() = runTest {
+        assertTrue(requestBodyFor(ReasoningLevel.OFF).contains(""""reasoning_effort":"none""""))
+        assertTrue(requestBodyFor(ReasoningLevel.LOW).contains(""""reasoning_effort":"low""""))
+        assertTrue(requestBodyFor(ReasoningLevel.MEDIUM).contains(""""reasoning_effort":"medium""""))
+        assertTrue(requestBodyFor(ReasoningLevel.HIGH).contains(""""reasoning_effort":"high""""))
+    }
+
+    @Test
+    fun `request body omits reasoning_effort for default level`() = runTest {
+        assertFalse(requestBodyFor(ReasoningLevel.DEFAULT).contains("reasoning_effort"))
     }
 }

@@ -108,7 +108,13 @@
     <string name="edit_prompt">แก้ไขพรอมต์</string>
     <string name="prompt_name">ชื่อ</string>
     <string name="prompt_template">ข้อความพรอมต์</string>
-    <string name="prompt_placeholders_hint">ตัวยึดตำแหน่ง: {text} = ข้อความในบอลลูน, {selection} = ข้อความที่เลือก, {translation} = คำแปล</string>
+    <string name="prompt_placeholders_hint">ตัวยึดตำแหน่ง: {text} = ข้อความในบอลลูน, {selection} = ข้อความที่เลือก, {translation} = คำแปล, {title} = ชื่อมังงะ, {balloons} = บอลลูนอื่นในหน้านี้, {prev_balloons} = บอลลูนในหน้าก่อนหน้า</string>
+    <string name="reasoning_level">การใช้เหตุผล</string>
+    <string name="reasoning_default">ค่าเริ่มต้นของโมเดล</string>
+    <string name="reasoning_off">ปิด</string>
+    <string name="reasoning_low">ต่ำ</string>
+    <string name="reasoning_medium">ปานกลาง</string>
+    <string name="reasoning_high">สูง</string>
     <string name="prompt_name_required">ต้องระบุชื่อและข้อความพรอมต์</string>
     <string name="delete_prompt_confirm">ลบพรอมต์นี้หรือไม่</string>
     <string name="no_prompts">ยังไม่มีพรอมต์</string>
@@ -127,4 +133,6 @@
     <string name="conversations">การสนทนา</string>
     <string name="no_conversations">ยังไม่มีการสนทนา</string>
     <string name="delete_conversation_confirm">ลบการสนทนานี้หรือไม่</string>
+    <string name="no_page_balloons">ไม่มีบอลลูนอื่นในหน้านี้</string>
+    <string name="no_previous_balloons">ไม่มีบอลลูนในหน้าก่อนหน้า</string>
 </resources>

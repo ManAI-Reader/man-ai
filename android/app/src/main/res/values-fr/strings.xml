@@ -111,7 +111,13 @@
     <string name="edit_prompt">Modifier le prompt</string>
     <string name="prompt_name">Nom</string>
     <string name="prompt_template">Texte du prompt</string>
-    <string name="prompt_placeholders_hint">Espaces réservés : {text} = texte de la bulle, {selection} = texte sélectionné, {translation} = traduction</string>
+    <string name="prompt_placeholders_hint">Espaces réservés : {text} = texte de la bulle, {selection} = texte sélectionné, {translation} = traduction, {title} = titre du manga, {balloons} = autres bulles de cette page, {prev_balloons} = bulles de la page précédente</string>
+    <string name="reasoning_level">Raisonnement</string>
+    <string name="reasoning_default">Par défaut du modèle</string>
+    <string name="reasoning_off">Désactivé</string>
+    <string name="reasoning_low">Faible</string>
+    <string name="reasoning_medium">Moyen</string>
+    <string name="reasoning_high">Élevé</string>
     <string name="prompt_name_required">Le nom et le texte du prompt sont requis</string>
     <string name="delete_prompt_confirm">Supprimer ce prompt ?</string>
     <string name="no_prompts">Aucun prompt pour l\'instant</string>
@@ -130,4 +136,6 @@
     <string name="conversations">Conversations</string>
     <string name="no_conversations">Aucune conversation pour l\'instant</string>
     <string name="delete_conversation_confirm">Supprimer cette conversation ?</string>
+    <string name="no_page_balloons">Aucune autre bulle sur cette page</string>
+    <string name="no_previous_balloons">Aucune bulle sur les pages précédentes</string>
 </resources>

@@ -102,6 +102,50 @@ class ManAiDatabaseTest {
     }
 
     @Test
+    fun `migration 6 to 7 adds reasoningLevel columns`() {
+        ManAiDatabase.MIGRATION_6_7.migrate(db)
+
+        verifyOrder {
+            db.execSQL(
+                "ALTER TABLE prompt_template ADD COLUMN reasoningLevel TEXT NOT NULL DEFAULT 'DEFAULT'"
+            )
+            db.execSQL(
+                "ALTER TABLE conversation ADD COLUMN reasoningLevel TEXT NOT NULL DEFAULT 'DEFAULT'"
+            )
+        }
+    }
+
+    @Test
+    fun `migration 7 to 6 removes reasoningLevel via backup tables`() {
+        ManAiDatabase.MIGRATION_7_6.migrate(db)
+
+        verifyOrder {
+            db.execSQL(match {
+                it.contains("CREATE TABLE prompt_template_backup") && !it.contains("reasoningLevel")
+            })
+            db.execSQL(match {
+                it.contains("INSERT INTO prompt_template_backup") &&
+                    it.contains("id, name, template, sortOrder") &&
+                    !it.contains("reasoningLevel")
+            })
+            db.execSQL("DROP TABLE prompt_template")
+            db.execSQL("ALTER TABLE prompt_template_backup RENAME TO prompt_template")
+            db.execSQL("DROP INDEX IF EXISTS index_conversation_mangaId")
+            db.execSQL(match {
+                it.contains("CREATE TABLE conversation_backup") && !it.contains("reasoningLevel")
+            })
+            db.execSQL(match {
+                it.contains("INSERT INTO conversation_backup") &&
+                    it.contains("id, title, mangaId, pageIndex, regionIndex, createdAt, updatedAt") &&
+                    !it.contains("reasoningLevel")
+            })
+            db.execSQL("DROP TABLE conversation")
+            db.execSQL("ALTER TABLE conversation_backup RENAME TO conversation")
+            db.execSQL("CREATE INDEX index_conversation_mangaId ON conversation(mangaId)")
+        }
+    }
+
+    @Test
     fun `migration 2 to 1 removes lastReadPage via backup table`() {
         ManAiDatabase.MIGRATION_2_1.migrate(db)
 

@@ -7,6 +7,7 @@ import com.highliuk.manai.data.local.entity.ConversationEntity
 import com.highliuk.manai.domain.model.ChatMessage
 import com.highliuk.manai.domain.model.ChatRole
 import com.highliuk.manai.domain.model.Conversation
+import com.highliuk.manai.domain.model.ReasoningLevel
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -106,12 +107,42 @@ class ChatRepositoryImplTest {
             mangaId = 1L,
             pageIndex = 0,
             regionIndex = null,
+            reasoningLevel = ReasoningLevel.DEFAULT,
         )
 
         assertEquals(42L, id)
         assertEquals("New chat", entitySlot.captured.title)
         assertEquals(FIXED_NOW, entitySlot.captured.createdAt)
         assertEquals(FIXED_NOW, entitySlot.captured.updatedAt)
+        assertEquals("DEFAULT", entitySlot.captured.reasoningLevel)
+    }
+
+    @Test
+    fun `createConversation stores reasoning level enum name`() = runTest {
+        val entitySlot = slot<ConversationEntity>()
+        coEvery { conversationDao.insert(capture(entitySlot)) } returns 42L
+
+        repository.createConversation(
+            title = "New chat",
+            mangaId = 1L,
+            pageIndex = 0,
+            regionIndex = null,
+            reasoningLevel = ReasoningLevel.OFF,
+        )
+
+        assertEquals("OFF", entitySlot.captured.reasoningLevel)
+    }
+
+    @Test
+    fun `conversation reasoning level maps back to enum with DEFAULT fallback`() = runTest {
+        val valid = conversationEntity(id = 1L, reasoningLevel = "HIGH")
+        val invalid = conversationEntity(id = 2L, reasoningLevel = "BANANAS")
+        every { conversationDao.observeAll() } returns flowOf(listOf(valid, invalid))
+
+        val result = repository.observeConversations().first()
+
+        assertEquals(ReasoningLevel.HIGH, result[0].reasoningLevel)
+        assertEquals(ReasoningLevel.DEFAULT, result[1].reasoningLevel)
     }
 
     @Test
@@ -134,6 +165,17 @@ class ChatRepositoryImplTest {
 
         coVerify { conversationDao.delete(7L) }
     }
+
+    private fun conversationEntity(id: Long, reasoningLevel: String) = ConversationEntity(
+        id = id,
+        title = "Chat",
+        mangaId = null,
+        pageIndex = null,
+        regionIndex = null,
+        createdAt = 100L,
+        updatedAt = 200L,
+        reasoningLevel = reasoningLevel,
+    )
 
     private companion object {
         const val FIXED_NOW = 1_723_600_000_000L

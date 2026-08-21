@@ -4,11 +4,13 @@ import com.highliuk.manai.R
 import com.highliuk.manai.data.local.dao.PromptTemplateDao
 import com.highliuk.manai.data.local.entity.PromptTemplateEntity
 import com.highliuk.manai.domain.model.PromptTemplate
+import com.highliuk.manai.domain.model.ReasoningLevel
 import com.highliuk.manai.domain.repository.UserPreferencesRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
@@ -31,16 +33,70 @@ class PromptTemplateRepositoryImplTest {
     @Test
     fun `observeTemplates maps entities to domain models`() = runTest {
         every { dao.observeAll() } returns flowOf(
-            listOf(PromptTemplateEntity(id = 3L, name = "Custom", template = "Do {text}", sortOrder = 7))
+            listOf(
+                PromptTemplateEntity(
+                    id = 3L,
+                    name = "Custom",
+                    template = "Do {text}",
+                    sortOrder = 7,
+                    reasoningLevel = "HIGH",
+                )
+            )
         )
         coEvery { dao.count() } returns 1
 
         val result = repository.observeTemplates().first()
 
         assertEquals(
-            listOf(PromptTemplate(id = 3L, name = "Custom", template = "Do {text}", sortOrder = 7)),
+            listOf(
+                PromptTemplate(
+                    id = 3L,
+                    name = "Custom",
+                    template = "Do {text}",
+                    sortOrder = 7,
+                    reasoningLevel = ReasoningLevel.HIGH,
+                )
+            ),
             result
         )
+    }
+
+    @Test
+    fun `observeTemplates maps unknown stored reasoning level to DEFAULT`() = runTest {
+        every { dao.observeAll() } returns flowOf(
+            listOf(
+                PromptTemplateEntity(
+                    id = 3L,
+                    name = "Custom",
+                    template = "Do {text}",
+                    sortOrder = 0,
+                    reasoningLevel = "BANANAS",
+                )
+            )
+        )
+        coEvery { dao.count() } returns 1
+
+        val result = repository.observeTemplates().first()
+
+        assertEquals(ReasoningLevel.DEFAULT, result.single().reasoningLevel)
+    }
+
+    @Test
+    fun `save stores reasoning level enum name on the entity`() = runTest {
+        val entitySlot = slot<PromptTemplateEntity>()
+        coEvery { dao.upsert(capture(entitySlot)) } returns 1L
+
+        repository.save(
+            PromptTemplate(
+                id = 4L,
+                name = "Deep",
+                template = "Think about {text}",
+                sortOrder = 1,
+                reasoningLevel = ReasoningLevel.MEDIUM,
+            )
+        )
+
+        assertEquals("MEDIUM", entitySlot.captured.reasoningLevel)
     }
 
     @Test

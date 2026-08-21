@@ -111,7 +111,13 @@
     <string name="edit_prompt">Prompt bearbeiten</string>
     <string name="prompt_name">Name</string>
     <string name="prompt_template">Prompt-Text</string>
-    <string name="prompt_placeholders_hint">Platzhalter: {text} = Sprechblasentext, {selection} = ausgewählter Text, {translation} = Übersetzung</string>
+    <string name="prompt_placeholders_hint">Platzhalter: {text} = Sprechblasentext, {selection} = ausgewählter Text, {translation} = Übersetzung, {title} = Manga-Titel, {balloons} = weitere Sprechblasen dieser Seite, {prev_balloons} = Sprechblasen der vorherigen Seite</string>
+    <string name="reasoning_level">Denkaufwand</string>
+    <string name="reasoning_default">Modellstandard</string>
+    <string name="reasoning_off">Aus</string>
+    <string name="reasoning_low">Niedrig</string>
+    <string name="reasoning_medium">Mittel</string>
+    <string name="reasoning_high">Hoch</string>
     <string name="prompt_name_required">Name und Prompt-Text sind erforderlich</string>
     <string name="delete_prompt_confirm">Diesen Prompt löschen?</string>
     <string name="no_prompts">Noch keine Prompts</string>
@@ -130,4 +136,6 @@
     <string name="conversations">Konversationen</string>
     <string name="no_conversations">Noch keine Konversationen</string>
     <string name="delete_conversation_confirm">Diese Konversation löschen?</string>
+    <string name="no_page_balloons">Keine weiteren Sprechblasen auf dieser Seite</string>
+    <string name="no_previous_balloons">Keine Sprechblasen auf den vorherigen Seiten</string>
 </resources>

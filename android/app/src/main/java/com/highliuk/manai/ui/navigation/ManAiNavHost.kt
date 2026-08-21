@@ -33,6 +33,7 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import androidx.core.view.WindowCompat
@@ -53,8 +54,10 @@ import com.highliuk.manai.ui.home.RenameMangaDialog
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import com.highliuk.manai.BuildConfig
+import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.PageRegion
 import com.highliuk.manai.domain.model.PromptTemplate
+import com.highliuk.manai.ui.chat.ChatLaunchOptions
 import com.highliuk.manai.ui.chat.ChatLauncherViewModel
 import com.highliuk.manai.ui.chat.ChatScreen
 import com.highliuk.manai.ui.chat.ChatViewModel
@@ -227,6 +230,9 @@ fun ManAiNavHost(
                         val chatLauncher: ChatLauncherViewModel = hiltViewModel()
                         val promptTemplates by chatLauncher.promptTemplates
                             .collectAsStateWithLifecycle()
+                        val noPageBalloonsFallback = stringResource(R.string.no_page_balloons)
+                        val noPreviousBalloonsFallback =
+                            stringResource(R.string.no_previous_balloons)
                         LaunchedEffect(chatLauncher) {
                             chatLauncher.navigateToChat.collect { id ->
                                 navController.navigate("chat/$id")
@@ -288,8 +294,15 @@ fun ManAiNavHost(
                                         template = template,
                                         region = selectedRegion,
                                         mangaId = m.id,
-                                        selection = selection,
-                                        translationState = translationState,
+                                        options = ChatLaunchOptions(
+                                            selection = selection,
+                                            translation = (
+                                                translationState as?
+                                                    ReaderViewModel.TranslationState.Translated
+                                                )?.text,
+                                            noPageBalloonsFallback = noPageBalloonsFallback,
+                                            noPreviousBalloonsFallback = noPreviousBalloonsFallback,
+                                        ),
                                     )
                                 },
                             )
@@ -521,16 +534,14 @@ private fun ChatLauncherViewModel.launchPromptConversation(
     template: PromptTemplate,
     region: PageRegion?,
     mangaId: Long,
-    selection: String?,
-    translationState: ReaderViewModel.TranslationState,
+    options: ChatLaunchOptions,
 ) {
     if (region == null) return
     startConversation(
         template = template,
         region = region,
         mangaId = mangaId,
-        selection = selection,
-        translation = (translationState as? ReaderViewModel.TranslationState.Translated)?.text,
+        options = options,
     )
 }
 

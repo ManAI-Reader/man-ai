@@ -29,7 +29,7 @@ import com.highliuk.manai.data.local.entity.TranslationResultEntity
         PromptTemplateEntity::class,
         MemoryEntryEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = true,
 )
 abstract class ManAiDatabase : RoomDatabase() {
@@ -171,6 +171,58 @@ abstract class ManAiDatabase : RoomDatabase() {
                 db.execSQL("DROP TABLE IF EXISTS conversation")
                 db.execSQL("DROP TABLE IF EXISTS prompt_template")
                 db.execSQL("DROP TABLE IF EXISTS memory_entry")
+            }
+        }
+
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE prompt_template ADD COLUMN reasoningLevel TEXT NOT NULL DEFAULT 'DEFAULT'"
+                )
+                db.execSQL(
+                    "ALTER TABLE conversation ADD COLUMN reasoningLevel TEXT NOT NULL DEFAULT 'DEFAULT'"
+                )
+            }
+        }
+
+        val MIGRATION_7_6 = object : Migration(7, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """CREATE TABLE prompt_template_backup (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        name TEXT NOT NULL,
+                        template TEXT NOT NULL,
+                        sortOrder INTEGER NOT NULL DEFAULT 0
+                    )""".trimIndent()
+                )
+                db.execSQL(
+                    "INSERT INTO prompt_template_backup (id, name, template, sortOrder) " +
+                        "SELECT id, name, template, sortOrder FROM prompt_template"
+                )
+                db.execSQL("DROP TABLE prompt_template")
+                db.execSQL("ALTER TABLE prompt_template_backup RENAME TO prompt_template")
+                db.execSQL("DROP INDEX IF EXISTS index_conversation_mangaId")
+                db.execSQL(
+                    """CREATE TABLE conversation_backup (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        title TEXT NOT NULL,
+                        mangaId INTEGER,
+                        pageIndex INTEGER,
+                        regionIndex INTEGER,
+                        createdAt INTEGER NOT NULL,
+                        updatedAt INTEGER NOT NULL,
+                        FOREIGN KEY(mangaId) REFERENCES manga(id) ON DELETE SET NULL
+                    )""".trimIndent()
+                )
+                db.execSQL(
+                    "INSERT INTO conversation_backup " +
+                        "(id, title, mangaId, pageIndex, regionIndex, createdAt, updatedAt) " +
+                        "SELECT id, title, mangaId, pageIndex, regionIndex, createdAt, updatedAt " +
+                        "FROM conversation"
+                )
+                db.execSQL("DROP TABLE conversation")
+                db.execSQL("ALTER TABLE conversation_backup RENAME TO conversation")
+                db.execSQL("CREATE INDEX index_conversation_mangaId ON conversation(mangaId)")
             }
         }
 

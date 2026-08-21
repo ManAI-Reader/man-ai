@@ -111,7 +111,13 @@
     <string name="edit_prompt">Editar prompt</string>
     <string name="prompt_name">Nome</string>
     <string name="prompt_template">Texto do prompt</string>
-    <string name="prompt_placeholders_hint">Marcadores: {text} = texto do balão, {selection} = texto selecionado, {translation} = tradução</string>
+    <string name="prompt_placeholders_hint">Marcadores: {text} = texto do balão, {selection} = texto selecionado, {translation} = tradução, {title} = título do mangá, {balloons} = outros balões desta página, {prev_balloons} = balões da página anterior</string>
+    <string name="reasoning_level">Raciocínio</string>
+    <string name="reasoning_default">Padrão do modelo</string>
+    <string name="reasoning_off">Desativado</string>
+    <string name="reasoning_low">Baixo</string>
+    <string name="reasoning_medium">Médio</string>
+    <string name="reasoning_high">Alto</string>
     <string name="prompt_name_required">Nome e texto do prompt são obrigatórios</string>
     <string name="delete_prompt_confirm">Excluir este prompt?</string>
     <string name="no_prompts">Nenhum prompt ainda</string>
@@ -130,4 +136,6 @@
     <string name="conversations">Conversas</string>
     <string name="no_conversations">Nenhuma conversa ainda</string>
     <string name="delete_conversation_confirm">Excluir esta conversa?</string>
+    <string name="no_page_balloons">Nenhum outro balão nesta página</string>
+    <string name="no_previous_balloons">Nenhum balão nas páginas anteriores</string>
 </resources>

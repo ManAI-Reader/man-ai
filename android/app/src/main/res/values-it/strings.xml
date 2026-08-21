@@ -111,7 +111,13 @@
     <string name="edit_prompt">Modifica prompt</string>
     <string name="prompt_name">Nome</string>
     <string name="prompt_template">Testo del prompt</string>
-    <string name="prompt_placeholders_hint">Segnaposto: {text} = testo del balloon, {selection} = testo selezionato, {translation} = traduzione</string>
+    <string name="prompt_placeholders_hint">Segnaposto: {text} = testo del balloon, {selection} = testo selezionato, {translation} = traduzione, {title} = titolo del manga, {balloons} = altri balloon di questa pagina, {prev_balloons} = balloon della pagina precedente</string>
+    <string name="reasoning_level">Ragionamento</string>
+    <string name="reasoning_default">Predefinito del modello</string>
+    <string name="reasoning_off">Disattivato</string>
+    <string name="reasoning_low">Basso</string>
+    <string name="reasoning_medium">Medio</string>
+    <string name="reasoning_high">Alto</string>
     <string name="prompt_name_required">Nome e testo del prompt sono obbligatori</string>
     <string name="delete_prompt_confirm">Eliminare questo prompt?</string>
     <string name="no_prompts">Nessun prompt</string>
@@ -130,4 +136,6 @@
     <string name="conversations">Conversazioni</string>
     <string name="no_conversations">Nessuna conversazione</string>
     <string name="delete_conversation_confirm">Eliminare questa conversazione?</string>
+    <string name="no_page_balloons">Nessun altro balloon in questa pagina</string>
+    <string name="no_previous_balloons">Nessun balloon nelle pagine precedenti</string>
 </resources>

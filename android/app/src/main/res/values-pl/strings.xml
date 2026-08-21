@@ -117,7 +117,13 @@
     <string name="edit_prompt">Edytuj prompt</string>
     <string name="prompt_name">Nazwa</string>
     <string name="prompt_template">Treść promptu</string>
-    <string name="prompt_placeholders_hint">Symbole zastępcze: {text} = tekst dymku, {selection} = zaznaczony tekst, {translation} = tłumaczenie</string>
+    <string name="prompt_placeholders_hint">Symbole zastępcze: {text} = tekst dymku, {selection} = zaznaczony tekst, {translation} = tłumaczenie, {title} = tytuł mangi, {balloons} = inne dymki na tej stronie, {prev_balloons} = dymki z poprzedniej strony</string>
+    <string name="reasoning_level">Rozumowanie</string>
+    <string name="reasoning_default">Domyślne ustawienie modelu</string>
+    <string name="reasoning_off">Wyłączone</string>
+    <string name="reasoning_low">Niski</string>
+    <string name="reasoning_medium">Średni</string>
+    <string name="reasoning_high">Wysoki</string>
     <string name="prompt_name_required">Nazwa i treść promptu są wymagane</string>
     <string name="delete_prompt_confirm">Usunąć ten prompt?</string>
     <string name="no_prompts">Brak promptów</string>
@@ -136,4 +142,6 @@
     <string name="conversations">Rozmowy</string>
     <string name="no_conversations">Brak rozmów</string>
     <string name="delete_conversation_confirm">Usunąć tę rozmowę?</string>
+    <string name="no_page_balloons">Brak innych dymków na tej stronie</string>
+    <string name="no_previous_balloons">Brak dymków na poprzednich stronach</string>
 </resources>

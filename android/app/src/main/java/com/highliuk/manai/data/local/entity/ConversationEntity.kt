@@ -1,5 +1,6 @@
 package com.highliuk.manai.data.local.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -25,4 +26,6 @@ data class ConversationEntity(
     val regionIndex: Int?,
     val createdAt: Long,
     val updatedAt: Long,
+    @ColumnInfo(defaultValue = "DEFAULT")
+    val reasoningLevel: String = "DEFAULT",
 )

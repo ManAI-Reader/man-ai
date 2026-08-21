@@ -108,7 +108,13 @@
     <string name="edit_prompt">Edit prompt</string>
     <string name="prompt_name">Nama</string>
     <string name="prompt_template">Teks prompt</string>
-    <string name="prompt_placeholders_hint">Placeholder: {text} = teks balon, {selection} = teks terpilih, {translation} = terjemahan</string>
+    <string name="prompt_placeholders_hint">Placeholder: {text} = teks balon, {selection} = teks terpilih, {translation} = terjemahan, {title} = judul manga, {balloons} = balon lain di halaman ini, {prev_balloons} = balon di halaman sebelumnya</string>
+    <string name="reasoning_level">Penalaran</string>
+    <string name="reasoning_default">Bawaan model</string>
+    <string name="reasoning_off">Mati</string>
+    <string name="reasoning_low">Rendah</string>
+    <string name="reasoning_medium">Sedang</string>
+    <string name="reasoning_high">Tinggi</string>
     <string name="prompt_name_required">Nama dan teks prompt wajib diisi</string>
     <string name="delete_prompt_confirm">Hapus prompt ini?</string>
     <string name="no_prompts">Belum ada prompt</string>
@@ -127,4 +133,6 @@
     <string name="conversations">Percakapan</string>
     <string name="no_conversations">Belum ada percakapan</string>
     <string name="delete_conversation_confirm">Hapus percakapan ini?</string>
+    <string name="no_page_balloons">Tidak ada balon lain di halaman ini</string>
+    <string name="no_previous_balloons">Tidak ada balon di halaman-halaman sebelumnya</string>
 </resources>

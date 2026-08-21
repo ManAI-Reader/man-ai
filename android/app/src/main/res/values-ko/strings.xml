@@ -108,7 +108,13 @@
     <string name="edit_prompt">프롬프트 편집</string>
     <string name="prompt_name">이름</string>
     <string name="prompt_template">프롬프트 내용</string>
-    <string name="prompt_placeholders_hint">자리 표시자: {text} = 말풍선 텍스트, {selection} = 선택한 텍스트, {translation} = 번역</string>
+    <string name="prompt_placeholders_hint">자리 표시자: {text} = 말풍선 텍스트, {selection} = 선택한 텍스트, {translation} = 번역, {title} = 만화 제목, {balloons} = 이 페이지의 다른 말풍선, {prev_balloons} = 이전 페이지의 말풍선</string>
+    <string name="reasoning_level">추론</string>
+    <string name="reasoning_default">모델 기본값</string>
+    <string name="reasoning_off">끄기</string>
+    <string name="reasoning_low">낮음</string>
+    <string name="reasoning_medium">중간</string>
+    <string name="reasoning_high">높음</string>
     <string name="prompt_name_required">이름과 프롬프트 내용은 필수입니다</string>
     <string name="delete_prompt_confirm">이 프롬프트를 삭제할까요?</string>
     <string name="no_prompts">아직 프롬프트가 없습니다</string>
@@ -127,4 +133,6 @@
     <string name="conversations">대화</string>
     <string name="no_conversations">아직 대화가 없습니다</string>
     <string name="delete_conversation_confirm">이 대화를 삭제할까요?</string>
+    <string name="no_page_balloons">이 페이지에 다른 말풍선이 없습니다</string>
+    <string name="no_previous_balloons">이전 페이지에 말풍선이 없습니다</string>
 </resources>

@@ -4,6 +4,7 @@ import com.highliuk.manai.R
 import com.highliuk.manai.data.local.dao.PromptTemplateDao
 import com.highliuk.manai.data.local.entity.PromptTemplateEntity
 import com.highliuk.manai.domain.model.PromptTemplate
+import com.highliuk.manai.domain.model.ReasoningLevel
 import com.highliuk.manai.domain.repository.PromptTemplateRepository
 import com.highliuk.manai.domain.repository.UserPreferencesRepository
 import kotlinx.coroutines.flow.Flow
@@ -76,9 +77,19 @@ class PromptTemplateRepositoryImpl(
         ),
     )
 
-    private fun PromptTemplateEntity.toDomain(): PromptTemplate =
-        PromptTemplate(id = id, name = name, template = template, sortOrder = sortOrder)
+    private fun PromptTemplateEntity.toDomain(): PromptTemplate = PromptTemplate(
+        id = id,
+        name = name,
+        template = template,
+        sortOrder = sortOrder,
+        reasoningLevel = ReasoningLevel.valueOfOrDefault(reasoningLevel),
+    )
 
-    private fun PromptTemplate.toEntity(): PromptTemplateEntity =
-        PromptTemplateEntity(id = id, name = name, template = template, sortOrder = sortOrder)
+    private fun PromptTemplate.toEntity(): PromptTemplateEntity = PromptTemplateEntity(
+        id = id,
+        name = name,
+        template = template,
+        sortOrder = sortOrder,
+        reasoningLevel = reasoningLevel.name,
+    )
 }

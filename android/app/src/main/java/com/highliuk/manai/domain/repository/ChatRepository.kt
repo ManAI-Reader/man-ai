@@ -3,6 +3,7 @@ package com.highliuk.manai.domain.repository
 import com.highliuk.manai.domain.model.ChatMessage
 import com.highliuk.manai.domain.model.ChatRole
 import com.highliuk.manai.domain.model.Conversation
+import com.highliuk.manai.domain.model.ReasoningLevel
 import kotlinx.coroutines.flow.Flow
 
 interface ChatRepository {
@@ -15,6 +16,7 @@ interface ChatRepository {
         mangaId: Long?,
         pageIndex: Int?,
         regionIndex: Int?,
+        reasoningLevel: ReasoningLevel,
     ): Long
     suspend fun appendMessage(conversationId: Long, role: ChatRole, content: String)
     suspend fun deleteConversation(id: Long)

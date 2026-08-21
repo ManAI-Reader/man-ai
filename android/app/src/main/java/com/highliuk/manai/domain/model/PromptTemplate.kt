@@ -5,4 +5,5 @@ data class PromptTemplate(
     val name: String,
     val template: String,
     val sortOrder: Int = 0,
+    val reasoningLevel: ReasoningLevel = ReasoningLevel.DEFAULT,
 )

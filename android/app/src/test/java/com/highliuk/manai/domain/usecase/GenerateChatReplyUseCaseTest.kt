@@ -10,12 +10,15 @@ import com.highliuk.manai.domain.llm.LlmToolCall
 import com.highliuk.manai.domain.llm.LlmToolSpec
 import com.highliuk.manai.domain.model.ChatMessage
 import com.highliuk.manai.domain.model.ChatRole
+import com.highliuk.manai.domain.model.Conversation
+import com.highliuk.manai.domain.model.ReasoningLevel
 import com.highliuk.manai.domain.model.TargetLanguage
 import com.highliuk.manai.domain.repository.ChatRepository
 import com.highliuk.manai.domain.repository.MemoryRepository
 import com.highliuk.manai.domain.repository.UserPreferencesRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
@@ -27,7 +30,9 @@ import org.junit.Test
 
 class GenerateChatReplyUseCaseTest {
 
-    private val chatRepository = mockk<ChatRepository>(relaxed = true)
+    private val chatRepository = mockk<ChatRepository>(relaxed = true) {
+        every { observeConversation(any()) } returns flowOf(null)
+    }
     private val memoryRepository = mockk<MemoryRepository>()
     private val userPreferencesRepository = mockk<UserPreferencesRepository> {
         coEvery { translationTargetLang } returns flowOf(TargetLanguage.IT)
@@ -37,10 +42,16 @@ class GenerateChatReplyUseCaseTest {
         private val responses: List<List<LlmEvent>>,
     ) : LlmProvider {
         val recordedMessages = mutableListOf<List<LlmMessage>>()
+        val recordedReasonings = mutableListOf<ReasoningLevel>()
         private var callIndex = 0
 
-        override fun chat(messages: List<LlmMessage>, tools: List<LlmToolSpec>): Flow<LlmEvent> {
+        override fun chat(
+            messages: List<LlmMessage>,
+            tools: List<LlmToolSpec>,
+            reasoning: ReasoningLevel,
+        ): Flow<LlmEvent> {
             recordedMessages += messages.toList()
+            recordedReasonings += reasoning
             val events = responses[minOf(callIndex, responses.lastIndex)]
             callIndex++
             return events.asFlow()
@@ -214,6 +225,52 @@ class GenerateChatReplyUseCaseTest {
 
         assertEquals(5, provider.recordedMessages.size)
         coVerify(exactly = 0) { chatRepository.appendMessage(any(), any(), any()) }
+    }
+
+    @Test
+    fun `conversation reasoning level is passed to the provider on every round`() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage("Hello"))
+        coEvery { memoryRepository.listTitles() } returns emptyList()
+        every { chatRepository.observeConversation(42L) } returns flowOf(
+            Conversation(
+                id = 42L,
+                title = "Chat",
+                createdAt = 0L,
+                updatedAt = 0L,
+                reasoningLevel = ReasoningLevel.HIGH,
+            )
+        )
+        val toolCall = LlmToolCall(id = "call-1", name = "memory_list", arguments = "{}")
+        val provider = FakeLlmProvider(
+            listOf(
+                listOf(LlmEvent.ToolCalls(listOf(toolCall)), LlmEvent.Completed),
+                listOf(LlmEvent.TextDelta("Hi"), LlmEvent.Completed),
+            ),
+        )
+
+        useCase(provider).invoke(42L).test {
+            assertEquals(ChatGenerationEvent.Delta("Hi"), awaitItem())
+            assertEquals(ChatGenerationEvent.Done, awaitItem())
+            awaitComplete()
+        }
+
+        assertEquals(listOf(ReasoningLevel.HIGH, ReasoningLevel.HIGH), provider.recordedReasonings)
+    }
+
+    @Test
+    fun `missing conversation falls back to DEFAULT reasoning`() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage("Hello"))
+        val provider = FakeLlmProvider(
+            listOf(listOf(LlmEvent.TextDelta("ok"), LlmEvent.Completed)),
+        )
+
+        useCase(provider).invoke(42L).test {
+            assertEquals(ChatGenerationEvent.Delta("ok"), awaitItem())
+            assertEquals(ChatGenerationEvent.Done, awaitItem())
+            awaitComplete()
+        }
+
+        assertEquals(listOf(ReasoningLevel.DEFAULT), provider.recordedReasonings)
     }
 
     @Test

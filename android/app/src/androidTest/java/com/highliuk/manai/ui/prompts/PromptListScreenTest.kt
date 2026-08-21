@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.highliuk.manai.domain.model.PromptTemplate
+import com.highliuk.manai.domain.model.ReasoningLevel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -37,7 +38,7 @@ class PromptListScreenTest {
         val onAddClick: () -> Unit = {},
         val onEditClick: (PromptTemplate) -> Unit = {},
         val onDeleteClick: (PromptTemplate) -> Unit = {},
-        val onSave: (String, String) -> Unit = { _, _ -> },
+        val onSave: (String, String, ReasoningLevel) -> Unit = { _, _, _ -> },
         val onDismissEdit: () -> Unit = {},
         val onConfirmDelete: () -> Unit = {},
         val onDismissDelete: () -> Unit = {},

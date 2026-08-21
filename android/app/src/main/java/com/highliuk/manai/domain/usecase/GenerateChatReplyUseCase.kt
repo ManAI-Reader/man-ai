@@ -7,6 +7,7 @@ import com.highliuk.manai.domain.llm.LlmMessage
 import com.highliuk.manai.domain.llm.LlmProvider
 import com.highliuk.manai.domain.llm.LlmToolCall
 import com.highliuk.manai.domain.model.ChatRole
+import com.highliuk.manai.domain.model.ReasoningLevel
 import com.highliuk.manai.domain.model.TargetLanguage
 import com.highliuk.manai.domain.repository.ChatRepository
 import com.highliuk.manai.domain.repository.UserPreferencesRepository
@@ -41,13 +42,15 @@ class GenerateChatReplyUseCase @Inject constructor(
      */
     operator fun invoke(conversationId: Long): Flow<ChatGenerationEvent> = flow {
         val targetLang = userPreferencesRepository.translationTargetLang.first()
+        val reasoning = chatRepository.observeConversation(conversationId).first()
+            ?.reasoningLevel ?: ReasoningLevel.DEFAULT
         val history = buildHistory(conversationId, targetLang).toMutableList()
         val fullText = StringBuilder()
         var rounds = 0
         var finished = false
         while (!finished && rounds < MAX_TOOL_ROUNDS) {
             rounds++
-            finished = runRound(conversationId, history, fullText)
+            finished = runRound(RoundInput(conversationId, reasoning, history), fullText)
         }
         if (!finished) {
             emit(ChatGenerationEvent.Error("Tool-call limit reached"))
@@ -60,15 +63,22 @@ class GenerateChatReplyUseCase @Inject constructor(
      *
      * @return true when the generation is finished (Done or Error emitted).
      */
+    /** Immutable per-generation inputs shared by every round. */
+    private data class RoundInput(
+        val conversationId: Long,
+        val reasoning: ReasoningLevel,
+        val history: MutableList<LlmMessage>,
+    )
+
     private suspend fun FlowCollector<ChatGenerationEvent>.runRound(
-        conversationId: Long,
-        history: MutableList<LlmMessage>,
+        input: RoundInput,
         fullText: StringBuilder,
     ): Boolean {
+        val (conversationId, reasoning, history) = input
         var pendingToolCalls: List<LlmToolCall> = emptyList()
         var failure: String? = null
         val roundText = StringBuilder()
-        llmProvider.chat(history, MemoryToolExecutor.SPECS).collect { event ->
+        llmProvider.chat(history, MemoryToolExecutor.SPECS, reasoning).collect { event ->
             when (event) {
                 is LlmEvent.TextDelta -> {
                     roundText.append(event.text)

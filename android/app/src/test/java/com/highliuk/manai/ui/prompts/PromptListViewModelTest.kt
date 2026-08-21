@@ -3,6 +3,7 @@ package com.highliuk.manai.ui.prompts
 import app.cash.turbine.test
 import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.PromptTemplate
+import com.highliuk.manai.domain.model.ReasoningLevel
 import com.highliuk.manai.domain.repository.PromptTemplateRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -105,7 +106,7 @@ class PromptListViewModelTest {
         val viewModel = createViewModel()
         viewModel.requestEdit(template)
 
-        viewModel.saveTemplate("  New name  ", "  New body  ")
+        viewModel.saveTemplate("  New name  ", "  New body  ", ReasoningLevel.DEFAULT)
         advanceUntilIdle()
 
         coVerify {
@@ -118,11 +119,32 @@ class PromptListViewModelTest {
     }
 
     @Test
+    fun `saveTemplate persists the selected reasoning level`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        viewModel.requestEdit(template)
+
+        viewModel.saveTemplate("New name", "New body", ReasoningLevel.HIGH)
+        advanceUntilIdle()
+
+        coVerify {
+            repository.save(
+                PromptTemplate(
+                    id = 7L,
+                    name = "New name",
+                    template = "New body",
+                    sortOrder = 3,
+                    reasoningLevel = ReasoningLevel.HIGH,
+                ),
+            )
+        }
+    }
+
+    @Test
     fun `saveTemplate rejects blank name keeping dialog open`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         viewModel.requestEdit(template)
 
-        viewModel.saveTemplate("   ", "body")
+        viewModel.saveTemplate("   ", "body", ReasoningLevel.DEFAULT)
         advanceUntilIdle()
 
         coVerify(exactly = 0) { repository.save(any()) }
@@ -135,7 +157,7 @@ class PromptListViewModelTest {
         val viewModel = createViewModel()
         viewModel.requestNew()
 
-        viewModel.saveTemplate("name", "   ")
+        viewModel.saveTemplate("name", "   ", ReasoningLevel.DEFAULT)
         advanceUntilIdle()
 
         coVerify(exactly = 0) { repository.save(any()) }
@@ -152,9 +174,9 @@ class PromptListViewModelTest {
             val viewModel = createViewModel()
             viewModel.requestEdit(template)
 
-            viewModel.saveTemplate("name", "body")
+            viewModel.saveTemplate("name", "body", ReasoningLevel.DEFAULT)
             assertNull(viewModel.editing.value)
-            viewModel.saveTemplate("name", "body")
+            viewModel.saveTemplate("name", "body", ReasoningLevel.DEFAULT)
             advanceUntilIdle()
 
             coVerify(exactly = 1) { repository.save(any()) }
@@ -164,13 +186,13 @@ class PromptListViewModelTest {
     fun `requestNew and requestEdit clear previous error`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         viewModel.requestEdit(template)
-        viewModel.saveTemplate("", "")
+        viewModel.saveTemplate("", "", ReasoningLevel.DEFAULT)
         assertEquals(R.string.prompt_name_required, viewModel.editError.value)
 
         viewModel.requestNew()
         assertNull(viewModel.editError.value)
 
-        viewModel.saveTemplate("", "")
+        viewModel.saveTemplate("", "", ReasoningLevel.DEFAULT)
         viewModel.requestEdit(template)
         assertNull(viewModel.editError.value)
     }
@@ -179,7 +201,7 @@ class PromptListViewModelTest {
     fun `dismissEdit clears editing and error`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         viewModel.requestEdit(template)
-        viewModel.saveTemplate("", "")
+        viewModel.saveTemplate("", "", ReasoningLevel.DEFAULT)
 
         viewModel.dismissEdit()
 

@@ -30,6 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.PromptTemplate
+import com.highliuk.manai.domain.model.ReasoningLevel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,7 +42,7 @@ fun PromptListScreen(
     onAddClick: () -> Unit,
     onEditClick: (PromptTemplate) -> Unit,
     onDeleteClick: (PromptTemplate) -> Unit,
-    onSave: (name: String, template: String) -> Unit,
+    onSave: (name: String, template: String, reasoningLevel: ReasoningLevel) -> Unit,
     onDismissEdit: () -> Unit,
     onConfirmDelete: () -> Unit,
     onDismissDelete: () -> Unit,

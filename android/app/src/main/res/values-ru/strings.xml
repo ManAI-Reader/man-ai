@@ -117,7 +117,13 @@
     <string name="edit_prompt">Изменить промпт</string>
     <string name="prompt_name">Название</string>
     <string name="prompt_template">Текст промпта</string>
-    <string name="prompt_placeholders_hint">Плейсхолдеры: {text} = текст облачка, {selection} = выделенный текст, {translation} = перевод</string>
+    <string name="prompt_placeholders_hint">Плейсхолдеры: {text} = текст облачка, {selection} = выделенный текст, {translation} = перевод, {title} = название манги, {balloons} = другие облачка этой страницы, {prev_balloons} = облачка предыдущей страницы</string>
+    <string name="reasoning_level">Рассуждение</string>
+    <string name="reasoning_default">По умолчанию модели</string>
+    <string name="reasoning_off">Выкл.</string>
+    <string name="reasoning_low">Низкий</string>
+    <string name="reasoning_medium">Средний</string>
+    <string name="reasoning_high">Высокий</string>
     <string name="prompt_name_required">Название и текст промпта обязательны</string>
     <string name="delete_prompt_confirm">Удалить этот промпт?</string>
     <string name="no_prompts">Промптов пока нет</string>
@@ -136,4 +142,6 @@
     <string name="conversations">Беседы</string>
     <string name="no_conversations">Бесед пока нет</string>
     <string name="delete_conversation_confirm">Удалить эту беседу?</string>
+    <string name="no_page_balloons">На этой странице нет других облачков</string>
+    <string name="no_previous_balloons">На предыдущих страницах нет облачков</string>
 </resources>

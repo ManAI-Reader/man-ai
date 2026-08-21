@@ -34,6 +34,8 @@ object DatabaseModule {
                 ManAiDatabase.MIGRATION_5_4,
                 ManAiDatabase.MIGRATION_5_6,
                 ManAiDatabase.MIGRATION_6_5,
+                ManAiDatabase.MIGRATION_6_7,
+                ManAiDatabase.MIGRATION_7_6,
                 ManAiDatabase.MIGRATION_3_2,
                 ManAiDatabase.MIGRATION_2_1
             )

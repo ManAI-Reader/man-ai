@@ -111,7 +111,13 @@
     <string name="edit_prompt">Editar prompt</string>
     <string name="prompt_name">Nombre</string>
     <string name="prompt_template">Texto del prompt</string>
-    <string name="prompt_placeholders_hint">Marcadores: {text} = texto del bocadillo, {selection} = texto seleccionado, {translation} = traducción</string>
+    <string name="prompt_placeholders_hint">Marcadores: {text} = texto del bocadillo, {selection} = texto seleccionado, {translation} = traducción, {title} = título del manga, {balloons} = otros bocadillos de esta página, {prev_balloons} = bocadillos de la página anterior</string>
+    <string name="reasoning_level">Razonamiento</string>
+    <string name="reasoning_default">Predeterminado del modelo</string>
+    <string name="reasoning_off">Desactivado</string>
+    <string name="reasoning_low">Bajo</string>
+    <string name="reasoning_medium">Medio</string>
+    <string name="reasoning_high">Alto</string>
     <string name="prompt_name_required">El nombre y el texto del prompt son obligatorios</string>
     <string name="delete_prompt_confirm">¿Eliminar este prompt?</string>
     <string name="no_prompts">Aún no hay prompts</string>
@@ -130,4 +136,6 @@
     <string name="conversations">Conversaciones</string>
     <string name="no_conversations">Aún no hay conversaciones</string>
     <string name="delete_conversation_confirm">¿Eliminar esta conversación?</string>
+    <string name="no_page_balloons">No hay otros bocadillos en esta página</string>
+    <string name="no_previous_balloons">No hay bocadillos en las páginas anteriores</string>
 </resources>

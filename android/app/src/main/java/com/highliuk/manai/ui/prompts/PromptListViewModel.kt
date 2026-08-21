@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.PromptTemplate
+import com.highliuk.manai.domain.model.ReasoningLevel
 import com.highliuk.manai.domain.repository.PromptTemplateRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,7 +47,7 @@ class PromptListViewModel @Inject constructor(
         _editError.value = null
     }
 
-    fun saveTemplate(name: String, template: String) {
+    fun saveTemplate(name: String, template: String, reasoningLevel: ReasoningLevel) {
         val trimmedName = name.trim()
         val trimmedTemplate = template.trim()
         if (trimmedName.isEmpty() || trimmedTemplate.isEmpty()) {
@@ -57,7 +58,13 @@ class PromptListViewModel @Inject constructor(
         _editing.value = null
         _editError.value = null
         viewModelScope.launch {
-            repository.save(current.copy(name = trimmedName, template = trimmedTemplate))
+            repository.save(
+                current.copy(
+                    name = trimmedName,
+                    template = trimmedTemplate,
+                    reasoningLevel = reasoningLevel,
+                )
+            )
         }
     }
 

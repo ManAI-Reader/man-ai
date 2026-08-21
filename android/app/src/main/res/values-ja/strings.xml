@@ -108,7 +108,13 @@
     <string name="edit_prompt">プロンプトを編集</string>
     <string name="prompt_name">名前</string>
     <string name="prompt_template">プロンプト本文</string>
-    <string name="prompt_placeholders_hint">プレースホルダー: {text} = 吹き出しのテキスト、{selection} = 選択したテキスト、{translation} = 翻訳</string>
+    <string name="prompt_placeholders_hint">プレースホルダー: {text} = 吹き出しのテキスト、{selection} = 選択したテキスト、{translation} = 翻訳、{title} = 漫画のタイトル、{balloons} = このページの他の吹き出し、{prev_balloons} = 前のページの吹き出し</string>
+    <string name="reasoning_level">推論</string>
+    <string name="reasoning_default">モデルの既定</string>
+    <string name="reasoning_off">オフ</string>
+    <string name="reasoning_low">低</string>
+    <string name="reasoning_medium">中</string>
+    <string name="reasoning_high">高</string>
     <string name="prompt_name_required">名前とプロンプト本文は必須です</string>
     <string name="delete_prompt_confirm">このプロンプトを削除しますか？</string>
     <string name="no_prompts">プロンプトはまだありません</string>
@@ -127,4 +133,6 @@
     <string name="conversations">会話</string>
     <string name="no_conversations">会話はまだありません</string>
     <string name="delete_conversation_confirm">この会話を削除しますか？</string>
+    <string name="no_page_balloons">このページに他の吹き出しはありません</string>
+    <string name="no_previous_balloons">前のページに吹き出しはありません</string>
 </resources>

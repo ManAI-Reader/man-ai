@@ -8,4 +8,9 @@ data class Conversation(
     val regionIndex: Int? = null,
     val createdAt: Long,
     val updatedAt: Long,
+    /**
+     * Reasoning level snapshot copied from the prompt template at launch time
+     * so follow-up turns keep using the same level.
+     */
+    val reasoningLevel: ReasoningLevel = ReasoningLevel.DEFAULT,
 )

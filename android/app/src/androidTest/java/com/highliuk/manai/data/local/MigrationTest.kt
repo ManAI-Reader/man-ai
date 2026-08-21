@@ -180,6 +180,113 @@ class MigrationTest {
     }
 
     @Test
+    fun migration6to7_addsReasoningLevelColumnsWithDefault() {
+        helper.createDatabase("test-db-6to7", 6).apply {
+            execSQL(
+                "INSERT INTO prompt_template (name, template, sortOrder) " +
+                    "VALUES ('Explain', 'Explain {text}', 2)"
+            )
+            execSQL(
+                "INSERT INTO conversation (title, mangaId, pageIndex, regionIndex, createdAt, updatedAt) " +
+                    "VALUES ('Chat', NULL, 3, 0, 1000, 2000)"
+            )
+            close()
+        }
+
+        val db = helper.runMigrationsAndValidate(
+            "test-db-6to7", 7, true, ManAiDatabase.MIGRATION_6_7
+        )
+
+        val templateCursor = db.query(
+            "SELECT name, template, sortOrder, reasoningLevel FROM prompt_template"
+        )
+        assertTrue(templateCursor.moveToFirst())
+        assertEquals("Explain", templateCursor.getString(0))
+        assertEquals("Explain {text}", templateCursor.getString(1))
+        assertEquals(2, templateCursor.getInt(2))
+        assertEquals("DEFAULT", templateCursor.getString(3))
+        templateCursor.close()
+
+        val conversationCursor = db.query(
+            "SELECT title, pageIndex, createdAt, updatedAt, reasoningLevel FROM conversation"
+        )
+        assertTrue(conversationCursor.moveToFirst())
+        assertEquals("Chat", conversationCursor.getString(0))
+        assertEquals(3, conversationCursor.getInt(1))
+        assertEquals(1000, conversationCursor.getLong(2))
+        assertEquals(2000, conversationCursor.getLong(3))
+        assertEquals("DEFAULT", conversationCursor.getString(4))
+        conversationCursor.close()
+        db.close()
+    }
+
+    @Test
+    fun migration7to6_removesReasoningLevelAndPreservesData() {
+        helper.createDatabase("test-db-7to6", 7).apply {
+            execSQL(
+                "INSERT INTO prompt_template (name, template, sortOrder, reasoningLevel) " +
+                    "VALUES ('Explain', 'Explain {text}', 2, 'HIGH')"
+            )
+            execSQL(
+                "INSERT INTO conversation " +
+                    "(title, mangaId, pageIndex, regionIndex, createdAt, updatedAt, reasoningLevel) " +
+                    "VALUES ('Chat', NULL, 3, 0, 1000, 2000, 'LOW')"
+            )
+            close()
+        }
+
+        val db = helper.runMigrationsAndValidate(
+            "test-db-7to6", 6, true, ManAiDatabase.MIGRATION_7_6
+        )
+
+        val templateCursor = db.query("SELECT name, template, sortOrder FROM prompt_template")
+        assertTrue(templateCursor.moveToFirst())
+        assertEquals("Explain", templateCursor.getString(0))
+        assertEquals("Explain {text}", templateCursor.getString(1))
+        assertEquals(2, templateCursor.getInt(2))
+        assertEquals(-1, templateCursor.getColumnIndex("reasoningLevel"))
+        templateCursor.close()
+
+        val conversationCursor = db.query(
+            "SELECT title, pageIndex, createdAt, updatedAt FROM conversation"
+        )
+        assertTrue(conversationCursor.moveToFirst())
+        assertEquals("Chat", conversationCursor.getString(0))
+        assertEquals(3, conversationCursor.getInt(1))
+        assertEquals(1000, conversationCursor.getLong(2))
+        assertEquals(2000, conversationCursor.getLong(3))
+        assertEquals(-1, conversationCursor.getColumnIndex("reasoningLevel"))
+        conversationCursor.close()
+        db.close()
+    }
+
+    @Test
+    fun migration6to7to6_roundTripPreservesRows() {
+        helper.createDatabase("test-db-6to7to6", 6).apply {
+            execSQL(
+                "INSERT INTO prompt_template (name, template, sortOrder) " +
+                    "VALUES ('Explain', 'Explain {text}', 0)"
+            )
+            close()
+        }
+
+        helper.runMigrationsAndValidate(
+            "test-db-6to7to6", 7, true, ManAiDatabase.MIGRATION_6_7
+        ).close()
+
+        val db = helper.runMigrationsAndValidate(
+            "test-db-6to7to6", 6, true, ManAiDatabase.MIGRATION_7_6
+        )
+
+        val cursor = db.query("SELECT name, template FROM prompt_template")
+        assertTrue(cursor.moveToFirst())
+        assertEquals("Explain", cursor.getString(0))
+        assertEquals("Explain {text}", cursor.getString(1))
+        cursor.close()
+        db.close()
+    }
+
+    @Test
     fun migration3to2_removesContentHashAndPreservesData() {
         helper.createDatabase("test-db-down32", 3).apply {
             execSQL(

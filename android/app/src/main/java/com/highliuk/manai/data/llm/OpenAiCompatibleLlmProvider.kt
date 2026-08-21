@@ -5,6 +5,7 @@ import com.highliuk.manai.domain.llm.LlmMessage
 import com.highliuk.manai.domain.llm.LlmProvider
 import com.highliuk.manai.domain.llm.LlmToolSpec
 import com.highliuk.manai.domain.logging.Logger
+import com.highliuk.manai.domain.model.ReasoningLevel
 import io.ktor.client.HttpClient
 import io.ktor.client.request.header
 import io.ktor.client.request.preparePost
@@ -37,14 +38,18 @@ class OpenAiCompatibleLlmProvider(
     private val logger: Logger? = null,
 ) : LlmProvider {
 
-    override fun chat(messages: List<LlmMessage>, tools: List<LlmToolSpec>): Flow<LlmEvent> = flow {
+    override fun chat(
+        messages: List<LlmMessage>,
+        tools: List<LlmToolSpec>,
+        reasoning: ReasoningLevel,
+    ): Flow<LlmEvent> = flow {
         val apiKey = apiKeyProvider()
         if (apiKey.isBlank()) {
             emit(LlmEvent.Failure("LLM API key is not configured"))
             return@flow
         }
         try {
-            stream(apiKey, messages, tools)
+            stream(apiKey, StreamRequest(messages, tools, reasoning))
         } catch (e: CancellationException) {
             throw e
         } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
@@ -52,13 +57,15 @@ class OpenAiCompatibleLlmProvider(
         }
     }
 
-    private suspend fun FlowCollector<LlmEvent>.stream(
-        apiKey: String,
-        messages: List<LlmMessage>,
-        tools: List<LlmToolSpec>,
-    ) {
+    private data class StreamRequest(
+        val messages: List<LlmMessage>,
+        val tools: List<LlmToolSpec>,
+        val reasoning: ReasoningLevel,
+    )
+
+    private suspend fun FlowCollector<LlmEvent>.stream(apiKey: String, request: StreamRequest) {
         val url = baseUrlProvider().trimEnd('/') + "/chat/completions"
-        val body = buildRequestBody(messages, tools).toString()
+        val body = buildRequestBody(request).toString()
         httpClient.preparePost(url) {
             header(HttpHeaders.Authorization, "Bearer $apiKey")
             contentType(ContentType.Application.Json)
@@ -91,20 +98,30 @@ class OpenAiCompatibleLlmProvider(
         emit(LlmEvent.Completed)
     }
 
-    private suspend fun buildRequestBody(messages: List<LlmMessage>, tools: List<LlmToolSpec>): JsonObject {
+    private suspend fun buildRequestBody(request: StreamRequest): JsonObject {
         val model = modelProvider()
         return buildJsonObject {
             put("model", model)
             put("stream", true)
+            request.reasoning.toApiValue()?.let { put("reasoning_effort", it) }
             putJsonArray("messages") {
-                messages.forEach { message -> add(message.toJson()) }
+                request.messages.forEach { message -> add(message.toJson()) }
             }
-            if (tools.isNotEmpty()) {
+            if (request.tools.isNotEmpty()) {
                 putJsonArray("tools") {
-                    tools.forEach { tool -> add(tool.toJson()) }
+                    request.tools.forEach { tool -> add(tool.toJson()) }
                 }
             }
         }
+    }
+
+    /** Maps the level to the `reasoning_effort` value, or null when the parameter must be omitted. */
+    private fun ReasoningLevel.toApiValue(): String? = when (this) {
+        ReasoningLevel.DEFAULT -> null
+        ReasoningLevel.OFF -> "none"
+        ReasoningLevel.LOW -> "low"
+        ReasoningLevel.MEDIUM -> "medium"
+        ReasoningLevel.HIGH -> "high"
     }
 
     private fun LlmMessage.toJson(): JsonObject = buildJsonObject {

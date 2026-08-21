@@ -11,4 +11,6 @@ data class PromptTemplateEntity(
     val template: String,
     @ColumnInfo(defaultValue = "0")
     val sortOrder: Int = 0,
+    @ColumnInfo(defaultValue = "DEFAULT")
+    val reasoningLevel: String = "DEFAULT",
 )

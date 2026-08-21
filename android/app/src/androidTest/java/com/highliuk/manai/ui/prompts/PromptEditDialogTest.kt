@@ -1,15 +1,19 @@
 package com.highliuk.manai.ui.prompts
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.PromptTemplate
+import com.highliuk.manai.domain.model.ReasoningLevel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -31,7 +35,7 @@ class PromptEditDialogTest {
     private fun setDialogContent(
         template: PromptTemplate = newTemplate,
         errorRes: Int? = null,
-        onConfirm: (String, String) -> Unit = { _, _ -> },
+        onConfirm: (String, String, ReasoningLevel) -> Unit = { _, _, _ -> },
         onDismiss: () -> Unit = {},
     ) {
         composeTestRule.setContent {
@@ -74,7 +78,9 @@ class PromptEditDialogTest {
 
         composeTestRule.onNodeWithText(
             "Placeholders: {text} = balloon text, {selection} = selected text, " +
-                "{translation} = translation"
+                "{translation} = translation, {title} = manga title, " +
+                "{balloons} = other balloons on this page, " +
+                "{prev_balloons} = balloons on the previous page"
         ).assertIsDisplayed()
     }
 
@@ -97,11 +103,13 @@ class PromptEditDialogTest {
     fun confirmInvokesOnConfirmWithEditedValues() {
         var savedName: String? = null
         var savedTemplate: String? = null
+        var savedLevel: ReasoningLevel? = null
         setDialogContent(
             template = newTemplate,
-            onConfirm = { name, template ->
+            onConfirm = { name, template, level ->
                 savedName = name
                 savedTemplate = template
+                savedLevel = level
             },
         )
 
@@ -111,6 +119,7 @@ class PromptEditDialogTest {
 
         assertEquals("My prompt", savedName)
         assertEquals("Explain {text}", savedTemplate)
+        assertEquals(ReasoningLevel.DEFAULT, savedLevel)
     }
 
     @Test
@@ -118,13 +127,46 @@ class PromptEditDialogTest {
         var savedName: String? = null
         setDialogContent(
             template = existingTemplate,
-            onConfirm = { name, _ -> savedName = name },
+            onConfirm = { name, _, _ -> savedName = name },
         )
 
         composeTestRule.onNodeWithTag("prompt_name_field").performTextClearance()
         composeTestRule.onNodeWithText("OK").performClick()
 
         assertEquals("", savedName)
+    }
+
+    @Test
+    fun reasoningSelectorShowsAllLevelsWithModelDefaultPreselected() {
+        setDialogContent(template = newTemplate)
+
+        ReasoningLevel.entries.forEach { level ->
+            composeTestRule.onNodeWithTag("reasoning_chip_${level.name}").assertExists()
+        }
+        composeTestRule.onNodeWithTag("reasoning_chip_DEFAULT").assertIsSelected()
+    }
+
+    @Test
+    fun reasoningSelectorPreselectsTemplateLevel() {
+        setDialogContent(template = existingTemplate.copy(reasoningLevel = ReasoningLevel.MEDIUM))
+
+        composeTestRule.onNodeWithTag("reasoning_chip_MEDIUM").assertIsSelected()
+        composeTestRule.onNodeWithTag("reasoning_chip_DEFAULT").assertIsNotSelected()
+    }
+
+    @Test
+    fun selectingReasoningChipIsReflectedInConfirmCallback() {
+        var savedLevel: ReasoningLevel? = null
+        setDialogContent(
+            template = existingTemplate,
+            onConfirm = { _, _, level -> savedLevel = level },
+        )
+
+        composeTestRule.onNodeWithTag("reasoning_chip_HIGH").performScrollTo().performClick()
+        composeTestRule.onNodeWithTag("reasoning_chip_HIGH").assertIsSelected()
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        assertEquals(ReasoningLevel.HIGH, savedLevel)
     }
 
     @Test
