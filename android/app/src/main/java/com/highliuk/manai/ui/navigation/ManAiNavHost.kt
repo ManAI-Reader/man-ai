@@ -58,6 +58,8 @@ import com.highliuk.manai.domain.model.PromptTemplate
 import com.highliuk.manai.ui.chat.ChatLauncherViewModel
 import com.highliuk.manai.ui.chat.ChatScreen
 import com.highliuk.manai.ui.chat.ChatViewModel
+import com.highliuk.manai.ui.chat.ConversationListScreen
+import com.highliuk.manai.ui.chat.ConversationListViewModel
 import com.highliuk.manai.ui.prompts.PromptListScreen
 import com.highliuk.manai.ui.prompts.PromptListViewModel
 import com.highliuk.manai.ui.reader.ReaderScreen
@@ -160,6 +162,7 @@ fun ManAiNavHost(
                             isSelectionMode = isSelectionMode,
                             onImportClick = onImportClick,
                             onSettingsClick = { navController.navigate("settings") },
+                            onConversationsClick = { navController.navigate("conversations") },
                             onMangaClick = { manga -> navController.navigate("reader/${manga.id}") },
                             onToggleSelection = viewModel::toggleSelection,
                             onRenameClick = viewModel::requestRename,
@@ -269,6 +272,7 @@ fun ManAiNavHost(
                                     }
                                 },
                                 onSettingsClick = { navController.navigate("settings") },
+                                onConversationsClick = { navController.navigate("conversations") },
                                 onImmersiveModeChange = { immersive ->
                                     applyImmersiveMode(insetsController, immersive)
                                 },
@@ -302,6 +306,7 @@ fun ManAiNavHost(
                     }
                 }
                 chatDestination(navController)
+                conversationListDestination(navController)
                 composable(
                     "settings",
                     enterTransition = {
@@ -472,6 +477,50 @@ private fun NavGraphBuilder.chatDestination(navController: NavHostController) {
                     }
                 }
             },
+            onBack = { navController.popBackStack() },
+        )
+    }
+}
+
+private fun NavGraphBuilder.conversationListDestination(navController: NavHostController) {
+    composable(
+        "conversations",
+        enterTransition = {
+            slideInHorizontally(
+                initialOffsetX = { it },
+                animationSpec = tween(300, easing = FastOutSlowInEasing)
+            )
+        },
+        exitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { it },
+                animationSpec = tween(300, easing = FastOutSlowInEasing)
+            )
+        },
+        popEnterTransition = {
+            slideInHorizontally(
+                initialOffsetX = { it },
+                animationSpec = tween(300, easing = FastOutSlowInEasing)
+            )
+        },
+        popExitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { it },
+                animationSpec = tween(300, easing = FastOutSlowInEasing)
+            )
+        }
+    ) {
+        val viewModel: ConversationListViewModel = hiltViewModel()
+        val conversations by viewModel.conversations.collectAsState()
+        val pendingDelete by viewModel.pendingDelete.collectAsState()
+
+        ConversationListScreen(
+            conversations = conversations,
+            pendingDelete = pendingDelete,
+            onConversationClick = { id -> navController.navigate("chat/$id") },
+            onDeleteClick = viewModel::requestDelete,
+            onConfirmDelete = viewModel::confirmDelete,
+            onDismissDelete = viewModel::dismissDelete,
             onBack = { navController.popBackStack() },
         )
     }

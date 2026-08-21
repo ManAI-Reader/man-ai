@@ -127,4 +127,7 @@
     <string name="send_message">Invia</string>
     <string name="jump_to_source">Apri la pagina d\'origine</string>
     <string name="chat_error_generic">Qualcosa è andato storto</string>
+    <string name="conversations">Conversazioni</string>
+    <string name="no_conversations">Nessuna conversazione</string>
+    <string name="delete_conversation_confirm">Eliminare questa conversazione?</string>
 </resources>

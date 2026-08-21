@@ -124,4 +124,7 @@
     <string name="send_message">ส่ง</string>
     <string name="jump_to_source">เปิดหน้าที่มา</string>
     <string name="chat_error_generic">เกิดข้อผิดพลาดบางอย่าง</string>
+    <string name="conversations">การสนทนา</string>
+    <string name="no_conversations">ยังไม่มีการสนทนา</string>
+    <string name="delete_conversation_confirm">ลบการสนทนานี้หรือไม่</string>
 </resources>

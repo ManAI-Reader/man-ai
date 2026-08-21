@@ -133,4 +133,7 @@
     <string name="send_message">Отправить</string>
     <string name="jump_to_source">Открыть исходную страницу</string>
     <string name="chat_error_generic">Что-то пошло не так</string>
+    <string name="conversations">Беседы</string>
+    <string name="no_conversations">Бесед пока нет</string>
+    <string name="delete_conversation_confirm">Удалить эту беседу?</string>
 </resources>

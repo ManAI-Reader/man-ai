@@ -133,4 +133,7 @@
     <string name="send_message">Wyślij</string>
     <string name="jump_to_source">Otwórz stronę źródłową</string>
     <string name="chat_error_generic">Coś poszło nie tak</string>
+    <string name="conversations">Rozmowy</string>
+    <string name="no_conversations">Brak rozmów</string>
+    <string name="delete_conversation_confirm">Usunąć tę rozmowę?</string>
 </resources>

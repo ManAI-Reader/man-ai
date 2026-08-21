@@ -128,4 +128,7 @@
     <string name="send_message">Send</string>
     <string name="jump_to_source">Open source page</string>
     <string name="chat_error_generic">Something went wrong</string>
+    <string name="conversations">Conversations</string>
+    <string name="no_conversations">No conversations yet</string>
+    <string name="delete_conversation_confirm">Delete this conversation?</string>
 </resources>

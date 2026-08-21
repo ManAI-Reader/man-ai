@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -111,6 +112,7 @@ fun ReaderScreen(
     onDismissBottomSheet: () -> Unit = {},
     onBack: () -> Unit,
     onSettingsClick: () -> Unit,
+    onConversationsClick: () -> Unit = {},
     onImmersiveModeChange: (Boolean) -> Unit = {},
     debugPipelineStates: Map<Int, PagePipelineState> = emptyMap(),
     visiblePagesRegions: Map<Int, List<PageRegion>> = emptyMap(),
@@ -284,6 +286,12 @@ fun ReaderScreen(
                 },
                 title = { Text(manga.title) },
                 actions = {
+                    IconButton(onClick = onConversationsClick) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Chat,
+                            contentDescription = stringResource(R.string.conversations)
+                        )
+                    }
                     IconButton(onClick = onSettingsClick) {
                         Icon(
                             imageVector = Icons.Default.Settings,
