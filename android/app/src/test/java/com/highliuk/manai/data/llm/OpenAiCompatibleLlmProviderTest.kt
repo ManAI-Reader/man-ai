@@ -161,6 +161,23 @@ class OpenAiCompatibleLlmProviderTest {
         assertTrue(body.contains(""""name":"memory_read""""))
     }
 
+    @Test
+    fun `request body omits the tools field entirely when the tool list is empty`() = runTest {
+        val engine = MockEngine {
+            respond(
+                content = sse("data: [DONE]"),
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, "text/event-stream"),
+            )
+        }
+        provider(engine).chat(listOf(LlmMessage(LlmMessage.ROLE_USER, "hi")), emptyList()).test {
+            assertEquals(LlmEvent.Completed, awaitItem())
+            awaitComplete()
+        }
+        val body = engine.requestHistory.single().body.toByteArray().decodeToString()
+        assertFalse(body.contains("\"tools\""))
+    }
+
     private suspend fun requestBodyFor(reasoning: ReasoningLevel): String {
         val engine = MockEngine {
             respond(

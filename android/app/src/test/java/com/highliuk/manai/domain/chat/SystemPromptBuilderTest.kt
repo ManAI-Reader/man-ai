@@ -1,6 +1,7 @@
 package com.highliuk.manai.domain.chat
 
 import com.highliuk.manai.domain.model.TargetLanguage
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -46,5 +47,26 @@ class SystemPromptBuilderTest {
         val prompt = SystemPromptBuilder.build(TargetLanguage.EN)
 
         assertTrue(prompt.contains("Use the memory tools silently; do not narrate tool usage to the user."))
+    }
+
+    @Test
+    fun `vanilla prompt keeps only the target language directive`() {
+        val prompt = SystemPromptBuilder.buildVanilla(TargetLanguage.EN)
+
+        assertTrue(prompt.contains("English"))
+        assertFalse(prompt.contains("memory_"))
+        assertFalse(prompt.contains("tutor"))
+        assertFalse(prompt.contains("wiki"))
+    }
+
+    @Test
+    fun `vanilla prompt uses the display name of each target language`() {
+        assertTrue(SystemPromptBuilder.buildVanilla(TargetLanguage.IT).contains("Italiano"))
+        assertTrue(SystemPromptBuilder.buildVanilla(TargetLanguage.EN).contains("English"))
+    }
+
+    @Test
+    fun `vanilla prompt is a single line`() {
+        assertFalse(SystemPromptBuilder.buildVanilla(TargetLanguage.EN).contains("\n"))
     }
 }

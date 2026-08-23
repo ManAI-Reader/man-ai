@@ -3,13 +3,22 @@ package com.highliuk.manai.ui.chat
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.highliuk.manai.domain.furigana.FuriganaPipeline
+import com.highliuk.manai.domain.furigana.FuriganaRunCache
+import com.highliuk.manai.domain.logging.Logger
 import com.highliuk.manai.domain.model.ChatMessage
 import com.highliuk.manai.domain.model.ChatRole
 import com.highliuk.manai.domain.model.Conversation
+import com.highliuk.manai.domain.model.FuriganaToken
 import com.highliuk.manai.domain.repository.ChatRepository
 import com.highliuk.manai.domain.usecase.ChatGenerationEvent
 import com.highliuk.manai.domain.usecase.GenerateChatReplyUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +26,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -24,6 +34,8 @@ class ChatViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val chatRepository: ChatRepository,
     private val generateChatReply: GenerateChatReplyUseCase,
+    private val furiganaPipeline: FuriganaPipeline,
+    private val logger: Logger,
 ) : ViewModel() {
 
     private val conversationId: Long = savedStateHandle["conversationId"] ?: 0L
@@ -55,6 +67,37 @@ class ChatViewModel @Inject constructor(
             chatRepository.appendMessage(conversationId, ChatRole.USER, text.trim())
             runGeneration()
         }
+    }
+
+    private val tokenizerReady: Deferred<Unit> = viewModelScope.async(
+        context = Dispatchers.IO,
+        start = CoroutineStart.LAZY,
+    ) { furiganaPipeline.tokenizer.init() }
+
+    private val kanjiReadingsReady: Deferred<Unit> = viewModelScope.async(
+        context = Dispatchers.IO,
+        start = CoroutineStart.LAZY,
+    ) { furiganaPipeline.kanjiReadings.load() }
+
+    private val furiganaRunCache = FuriganaRunCache { text ->
+        withContext(Dispatchers.Default) { furiganaPipeline.parseFurigana(text) }
+    }
+
+    /**
+     * Resolves furigana tokens for a closed Japanese run of streamed or
+     * persisted assistant text. The tokenizer and readings are initialized
+     * lazily on the first call; each distinct run is parsed exactly once.
+     * Cancellation propagates so callers never mistake it for a result.
+     */
+    suspend fun resolveFurigana(text: String): List<FuriganaToken> = try {
+        tokenizerReady.await()
+        kanjiReadingsReady.await()
+        furiganaRunCache.get(text)
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (expected: Exception) {
+        logger.e("ChatViewModel", "Furigana parsing failed", expected)
+        emptyList()
     }
 
     fun retry() {

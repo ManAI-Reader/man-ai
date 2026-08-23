@@ -3,6 +3,15 @@ package com.highliuk.manai.domain.chat
 import com.highliuk.manai.domain.model.TargetLanguage
 
 object SystemPromptBuilder {
+
+    /**
+     * Minimal system prompt for the vanilla first turn of a conversation: the
+     * rendered prompt template is the full instruction, so only the app-level
+     * target-language directive is sent (no tutor persona, no memory tools).
+     */
+    fun buildVanilla(targetLanguage: TargetLanguage): String =
+        "Always reply in ${targetLanguage.displayName} unless the user explicitly asks otherwise."
+
     fun build(targetLanguage: TargetLanguage): String {
         val list = MemoryToolExecutor.TOOL_MEMORY_LIST
         val read = MemoryToolExecutor.TOOL_MEMORY_READ

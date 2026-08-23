@@ -133,6 +133,7 @@
     <string name="send_message">Senden</string>
     <string name="jump_to_source">Quellseite öffnen</string>
     <string name="chat_error_generic">Etwas ist schiefgelaufen</string>
+    <string name="assistant_thinking">Warten auf den Assistenten…</string>
     <string name="conversations">Konversationen</string>
     <string name="no_conversations">Noch keine Konversationen</string>
     <string name="delete_conversation_confirm">Diese Konversation löschen?</string>

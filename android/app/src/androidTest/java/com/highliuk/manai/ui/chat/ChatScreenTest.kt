@@ -17,6 +17,8 @@ import androidx.test.espresso.Espresso
 import com.highliuk.manai.domain.model.ChatMessage
 import com.highliuk.manai.domain.model.ChatRole
 import com.highliuk.manai.domain.model.Conversation
+import com.highliuk.manai.domain.model.FuriganaPart
+import com.highliuk.manai.domain.model.FuriganaToken
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -46,6 +48,7 @@ class ChatScreenTest {
         val streamingText: String? = null,
         val isGenerating: Boolean = false,
         val error: String? = null,
+        val resolveFurigana: FuriganaResolver? = null,
     )
 
     private fun setChatContent(
@@ -66,6 +69,7 @@ class ChatScreenTest {
                 onRetry = onRetry,
                 onJumpToSource = onJumpToSource,
                 onBack = onBack,
+                resolveFurigana = state.resolveFurigana,
             )
         }
     }
@@ -127,6 +131,87 @@ class ChatScreenTest {
         setChatContent(ChatState(conversation, streamingText = null))
 
         composeTestRule.onNodeWithTag("chat_streaming").assertDoesNotExist()
+    }
+
+    @Test
+    fun ttfbSpinnerVisibleWhileGeneratingBeforeFirstDelta() {
+        setChatContent(ChatState(conversation, streamingText = null, isGenerating = true))
+
+        composeTestRule.onNodeWithTag("chat_streaming").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("chat_ttfb_spinner").assertIsDisplayed()
+    }
+
+    @Test
+    fun ttfbSpinnerVisibleWithEmptyStreamingText() {
+        setChatContent(ChatState(conversation, streamingText = "", isGenerating = true))
+
+        composeTestRule.onNodeWithTag("chat_ttfb_spinner").assertIsDisplayed()
+    }
+
+    @Test
+    fun ttfbSpinnerGoneOnceStreamingTextArrives() {
+        setChatContent(
+            ChatState(conversation, streamingText = "Hello there", isGenerating = true)
+        )
+
+        composeTestRule.onNodeWithTag("chat_ttfb_spinner").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Hello there").assertIsDisplayed()
+    }
+
+    @Test
+    fun assistantMarkdownRendersBoldAndListWithoutRawMarkers() {
+        setChatContent(
+            ChatState(
+                conversation = conversation,
+                messages = listOf(
+                    ChatMessage(
+                        id = 1L,
+                        conversationId = 1L,
+                        role = ChatRole.ASSISTANT,
+                        content = "**Meaning** of the word\n\n- first item\n- second item",
+                        timestamp = 0L,
+                    ),
+                ),
+            ),
+        )
+
+        composeTestRule.onNodeWithText("Meaning of the word").assertIsDisplayed()
+        composeTestRule.onNodeWithText("first item").assertIsDisplayed()
+        composeTestRule.onNodeWithText("second item").assertIsDisplayed()
+        composeTestRule.onNodeWithText("**Meaning** of the word").assertDoesNotExist()
+    }
+
+    @Test
+    fun assistantJapaneseTextRequestsFuriganaFromInjectedResolver() {
+        val requested = mutableListOf<String>()
+        val tokens = listOf(
+            FuriganaToken(
+                surface = "漢字",
+                reading = "カンジ",
+                parts = listOf(FuriganaPart.kanji("漢字", "かんじ")),
+            ),
+        )
+        setChatContent(
+            ChatState(
+                conversation = conversation,
+                messages = listOf(
+                    ChatMessage(
+                        id = 1L,
+                        conversationId = 1L,
+                        role = ChatRole.ASSISTANT,
+                        content = "漢字",
+                        timestamp = 0L,
+                    ),
+                ),
+                resolveFurigana = { run ->
+                    requested.add(run)
+                    tokens
+                },
+            ),
+        )
+
+        composeTestRule.waitUntil(timeoutMillis = 5_000) { requested.contains("漢字") }
+        composeTestRule.onNodeWithText("漢字").assertIsDisplayed()
     }
 
     @Test

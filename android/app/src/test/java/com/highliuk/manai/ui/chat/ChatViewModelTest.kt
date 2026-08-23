@@ -2,11 +2,18 @@ package com.highliuk.manai.ui.chat
 
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
+import com.highliuk.manai.domain.furigana.FuriganaPipeline
+import com.highliuk.manai.domain.furigana.KanjiReadingsDataSource
+import com.highliuk.manai.domain.logging.Logger
+import com.highliuk.manai.domain.ml.JapaneseTokenizer
 import com.highliuk.manai.domain.model.ChatMessage
 import com.highliuk.manai.domain.model.ChatRole
+import com.highliuk.manai.domain.model.FuriganaPart
+import com.highliuk.manai.domain.model.FuriganaToken
 import com.highliuk.manai.domain.repository.ChatRepository
 import com.highliuk.manai.domain.usecase.ChatGenerationEvent
 import com.highliuk.manai.domain.usecase.GenerateChatReplyUseCase
+import com.highliuk.manai.domain.usecase.ParseFuriganaUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -14,8 +21,10 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -24,6 +33,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -36,6 +46,10 @@ class ChatViewModelTest {
 
     private val chatRepository: ChatRepository = mockk(relaxed = true)
     private val generateChatReply: GenerateChatReplyUseCase = mockk()
+    private val parseFuriganaUseCase: ParseFuriganaUseCase = mockk()
+    private val japaneseTokenizer: JapaneseTokenizer = mockk(relaxed = true)
+    private val kanjiReadingsDataSource: KanjiReadingsDataSource = mockk(relaxed = true)
+    private val logger: Logger = mockk(relaxed = true)
 
     private fun userMessage(content: String = "question") = ChatMessage(
         id = 1L, conversationId = 42L, role = ChatRole.USER, content = content, timestamp = 0L
@@ -61,7 +75,110 @@ class ChatViewModelTest {
         SavedStateHandle(mapOf("conversationId" to 42L)),
         chatRepository,
         generateChatReply,
+        FuriganaPipeline(japaneseTokenizer, kanjiReadingsDataSource, parseFuriganaUseCase),
+        logger,
     )
+
+    private fun furiganaToken(surface: String) = FuriganaToken(
+        surface = surface,
+        reading = null,
+        parts = listOf(FuriganaPart.kana(surface)),
+    )
+
+    @Test
+    fun resolveFuriganaInitializesPipelineOnlyOnceAcrossCalls() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns emptyList()
+        every { parseFuriganaUseCase(any()) } answers { listOf(furiganaToken(firstArg())) }
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(listOf(furiganaToken("漢字")), viewModel.resolveFurigana("漢字"))
+        assertEquals(listOf(furiganaToken("仮名")), viewModel.resolveFurigana("仮名"))
+
+        coVerify(exactly = 1) { japaneseTokenizer.init() }
+        coVerify(exactly = 1) { kanjiReadingsDataSource.load() }
+    }
+
+    @Test
+    fun resolveFuriganaParsesEachRunExactlyOnce() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns emptyList()
+        every { parseFuriganaUseCase(any()) } answers { listOf(furiganaToken(firstArg())) }
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.resolveFurigana("漢字")
+        viewModel.resolveFurigana("漢字")
+
+        verify(exactly = 1) { parseFuriganaUseCase("漢字") }
+    }
+
+    @Test
+    fun resolveFuriganaFailureLogsAndReturnsEmptyList() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns emptyList()
+        every { parseFuriganaUseCase(any()) } throws IllegalStateException("tokenizer broken")
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(emptyList<FuriganaToken>(), viewModel.resolveFurigana("漢字"))
+        verify {
+            logger.e("ChatViewModel", "Furigana parsing failed", any<IllegalStateException>())
+        }
+    }
+
+    @Test
+    fun resolveFuriganaCancellationPropagatesAndIsNotLogged() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns emptyList()
+        coEvery { japaneseTokenizer.init() } coAnswers { awaitCancellation() }
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        var completedNormally = false
+        val job = launch {
+            viewModel.resolveFurigana("漢字")
+            completedNormally = true
+        }
+        advanceUntilIdle()
+        job.cancel()
+        job.join()
+
+        assertEquals(false, completedNormally)
+        verify(exactly = 0) { logger.e(any(), any(), any()) }
+    }
+
+    @Test
+    fun resolveFuriganaParsesOnBackgroundDispatcher() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns emptyList()
+        var parseThread: String? = null
+        every { parseFuriganaUseCase(any()) } answers {
+            parseThread = Thread.currentThread().name
+            listOf(furiganaToken(firstArg()))
+        }
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.resolveFurigana("漢字")
+
+        assertTrue(
+            "parse ran on: $parseThread",
+            parseThread.orEmpty().contains("DefaultDispatcher"),
+        )
+    }
+
+    @Test
+    fun tokenizerIsNotInitializedWhenFuriganaIsNeverRequested() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns emptyList()
+
+        createViewModel()
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { japaneseTokenizer.init() }
+        coVerify(exactly = 0) { kanjiReadingsDataSource.load() }
+    }
 
     @Test
     fun autoGeneratesOnInitWhenLastPersistedMessageIsUser() = runTest {

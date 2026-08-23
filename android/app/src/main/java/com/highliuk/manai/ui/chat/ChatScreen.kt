@@ -46,6 +46,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -68,9 +72,10 @@ fun ChatScreen(
     onRetry: () -> Unit,
     onJumpToSource: () -> Unit,
     onBack: () -> Unit,
+    resolveFurigana: FuriganaResolver? = null,
 ) {
     val listState = rememberLazyListState()
-    val isStreaming = streamingText != null
+    val isStreaming = streamingText != null || isGenerating
     val itemCount = messages.size + if (isStreaming) 1 else 0
 
     LaunchedEffect(messages.size, isStreaming) {
@@ -138,11 +143,14 @@ fun ChatScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(messages, key = { it.id }) { message ->
-                    MessageBubble(message = message)
+                    MessageBubble(message = message, resolveFurigana = resolveFurigana)
                 }
-                if (streamingText != null) {
+                if (isStreaming) {
                     item {
-                        StreamingBubble(partialText = streamingText)
+                        StreamingBubble(
+                            partialText = streamingText,
+                            resolveFurigana = resolveFurigana,
+                        )
                     }
                 }
             }
@@ -176,7 +184,7 @@ fun ChatScreen(
 }
 
 @Composable
-private fun MessageBubble(message: ChatMessage) {
+private fun MessageBubble(message: ChatMessage, resolveFurigana: FuriganaResolver?) {
     when (message.role) {
         ChatRole.USER -> Box(
             modifier = Modifier.fillMaxWidth(),
@@ -194,8 +202,10 @@ private fun MessageBubble(message: ChatMessage) {
         }
 
         ChatRole.ASSISTANT -> SelectionContainer {
-            Text(
+            MarkdownMessageContent(
                 text = message.content,
+                isComplete = true,
+                resolveFurigana = resolveFurigana,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
@@ -203,17 +213,33 @@ private fun MessageBubble(message: ChatMessage) {
 }
 
 @Composable
-private fun StreamingBubble(partialText: String) {
+private fun StreamingBubble(partialText: String?, resolveFurigana: FuriganaResolver?) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .testTag("chat_streaming"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (partialText.isEmpty()) {
-            CircularProgressIndicator(Modifier.size(16.dp))
+        if (partialText.isNullOrEmpty()) {
+            val waitingDescription = stringResource(R.string.assistant_thinking)
+            // Live region is scoped to the waiting phase only: announcing the
+            // growing streamed text on every delta would spam TalkBack.
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(24.dp)
+                    .testTag("chat_ttfb_spinner")
+                    .semantics {
+                        contentDescription = waitingDescription
+                        liveRegion = LiveRegionMode.Polite
+                    },
+            )
         } else {
-            Text(text = partialText, modifier = Modifier.fillMaxWidth())
+            MarkdownMessageContent(
+                text = partialText,
+                isComplete = false,
+                resolveFurigana = resolveFurigana,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }

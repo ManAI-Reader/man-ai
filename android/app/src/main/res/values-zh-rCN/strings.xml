@@ -130,6 +130,7 @@
     <string name="send_message">发送</string>
     <string name="jump_to_source">打开来源页面</string>
     <string name="chat_error_generic">出了点问题</string>
+    <string name="assistant_thinking">正在等待助手…</string>
     <string name="conversations">对话</string>
     <string name="no_conversations">暂无对话</string>
     <string name="delete_conversation_confirm">删除此对话？</string>

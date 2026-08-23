@@ -6,6 +6,8 @@ import com.highliuk.manai.domain.llm.LlmEvent
 import com.highliuk.manai.domain.llm.LlmMessage
 import com.highliuk.manai.domain.llm.LlmProvider
 import com.highliuk.manai.domain.llm.LlmToolCall
+import com.highliuk.manai.domain.llm.LlmToolSpec
+import com.highliuk.manai.domain.model.ChatMessage
 import com.highliuk.manai.domain.model.ChatRole
 import com.highliuk.manai.domain.model.ReasoningLevel
 import com.highliuk.manai.domain.model.TargetLanguage
@@ -44,18 +46,31 @@ class GenerateChatReplyUseCase @Inject constructor(
         val targetLang = userPreferencesRepository.translationTargetLang.first()
         val reasoning = chatRepository.observeConversation(conversationId).first()
             ?.reasoningLevel ?: ReasoningLevel.DEFAULT
-        val history = buildHistory(conversationId, targetLang).toMutableList()
+        val persisted = chatRepository.getMessages(conversationId)
+        val vanillaFirstTurn = isVanillaFirstTurn(persisted)
+        val tools = if (vanillaFirstTurn) emptyList() else MemoryToolExecutor.SPECS
+        val history = buildHistory(persisted, targetLang, vanillaFirstTurn).toMutableList()
         val fullText = StringBuilder()
         var rounds = 0
         var finished = false
         while (!finished && rounds < MAX_TOOL_ROUNDS) {
             rounds++
-            finished = runRound(RoundInput(conversationId, reasoning, history), fullText)
+            finished = runRound(RoundInput(conversationId, reasoning, history, tools), fullText)
         }
         if (!finished) {
             emit(ChatGenerationEvent.Error("Tool-call limit reached"))
         }
     }
+
+    /**
+     * The very first LLM call of a conversation runs vanilla: the rendered
+     * prompt template is the whole instruction, so no memory tools and only a
+     * minimal system line are sent. Anything past a single user message means
+     * the tutoring conversation has started and the full agent applies.
+     */
+    private fun isVanillaFirstTurn(messages: List<ChatMessage>): Boolean =
+        messages.count { it.role == ChatRole.USER } == 1 &&
+            messages.none { it.role == ChatRole.ASSISTANT }
 
     /**
      * Runs one LLM round: streams deltas, then either terminates the flow (failure or final
@@ -68,17 +83,18 @@ class GenerateChatReplyUseCase @Inject constructor(
         val conversationId: Long,
         val reasoning: ReasoningLevel,
         val history: MutableList<LlmMessage>,
+        val tools: List<LlmToolSpec>,
     )
 
     private suspend fun FlowCollector<ChatGenerationEvent>.runRound(
         input: RoundInput,
         fullText: StringBuilder,
     ): Boolean {
-        val (conversationId, reasoning, history) = input
+        val history = input.history
         var pendingToolCalls: List<LlmToolCall> = emptyList()
         var failure: String? = null
         val roundText = StringBuilder()
-        llmProvider.chat(history, MemoryToolExecutor.SPECS, reasoning).collect { event ->
+        llmProvider.chat(history, input.tools, input.reasoning).collect { event ->
             when (event) {
                 is LlmEvent.TextDelta -> {
                     roundText.append(event.text)
@@ -97,7 +113,11 @@ class GenerateChatReplyUseCase @Inject constructor(
                 true
             }
             pendingToolCalls.isEmpty() -> {
-                chatRepository.appendMessage(conversationId, ChatRole.ASSISTANT, fullText.toString())
+                chatRepository.appendMessage(
+                    input.conversationId,
+                    ChatRole.ASSISTANT,
+                    fullText.toString(),
+                )
                 emit(ChatGenerationEvent.Done)
                 true
             }
@@ -119,12 +139,18 @@ class GenerateChatReplyUseCase @Inject constructor(
         }
     }
 
-    private suspend fun buildHistory(
-        conversationId: Long,
+    private fun buildHistory(
+        persistedMessages: List<ChatMessage>,
         targetLang: TargetLanguage,
+        vanillaFirstTurn: Boolean,
     ): List<LlmMessage> {
-        val system = LlmMessage(LlmMessage.ROLE_SYSTEM, SystemPromptBuilder.build(targetLang))
-        val persisted = chatRepository.getMessages(conversationId).map { message ->
+        val systemPrompt = if (vanillaFirstTurn) {
+            SystemPromptBuilder.buildVanilla(targetLang)
+        } else {
+            SystemPromptBuilder.build(targetLang)
+        }
+        val system = LlmMessage(LlmMessage.ROLE_SYSTEM, systemPrompt)
+        val persisted = persistedMessages.map { message ->
             LlmMessage(
                 role = when (message.role) {
                     ChatRole.USER -> LlmMessage.ROLE_USER

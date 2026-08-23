@@ -482,6 +482,7 @@ private fun NavGraphBuilder.chatDestination(navController: NavHostController) {
                 }
             },
             onBack = { navController.popBackStack() },
+            resolveFurigana = viewModel::resolveFurigana,
         )
     }
 }

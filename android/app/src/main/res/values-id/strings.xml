@@ -130,6 +130,7 @@
     <string name="send_message">Kirim</string>
     <string name="jump_to_source">Buka halaman sumber</string>
     <string name="chat_error_generic">Terjadi kesalahan</string>
+    <string name="assistant_thinking">Menunggu asisten…</string>
     <string name="conversations">Percakapan</string>
     <string name="no_conversations">Belum ada percakapan</string>
     <string name="delete_conversation_confirm">Hapus percakapan ini?</string>

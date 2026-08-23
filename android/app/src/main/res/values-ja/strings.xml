@@ -130,6 +130,7 @@
     <string name="send_message">送信</string>
     <string name="jump_to_source">元のページを開く</string>
     <string name="chat_error_generic">問題が発生しました</string>
+    <string name="assistant_thinking">アシスタントの応答を待っています…</string>
     <string name="conversations">会話</string>
     <string name="no_conversations">会話はまだありません</string>
     <string name="delete_conversation_confirm">この会話を削除しますか？</string>

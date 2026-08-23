@@ -43,6 +43,7 @@ class GenerateChatReplyUseCaseTest {
     ) : LlmProvider {
         val recordedMessages = mutableListOf<List<LlmMessage>>()
         val recordedReasonings = mutableListOf<ReasoningLevel>()
+        val recordedTools = mutableListOf<List<LlmToolSpec>>()
         private var callIndex = 0
 
         override fun chat(
@@ -52,6 +53,7 @@ class GenerateChatReplyUseCaseTest {
         ): Flow<LlmEvent> {
             recordedMessages += messages.toList()
             recordedReasonings += reasoning
+            recordedTools += tools.toList()
             val events = responses[minOf(callIndex, responses.lastIndex)]
             callIndex++
             return events.asFlow()
@@ -71,6 +73,13 @@ class GenerateChatReplyUseCaseTest {
         role = ChatRole.USER,
         content = content,
         timestamp = 0L,
+    )
+
+    /** A history past the first turn: the full agent must be active. */
+    private fun followUpHistory() = listOf(
+        ChatMessage(1L, 42L, ChatRole.USER, "Q1", 0L),
+        ChatMessage(2L, 42L, ChatRole.ASSISTANT, "A1", 1L),
+        ChatMessage(3L, 42L, ChatRole.USER, "Hello", 2L),
     )
 
     @Test
@@ -94,7 +103,7 @@ class GenerateChatReplyUseCaseTest {
 
     @Test
     fun `tool round executes tool and feeds result back to provider`() = runTest {
-        coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage("Hello"))
+        coEvery { chatRepository.getMessages(42L) } returns followUpHistory()
         coEvery { memoryRepository.listTitles() } returns listOf("Level")
         val toolCall = LlmToolCall(id = "call-1", name = "memory_list", arguments = "{}")
         val provider = FakeLlmProvider(
@@ -124,7 +133,7 @@ class GenerateChatReplyUseCaseTest {
 
     @Test
     fun `each tool round history message carries only that round's text`() = runTest {
-        coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage("Hello"))
+        coEvery { chatRepository.getMessages(42L) } returns followUpHistory()
         coEvery { memoryRepository.listTitles() } returns emptyList()
         coEvery { memoryRepository.read("Level") } returns "N4"
         val callOne = LlmToolCall(id = "call-1", name = "memory_list", arguments = "{}")
@@ -159,7 +168,7 @@ class GenerateChatReplyUseCaseTest {
 
     @Test
     fun `tool calls split across multiple events are all executed`() = runTest {
-        coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage("Hello"))
+        coEvery { chatRepository.getMessages(42L) } returns followUpHistory()
         coEvery { memoryRepository.listTitles() } returns emptyList()
         coEvery { memoryRepository.read("Level") } returns "N4"
         val callA = LlmToolCall(id = "call-a", name = "memory_list", arguments = "{}")
@@ -210,7 +219,7 @@ class GenerateChatReplyUseCaseTest {
 
     @Test
     fun `runaway tool calls stop with error after max rounds`() = runTest {
-        coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage("Hello"))
+        coEvery { chatRepository.getMessages(42L) } returns followUpHistory()
         coEvery { memoryRepository.listTitles() } returns emptyList()
         val toolCall = LlmToolCall(id = "call-1", name = "memory_list", arguments = "{}")
         val provider = FakeLlmProvider(
@@ -229,7 +238,7 @@ class GenerateChatReplyUseCaseTest {
 
     @Test
     fun `conversation reasoning level is passed to the provider on every round`() = runTest {
-        coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage("Hello"))
+        coEvery { chatRepository.getMessages(42L) } returns followUpHistory()
         coEvery { memoryRepository.listTitles() } returns emptyList()
         every { chatRepository.observeConversation(42L) } returns flowOf(
             Conversation(
@@ -300,5 +309,90 @@ class GenerateChatReplyUseCaseTest {
         assertEquals("A1", history[2].content)
         assertEquals(LlmMessage.ROLE_USER, history[3].role)
         assertEquals("Q2", history[3].content)
+    }
+
+    @Test
+    fun `first turn is vanilla - no tools and minimal system prompt`() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage("rendered template"))
+        val provider = FakeLlmProvider(
+            listOf(listOf(LlmEvent.TextDelta("ok"), LlmEvent.Completed)),
+        )
+
+        useCase(provider).invoke(42L).test {
+            assertEquals(ChatGenerationEvent.Delta("ok"), awaitItem())
+            assertEquals(ChatGenerationEvent.Done, awaitItem())
+            awaitComplete()
+        }
+
+        assertEquals(listOf(emptyList<LlmToolSpec>()), provider.recordedTools)
+        val history = provider.recordedMessages.single()
+        assertEquals(LlmMessage.ROLE_SYSTEM, history[0].role)
+        assertEquals(SystemPromptBuilder.buildVanilla(TargetLanguage.IT), history[0].content)
+        assertEquals("rendered template", history[1].content)
+    }
+
+    @Test
+    fun `follow-up turn advertises the memory tools`() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns followUpHistory()
+        val provider = FakeLlmProvider(
+            listOf(listOf(LlmEvent.TextDelta("ok"), LlmEvent.Completed)),
+        )
+
+        useCase(provider).invoke(42L).test {
+            assertEquals(ChatGenerationEvent.Delta("ok"), awaitItem())
+            assertEquals(ChatGenerationEvent.Done, awaitItem())
+            awaitComplete()
+        }
+
+        assertEquals(listOf(MemoryToolExecutor.SPECS), provider.recordedTools)
+    }
+
+    @Test
+    fun `reasoning level is still applied on the vanilla first turn`() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage("rendered template"))
+        every { chatRepository.observeConversation(42L) } returns flowOf(
+            Conversation(
+                id = 42L,
+                title = "Chat",
+                createdAt = 0L,
+                updatedAt = 0L,
+                reasoningLevel = ReasoningLevel.HIGH,
+            )
+        )
+        val provider = FakeLlmProvider(
+            listOf(listOf(LlmEvent.TextDelta("ok"), LlmEvent.Completed)),
+        )
+
+        useCase(provider).invoke(42L).test {
+            assertEquals(ChatGenerationEvent.Delta("ok"), awaitItem())
+            assertEquals(ChatGenerationEvent.Done, awaitItem())
+            awaitComplete()
+        }
+
+        assertEquals(listOf(ReasoningLevel.HIGH), provider.recordedReasonings)
+        assertEquals(listOf(emptyList<LlmToolSpec>()), provider.recordedTools)
+    }
+
+    @Test
+    fun `two user messages without an assistant reply use the full agent`() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns listOf(
+            ChatMessage(1L, 42L, ChatRole.USER, "Q1", 0L),
+            ChatMessage(2L, 42L, ChatRole.USER, "Q2", 1L),
+        )
+        val provider = FakeLlmProvider(
+            listOf(listOf(LlmEvent.TextDelta("ok"), LlmEvent.Completed)),
+        )
+
+        useCase(provider).invoke(42L).test {
+            assertEquals(ChatGenerationEvent.Delta("ok"), awaitItem())
+            assertEquals(ChatGenerationEvent.Done, awaitItem())
+            awaitComplete()
+        }
+
+        assertEquals(listOf(MemoryToolExecutor.SPECS), provider.recordedTools)
+        assertEquals(
+            SystemPromptBuilder.build(TargetLanguage.IT),
+            provider.recordedMessages.single()[0].content,
+        )
     }
 }

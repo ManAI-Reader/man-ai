@@ -130,6 +130,7 @@
     <string name="send_message">보내기</string>
     <string name="jump_to_source">원본 페이지 열기</string>
     <string name="chat_error_generic">문제가 발생했습니다</string>
+    <string name="assistant_thinking">어시스턴트를 기다리는 중…</string>
     <string name="conversations">대화</string>
     <string name="no_conversations">아직 대화가 없습니다</string>
     <string name="delete_conversation_confirm">이 대화를 삭제할까요?</string>
