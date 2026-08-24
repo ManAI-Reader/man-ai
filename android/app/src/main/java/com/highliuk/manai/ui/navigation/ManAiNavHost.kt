@@ -490,6 +490,7 @@ fun ManAiNavHost(
                         errorRes = editError,
                         onSave = viewModel::save,
                         modelForVendorChange = viewModel::modelForVendorChange,
+                        reasoningForVendorChange = viewModel::reasoningForVendorChange,
                         onBack = { navController.popBackStack() }
                     )
                 }

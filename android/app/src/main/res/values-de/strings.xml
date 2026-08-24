@@ -119,6 +119,7 @@
     <string name="reasoning_low">Niedrig</string>
     <string name="reasoning_medium">Mittel</string>
     <string name="reasoning_high">Hoch</string>
+    <string name="reasoning_max">Maximal</string>
     <string name="prompt_name_required">Name und Prompt-Text sind erforderlich</string>
     <string name="delete_prompt_confirm">Diesen Prompt löschen?</string>
     <string name="no_prompts">Noch keine Prompts</string>

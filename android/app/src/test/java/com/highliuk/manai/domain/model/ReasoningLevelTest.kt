@@ -23,4 +23,24 @@ class ReasoningLevelTest {
     fun `valueOfOrDefault falls back to DEFAULT for null`() {
         assertEquals(ReasoningLevel.DEFAULT, ReasoningLevel.valueOfOrDefault(null))
     }
+
+    @Test
+    fun `levels include MAX after HIGH`() {
+        assertEquals(
+            listOf(
+                ReasoningLevel.DEFAULT,
+                ReasoningLevel.OFF,
+                ReasoningLevel.LOW,
+                ReasoningLevel.MEDIUM,
+                ReasoningLevel.HIGH,
+                ReasoningLevel.MAX,
+            ),
+            ReasoningLevel.entries.toList(),
+        )
+    }
+
+    @Test
+    fun `valueOfOrDefault parses a stored MAX name`() {
+        assertEquals(ReasoningLevel.MAX, ReasoningLevel.valueOfOrDefault("MAX"))
+    }
 }

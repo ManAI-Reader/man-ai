@@ -97,19 +97,42 @@ class PromptEditViewModel @Inject constructor(
 
     /**
      * Model value the editor should show after switching to [newVendor]:
-     * a blank model or one that is just another vendor's default is replaced
-     * with [newVendor]'s default, while a user-customized model is kept.
+     * a blank model or one that is just another vendor's default (current or
+     * legacy) is replaced with [newVendor]'s default, while a user-customized
+     * model is kept. Legacy defaults are recognized so templates saved before
+     * a default-model change still swap cleanly.
      */
     fun modelForVendorChange(currentModel: String, newVendor: LlmVendor): String {
         val trimmed = currentModel.trim()
-        val isOtherVendorDefault = LlmVendor.entries.any {
-            it != newVendor && it.defaultModel == trimmed
+        val isOtherVendorDefault = LlmVendor.entries.any { vendor ->
+            vendor != newVendor && trimmed in vendor.defaultModelsIncludingLegacy()
         }
         return if (trimmed.isEmpty() || isOtherVendorDefault) newVendor.defaultModel else trimmed
     }
 
+    private fun LlmVendor.defaultModelsIncludingLegacy(): Set<String> = when (this) {
+        LlmVendor.GROQ -> setOf(defaultModel)
+        LlmVendor.DEEPSEEK -> setOf(defaultModel) + LEGACY_DEEPSEEK_DEFAULTS
+    }
+
+    /**
+     * Reasoning level the editor should show after switching to [newVendor]:
+     * the current level when the new vendor supports it, or
+     * [ReasoningLevel.DEFAULT] when it does not (see
+     * [LlmVendor.supportedReasoningLevels]).
+     */
+    fun reasoningForVendorChange(current: ReasoningLevel, newVendor: LlmVendor): ReasoningLevel =
+        if (current in newVendor.supportedReasoningLevels) current else ReasoningLevel.DEFAULT
+
     companion object {
         /** Navigation argument value that means "create a new template". */
         const val NEW_TEMPLATE_ID = -1L
+
+        /**
+         * DeepSeek default models from before `deepseek-v4-flash`
+         * (`deepseek-chat` reached end of life on 2026-07-24). Still treated
+         * as vendor defaults when swapping vendors.
+         */
+        private val LEGACY_DEEPSEEK_DEFAULTS = setOf("deepseek-chat", "deepseek-reasoner")
     }
 }

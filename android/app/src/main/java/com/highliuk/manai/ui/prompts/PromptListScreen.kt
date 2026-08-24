@@ -1,7 +1,7 @@
 package com.highliuk.manai.ui.prompts
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,7 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -26,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.PromptTemplate
@@ -113,6 +113,7 @@ fun PromptListScreen(
     }
 }
 
+/** The whole row opens the editor; deletion keeps its dedicated icon. */
 @Composable
 private fun PromptListItem(
     template: PromptTemplate,
@@ -120,6 +121,13 @@ private fun PromptListItem(
     onDeleteClick: () -> Unit,
 ) {
     ListItem(
+        modifier = Modifier
+            .clickable(
+                onClickLabel = stringResource(R.string.edit_prompt),
+                role = Role.Button,
+                onClick = onEditClick,
+            )
+            .testTag("prompt_row_${template.id}"),
         headlineContent = { Text(template.name) },
         supportingContent = {
             Text(
@@ -129,19 +137,11 @@ private fun PromptListItem(
             )
         },
         trailingContent = {
-            Row {
-                IconButton(onClick = onEditClick) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = stringResource(R.string.edit_prompt),
-                    )
-                }
-                IconButton(onClick = onDeleteClick) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = stringResource(R.string.delete),
-                    )
-                }
+            IconButton(onClick = onDeleteClick) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = stringResource(R.string.delete),
+                )
             }
         },
     )

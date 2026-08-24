@@ -116,6 +116,7 @@
     <string name="reasoning_low">低</string>
     <string name="reasoning_medium">中</string>
     <string name="reasoning_high">高</string>
+    <string name="reasoning_max">最大</string>
     <string name="prompt_name_required">名称和提示词内容为必填项</string>
     <string name="delete_prompt_confirm">删除此提示词？</string>
     <string name="no_prompts">暂无提示词</string>

@@ -55,6 +55,13 @@ class PromptEditScreenTest {
                         model
                     }
                 },
+                reasoningForVendorChange = { level, vendor ->
+                    if (level in vendor.supportedReasoningLevels) {
+                        level
+                    } else {
+                        ReasoningLevel.DEFAULT
+                    }
+                },
                 onBack = onBack,
             )
         }
@@ -157,13 +164,79 @@ class PromptEditScreenTest {
     }
 
     @Test
-    fun reasoningSelectorShowsAllLevelsVerticallyWithModelDefaultPreselected() {
+    fun reasoningSelectorShowsOnlyGroqSupportedLevelsWithModelDefaultPreselected() {
         setScreenContent(template = newTemplate)
 
-        ReasoningLevel.entries.forEach { level ->
+        LlmVendor.GROQ.supportedReasoningLevels.forEach { level ->
             composeTestRule.onNodeWithTag("reasoning_radio_${level.name}").assertExists()
         }
+        composeTestRule.onNodeWithTag("reasoning_radio_OFF").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("reasoning_radio_MAX").assertDoesNotExist()
         composeTestRule.onNodeWithTag("reasoning_radio_DEFAULT").assertIsSelected()
+    }
+
+    @Test
+    fun reasoningSelectorShowsOnlyDeepSeekSupportedLevelsForADeepSeekTemplate() {
+        setScreenContent(template = existingTemplate.copy(vendor = LlmVendor.DEEPSEEK))
+
+        LlmVendor.DEEPSEEK.supportedReasoningLevels.forEach { level ->
+            composeTestRule.onNodeWithTag("reasoning_radio_${level.name}").assertExists()
+        }
+        composeTestRule.onNodeWithTag("reasoning_radio_MEDIUM").assertDoesNotExist()
+    }
+
+    @Test
+    fun staleUnsupportedReasoningLevelFallsBackToDefaultOnOpen() {
+        setScreenContent(
+            template = existingTemplate.copy(
+                vendor = LlmVendor.DEEPSEEK,
+                reasoningLevel = ReasoningLevel.MEDIUM,
+            ),
+        )
+
+        composeTestRule.onNodeWithTag("reasoning_radio_MEDIUM").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("reasoning_radio_DEFAULT").assertIsSelected()
+    }
+
+    @Test
+    fun selectingMaxOnDeepSeekIsReflectedInSaveCallback() {
+        var savedLevel: ReasoningLevel? = null
+        setScreenContent(
+            template = existingTemplate.copy(vendor = LlmVendor.DEEPSEEK),
+            onSave = { _, _, level, _, _ -> savedLevel = level },
+        )
+
+        composeTestRule.onNodeWithTag("reasoning_radio_MAX").performScrollTo().performClick()
+        composeTestRule.onNodeWithTag("reasoning_radio_MAX").assertIsSelected()
+        composeTestRule.onNodeWithTag("save_prompt").performClick()
+
+        assertEquals(ReasoningLevel.MAX, savedLevel)
+    }
+
+    @Test
+    fun switchingVendorResetsAnUnsupportedReasoningLevelToDefault() {
+        setScreenContent(
+            template = existingTemplate.copy(
+                vendor = LlmVendor.DEEPSEEK,
+                reasoningLevel = ReasoningLevel.MAX,
+            ),
+        )
+
+        composeTestRule.onNodeWithTag("vendor_radio_GROQ").performScrollTo().performClick()
+
+        composeTestRule.onNodeWithTag("reasoning_radio_DEFAULT").assertIsSelected()
+        composeTestRule.onNodeWithTag("reasoning_radio_MAX").assertDoesNotExist()
+    }
+
+    @Test
+    fun switchingVendorKeepsASupportedReasoningLevel() {
+        setScreenContent(
+            template = existingTemplate.copy(reasoningLevel = ReasoningLevel.HIGH),
+        )
+
+        composeTestRule.onNodeWithTag("vendor_radio_DEEPSEEK").performScrollTo().performClick()
+
+        composeTestRule.onNodeWithTag("reasoning_radio_HIGH").assertIsSelected()
     }
 
     @Test
@@ -202,7 +275,7 @@ class PromptEditScreenTest {
         setScreenContent(
             template = existingTemplate.copy(
                 vendor = LlmVendor.DEEPSEEK,
-                model = "deepseek-chat",
+                model = "deepseek-v4-flash",
             ),
         )
 
@@ -215,13 +288,13 @@ class PromptEditScreenTest {
         setScreenContent(
             template = existingTemplate.copy(
                 vendor = LlmVendor.DEEPSEEK,
-                model = "deepseek-reasoner",
+                model = "deepseek-v3.2-exp",
             ),
         )
 
         composeTestRule.onNodeWithTag("prompt_model_field")
             .performScrollTo()
-            .assertTextContains("deepseek-reasoner")
+            .assertTextContains("deepseek-v3.2-exp")
     }
 
     @Test

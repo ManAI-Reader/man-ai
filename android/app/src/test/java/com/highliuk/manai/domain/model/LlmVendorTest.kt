@@ -21,6 +21,33 @@ class LlmVendorTest {
     @Test
     fun `each vendor exposes its default model`() {
         assertEquals("openai/gpt-oss-120b", LlmVendor.GROQ.defaultModel)
-        assertEquals("deepseek-chat", LlmVendor.DEEPSEEK.defaultModel)
+        assertEquals("deepseek-v4-flash", LlmVendor.DEEPSEEK.defaultModel)
+    }
+
+    @Test
+    fun `groq supports default plus the three gpt-oss efforts and cannot disable reasoning`() {
+        assertEquals(
+            listOf(
+                ReasoningLevel.DEFAULT,
+                ReasoningLevel.LOW,
+                ReasoningLevel.MEDIUM,
+                ReasoningLevel.HIGH,
+            ),
+            LlmVendor.GROQ.supportedReasoningLevels,
+        )
+    }
+
+    @Test
+    fun `deepseek supports off and max but not the undocumented medium`() {
+        assertEquals(
+            listOf(
+                ReasoningLevel.DEFAULT,
+                ReasoningLevel.OFF,
+                ReasoningLevel.LOW,
+                ReasoningLevel.HIGH,
+                ReasoningLevel.MAX,
+            ),
+            LlmVendor.DEEPSEEK.supportedReasoningLevels,
+        )
     }
 }

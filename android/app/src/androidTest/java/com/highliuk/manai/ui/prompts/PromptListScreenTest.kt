@@ -87,18 +87,25 @@ class PromptListScreenTest {
     }
 
     @Test
-    fun editIconInvokesOnEditClickWithTemplate() {
+    fun tappingARowInvokesOnEditClickWithItsTemplate() {
         var edited: PromptTemplate? = null
         setPromptListContent(
             PromptListArgs(
-                templates = listOf(grammarTemplate),
+                templates = listOf(grammarTemplate, translateTemplate),
                 onEditClick = { edited = it },
             )
         )
 
-        composeTestRule.onNodeWithContentDescription("Edit prompt").performClick()
+        composeTestRule.onNodeWithTag("prompt_row_2").performClick()
 
-        assertEquals(grammarTemplate, edited)
+        assertEquals(translateTemplate, edited)
+    }
+
+    @Test
+    fun editPencilIconIsGoneFromTheRow() {
+        setPromptListContent(PromptListArgs(templates = listOf(grammarTemplate)))
+
+        composeTestRule.onNodeWithContentDescription("Edit prompt").assertDoesNotExist()
     }
 
     @Test

@@ -133,18 +133,31 @@ class OpenAiCompatibleLlmProvider(
      * Maps the reasoning level to the vendor's `reasoning_effort` value, or
      * null when the parameter must be omitted.
      *
-     * Groq only accepts low/medium/high and rejects `"none"` (and any other
-     * value) with a 400 on gpt-oss models, so both [ReasoningLevel.DEFAULT]
-     * and [ReasoningLevel.OFF] are sent as an omission. DeepSeek accepts
-     * `"none"` to disable thinking, so only [ReasoningLevel.DEFAULT] is
-     * omitted there.
+     * The mapping is defensive: templates saved before the per-vendor level
+     * sets existed (see [LlmVendor.supportedReasoningLevels]) may still carry
+     * a level the vendor rejects, so out-of-set values are clamped to the
+     * closest accepted one instead of triggering an HTTP 400:
+     *
+     * - Groq gpt-oss only accepts low/medium/high and rejects `"none"` and
+     *   `"max"`, so [ReasoningLevel.DEFAULT] and [ReasoningLevel.OFF] are
+     *   sent as an omission and [ReasoningLevel.MAX] is clamped to `"high"`.
+     * - DeepSeek documents none/low/high/max; `"medium"` is undocumented, so
+     *   [ReasoningLevel.MEDIUM] is clamped to `"high"`.
      */
-    private fun LlmRequestConfig.reasoningApiValue(): String? = when (reasoning) {
-        ReasoningLevel.DEFAULT -> null
-        ReasoningLevel.OFF -> if (vendor == LlmVendor.DEEPSEEK) "none" else null
-        ReasoningLevel.LOW -> "low"
-        ReasoningLevel.MEDIUM -> "medium"
-        ReasoningLevel.HIGH -> "high"
+    private fun LlmRequestConfig.reasoningApiValue(): String? = when (vendor) {
+        LlmVendor.GROQ -> when (reasoning) {
+            ReasoningLevel.DEFAULT, ReasoningLevel.OFF -> null
+            ReasoningLevel.LOW -> "low"
+            ReasoningLevel.MEDIUM -> "medium"
+            ReasoningLevel.HIGH, ReasoningLevel.MAX -> "high"
+        }
+        LlmVendor.DEEPSEEK -> when (reasoning) {
+            ReasoningLevel.DEFAULT -> null
+            ReasoningLevel.OFF -> "none"
+            ReasoningLevel.LOW -> "low"
+            ReasoningLevel.MEDIUM, ReasoningLevel.HIGH -> "high"
+            ReasoningLevel.MAX -> "max"
+        }
     }
 
     /**

@@ -116,6 +116,7 @@
     <string name="reasoning_low">低</string>
     <string name="reasoning_medium">中</string>
     <string name="reasoning_high">高</string>
+    <string name="reasoning_max">最大</string>
     <string name="prompt_name_required">名前とプロンプト本文は必須です</string>
     <string name="delete_prompt_confirm">このプロンプトを削除しますか？</string>
     <string name="no_prompts">プロンプトはまだありません</string>

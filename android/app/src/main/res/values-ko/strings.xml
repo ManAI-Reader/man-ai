@@ -116,6 +116,7 @@
     <string name="reasoning_low">낮음</string>
     <string name="reasoning_medium">중간</string>
     <string name="reasoning_high">높음</string>
+    <string name="reasoning_max">최대</string>
     <string name="prompt_name_required">이름과 프롬프트 내용은 필수입니다</string>
     <string name="delete_prompt_confirm">이 프롬프트를 삭제할까요?</string>
     <string name="no_prompts">아직 프롬프트가 없습니다</string>

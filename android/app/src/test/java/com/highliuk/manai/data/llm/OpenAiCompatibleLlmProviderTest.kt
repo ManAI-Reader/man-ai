@@ -288,26 +288,38 @@ class OpenAiCompatibleLlmProviderTest {
         }
     }
 
+    private suspend fun assertReasoningEffort(
+        vendor: LlmVendor,
+        reasoning: ReasoningLevel,
+        expectedEffort: String?,
+    ) {
+        val body = requestBodyFor(vendor, reasoning)
+        if (expectedEffort == null) {
+            assertFalse("$vendor/$reasoning must omit reasoning_effort", body.contains("reasoning_effort"))
+        } else {
+            assertTrue(
+                "$vendor/$reasoning must send reasoning_effort=$expectedEffort",
+                body.contains(""""reasoning_effort":"$expectedEffort""""),
+            )
+        }
+    }
+
     @Test
     fun `groq body sends reasoning_effort only for explicit effort levels`() = runTest {
-        assertTrue(
-            requestBodyFor(LlmVendor.GROQ, ReasoningLevel.LOW)
-                .contains(""""reasoning_effort":"low""""),
-        )
-        assertTrue(
-            requestBodyFor(LlmVendor.GROQ, ReasoningLevel.MEDIUM)
-                .contains(""""reasoning_effort":"medium""""),
-        )
-        assertTrue(
-            requestBodyFor(LlmVendor.GROQ, ReasoningLevel.HIGH)
-                .contains(""""reasoning_effort":"high""""),
-        )
+        assertReasoningEffort(LlmVendor.GROQ, ReasoningLevel.LOW, "low")
+        assertReasoningEffort(LlmVendor.GROQ, ReasoningLevel.MEDIUM, "medium")
+        assertReasoningEffort(LlmVendor.GROQ, ReasoningLevel.HIGH, "high")
     }
 
     @Test
     fun `groq body omits reasoning_effort for default and off levels`() = runTest {
-        assertFalse(requestBodyFor(LlmVendor.GROQ, ReasoningLevel.DEFAULT).contains("reasoning_effort"))
-        assertFalse(requestBodyFor(LlmVendor.GROQ, ReasoningLevel.OFF).contains("reasoning_effort"))
+        assertReasoningEffort(LlmVendor.GROQ, ReasoningLevel.DEFAULT, null)
+        assertReasoningEffort(LlmVendor.GROQ, ReasoningLevel.OFF, null)
+    }
+
+    @Test
+    fun `groq body clamps max to high because gpt-oss rejects the max value`() = runTest {
+        assertReasoningEffort(LlmVendor.GROQ, ReasoningLevel.MAX, "high")
     }
 
     @Test
@@ -322,32 +334,23 @@ class OpenAiCompatibleLlmProviderTest {
 
     @Test
     fun `deepseek body maps off to reasoning_effort none`() = runTest {
-        assertTrue(
-            requestBodyFor(LlmVendor.DEEPSEEK, ReasoningLevel.OFF)
-                .contains(""""reasoning_effort":"none""""),
-        )
+        assertReasoningEffort(LlmVendor.DEEPSEEK, ReasoningLevel.OFF, "none")
     }
 
     @Test
-    fun `deepseek body sends explicit effort levels`() = runTest {
-        assertTrue(
-            requestBodyFor(LlmVendor.DEEPSEEK, ReasoningLevel.LOW)
-                .contains(""""reasoning_effort":"low""""),
-        )
-        assertTrue(
-            requestBodyFor(LlmVendor.DEEPSEEK, ReasoningLevel.MEDIUM)
-                .contains(""""reasoning_effort":"medium""""),
-        )
-        assertTrue(
-            requestBodyFor(LlmVendor.DEEPSEEK, ReasoningLevel.HIGH)
-                .contains(""""reasoning_effort":"high""""),
-        )
+    fun `deepseek body sends the documented effort levels including max`() = runTest {
+        assertReasoningEffort(LlmVendor.DEEPSEEK, ReasoningLevel.LOW, "low")
+        assertReasoningEffort(LlmVendor.DEEPSEEK, ReasoningLevel.HIGH, "high")
+        assertReasoningEffort(LlmVendor.DEEPSEEK, ReasoningLevel.MAX, "max")
+    }
+
+    @Test
+    fun `deepseek body clamps the undocumented medium to high`() = runTest {
+        assertReasoningEffort(LlmVendor.DEEPSEEK, ReasoningLevel.MEDIUM, "high")
     }
 
     @Test
     fun `deepseek body omits reasoning_effort for the default level`() = runTest {
-        assertFalse(
-            requestBodyFor(LlmVendor.DEEPSEEK, ReasoningLevel.DEFAULT).contains("reasoning_effort"),
-        )
+        assertReasoningEffort(LlmVendor.DEEPSEEK, ReasoningLevel.DEFAULT, null)
     }
 }

@@ -116,6 +116,7 @@
     <string name="reasoning_low">ต่ำ</string>
     <string name="reasoning_medium">ปานกลาง</string>
     <string name="reasoning_high">สูง</string>
+    <string name="reasoning_max">สูงสุด</string>
     <string name="prompt_name_required">ต้องระบุชื่อและข้อความพรอมต์</string>
     <string name="delete_prompt_confirm">ลบพรอมต์นี้หรือไม่</string>
     <string name="no_prompts">ยังไม่มีพรอมต์</string>

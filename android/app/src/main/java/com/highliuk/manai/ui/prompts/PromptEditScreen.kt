@@ -47,6 +47,7 @@ internal fun reasoningLevelLabelRes(level: ReasoningLevel): Int = when (level) {
     ReasoningLevel.LOW -> R.string.reasoning_low
     ReasoningLevel.MEDIUM -> R.string.reasoning_medium
     ReasoningLevel.HIGH -> R.string.reasoning_high
+    ReasoningLevel.MAX -> R.string.reasoning_max
 }
 
 /** Save callback carrying every editable field of the template. */
@@ -65,6 +66,9 @@ typealias OnSavePrompt = (
  *
  * @param modelForVendorChange resolves the model shown after a vendor switch
  * (swapping vendor defaults while keeping user-customized models).
+ * @param reasoningForVendorChange resolves the reasoning level shown after a
+ * vendor switch (falling back to the model default when the new vendor does
+ * not support the current level).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,12 +77,20 @@ fun PromptEditScreen(
     @StringRes errorRes: Int?,
     onSave: OnSavePrompt,
     modelForVendorChange: (String, LlmVendor) -> String,
+    reasoningForVendorChange: (ReasoningLevel, LlmVendor) -> ReasoningLevel,
     onBack: () -> Unit,
 ) {
     var name by remember(template) { mutableStateOf(template?.name.orEmpty()) }
     var text by remember(template) { mutableStateOf(template?.template.orEmpty()) }
     var reasoning by remember(template) {
-        mutableStateOf(template?.reasoningLevel ?: ReasoningLevel.DEFAULT)
+        // Normalize levels a template may have persisted before per-vendor
+        // support lists existed (e.g. MEDIUM on a DeepSeek template).
+        mutableStateOf(
+            reasoningForVendorChange(
+                template?.reasoningLevel ?: ReasoningLevel.DEFAULT,
+                template?.vendor ?: LlmVendor.GROQ,
+            )
+        )
     }
     var vendor by remember(template) { mutableStateOf(template?.vendor ?: LlmVendor.GROQ) }
     var model by remember(template) {
@@ -159,6 +171,7 @@ fun PromptEditScreen(
                 selected = vendor,
                 onSelect = { newVendor ->
                     model = modelForVendorChange(model, newVendor)
+                    reasoning = reasoningForVendorChange(reasoning, newVendor)
                     vendor = newVendor
                 },
             )
@@ -178,6 +191,7 @@ fun PromptEditScreen(
                 modifier = Modifier.padding(top = 16.dp),
             )
             ReasoningLevelSelector(
+                vendor = vendor,
                 selected = reasoning,
                 onSelect = { reasoning = it },
             )
@@ -234,13 +248,15 @@ internal fun vendorLabel(vendor: LlmVendor): String = when (vendor) {
     LlmVendor.DEEPSEEK -> "DeepSeek"
 }
 
+/** Shows only the levels the selected [vendor]'s API actually accepts. */
 @Composable
 private fun ReasoningLevelSelector(
+    vendor: LlmVendor,
     selected: ReasoningLevel,
     onSelect: (ReasoningLevel) -> Unit,
 ) {
     Column(modifier = Modifier.selectableGroup()) {
-        ReasoningLevel.entries.forEach { level ->
+        vendor.supportedReasoningLevels.forEach { level ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier

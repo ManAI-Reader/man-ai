@@ -207,11 +207,11 @@ class PromptEditViewModelTest {
         val viewModel = createViewModel(id = -1L)
 
         assertEquals(
-            "deepseek-chat",
+            "deepseek-v4-flash",
             viewModel.modelForVendorChange("", LlmVendor.DEEPSEEK),
         )
         assertEquals(
-            "deepseek-chat",
+            "deepseek-v4-flash",
             viewModel.modelForVendorChange("   ", LlmVendor.DEEPSEEK),
         )
     }
@@ -221,12 +221,26 @@ class PromptEditViewModelTest {
         val viewModel = createViewModel(id = -1L)
 
         assertEquals(
-            "deepseek-chat",
+            "deepseek-v4-flash",
             viewModel.modelForVendorChange("openai/gpt-oss-120b", LlmVendor.DEEPSEEK),
         )
         assertEquals(
             "openai/gpt-oss-120b",
+            viewModel.modelForVendorChange("deepseek-v4-flash", LlmVendor.GROQ),
+        )
+    }
+
+    @Test
+    fun `modelForVendorChange swaps legacy deepseek defaults so old templates do not block it`() {
+        val viewModel = createViewModel(id = -1L)
+
+        assertEquals(
+            "openai/gpt-oss-120b",
             viewModel.modelForVendorChange("deepseek-chat", LlmVendor.GROQ),
+        )
+        assertEquals(
+            "openai/gpt-oss-120b",
+            viewModel.modelForVendorChange("deepseek-reasoner", LlmVendor.GROQ),
         )
     }
 
@@ -235,8 +249,8 @@ class PromptEditViewModelTest {
         val viewModel = createViewModel(id = -1L)
 
         assertEquals(
-            "deepseek-reasoner",
-            viewModel.modelForVendorChange("deepseek-reasoner", LlmVendor.GROQ),
+            "deepseek-v3.2-exp",
+            viewModel.modelForVendorChange("deepseek-v3.2-exp", LlmVendor.GROQ),
         )
         assertEquals(
             "llama-3.3-70b-versatile",
@@ -249,8 +263,44 @@ class PromptEditViewModelTest {
         val viewModel = createViewModel(id = -1L)
 
         assertEquals(
-            "deepseek-chat",
-            viewModel.modelForVendorChange("deepseek-chat", LlmVendor.DEEPSEEK),
+            "deepseek-v4-flash",
+            viewModel.modelForVendorChange("deepseek-v4-flash", LlmVendor.DEEPSEEK),
+        )
+    }
+
+    @Test
+    fun `reasoningForVendorChange keeps a level the new vendor supports`() {
+        val viewModel = createViewModel(id = -1L)
+
+        assertEquals(
+            ReasoningLevel.HIGH,
+            viewModel.reasoningForVendorChange(ReasoningLevel.HIGH, LlmVendor.DEEPSEEK),
+        )
+        assertEquals(
+            ReasoningLevel.MEDIUM,
+            viewModel.reasoningForVendorChange(ReasoningLevel.MEDIUM, LlmVendor.GROQ),
+        )
+        assertEquals(
+            ReasoningLevel.OFF,
+            viewModel.reasoningForVendorChange(ReasoningLevel.OFF, LlmVendor.DEEPSEEK),
+        )
+    }
+
+    @Test
+    fun `reasoningForVendorChange falls back to DEFAULT for unsupported levels`() {
+        val viewModel = createViewModel(id = -1L)
+
+        assertEquals(
+            ReasoningLevel.DEFAULT,
+            viewModel.reasoningForVendorChange(ReasoningLevel.OFF, LlmVendor.GROQ),
+        )
+        assertEquals(
+            ReasoningLevel.DEFAULT,
+            viewModel.reasoningForVendorChange(ReasoningLevel.MAX, LlmVendor.GROQ),
+        )
+        assertEquals(
+            ReasoningLevel.DEFAULT,
+            viewModel.reasoningForVendorChange(ReasoningLevel.MEDIUM, LlmVendor.DEEPSEEK),
         )
     }
 }
