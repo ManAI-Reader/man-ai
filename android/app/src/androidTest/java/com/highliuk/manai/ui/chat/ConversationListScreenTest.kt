@@ -6,8 +6,9 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.activity.OnBackPressedDispatcherOwner
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.ui.test.performTextInput
-import androidx.test.espresso.Espresso
 import com.highliuk.manai.domain.model.Conversation
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -251,18 +252,32 @@ class ConversationListScreenTest {
     fun systemBackClosesSearchInsteadOfNavigatingBack() {
         var closed = false
         var backed = false
-        setConversationListContent(
-            ConversationListArgs(
+        // Dispatch through OnBackPressedDispatcher instead of a raw key
+        // event: whether the IME swallows the first back press varies per
+        // device, while the dispatcher path deterministically verifies the
+        // BackHandler is registered and enabled.
+        var dispatcherOwner: OnBackPressedDispatcherOwner? = null
+        composeTestRule.setContent {
+            dispatcherOwner = LocalOnBackPressedDispatcherOwner.current
+            ConversationListScreen(
+                conversations = emptyList(),
+                pendingDelete = null,
                 isSearchActive = true,
+                searchQuery = "",
+                onConversationClick = {},
+                onDeleteClick = {},
+                onConfirmDelete = {},
+                onDismissDelete = {},
+                onOpenSearch = {},
                 onCloseSearch = { closed = true },
+                onSearchQueryChange = {},
                 onBack = { backed = true },
             )
-        )
+        }
 
-        // The auto-focused search field opens the IME, which would swallow
-        // the first back press before it reaches the BackHandler.
-        Espresso.closeSoftKeyboard()
-        Espresso.pressBack()
+        composeTestRule.runOnIdle {
+            dispatcherOwner!!.onBackPressedDispatcher.onBackPressed()
+        }
         composeTestRule.waitForIdle()
 
         assertTrue(closed)
