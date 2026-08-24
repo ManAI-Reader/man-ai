@@ -8,11 +8,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface UserPreferencesRepository {
 
-    companion object {
-        const val DEFAULT_LLM_BASE_URL = "https://api.groq.com/openai/v1"
-        const val DEFAULT_LLM_MODEL = "llama-3.3-70b-versatile"
-    }
-
     val gridColumns: Flow<Int>
     suspend fun setGridColumns(columns: Int)
 
@@ -45,12 +40,6 @@ interface UserPreferencesRepository {
 
     val showFurigana: Flow<Boolean>
     suspend fun setShowFurigana(enabled: Boolean)
-
-    val llmBaseUrl: Flow<String>
-    suspend fun setLlmBaseUrl(url: String)
-
-    val llmModel: Flow<String>
-    suspend fun setLlmModel(model: String)
 
     val promptDefaultsSeeded: Flow<Boolean>
     suspend fun setPromptDefaultsSeeded()

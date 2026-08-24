@@ -13,4 +13,10 @@ data class Conversation(
      * so follow-up turns keep using the same level.
      */
     val reasoningLevel: ReasoningLevel = ReasoningLevel.DEFAULT,
+    /**
+     * Vendor and model snapshot copied from the prompt template at launch
+     * time so follow-up turns keep talking to the same provider and model.
+     */
+    val vendor: LlmVendor = LlmVendor.GROQ,
+    val model: String = LlmVendor.GROQ.defaultModel,
 )

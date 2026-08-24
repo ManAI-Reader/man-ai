@@ -29,7 +29,7 @@ import com.highliuk.manai.data.local.entity.TranslationResultEntity
         PromptTemplateEntity::class,
         MemoryEntryEntity::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = true,
 )
 abstract class ManAiDatabase : RoomDatabase() {
@@ -219,6 +219,71 @@ abstract class ManAiDatabase : RoomDatabase() {
                         "(id, title, mangaId, pageIndex, regionIndex, createdAt, updatedAt) " +
                         "SELECT id, title, mangaId, pageIndex, regionIndex, createdAt, updatedAt " +
                         "FROM conversation"
+                )
+                db.execSQL("DROP TABLE conversation")
+                db.execSQL("ALTER TABLE conversation_backup RENAME TO conversation")
+                db.execSQL("CREATE INDEX index_conversation_mangaId ON conversation(mangaId)")
+            }
+        }
+
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE prompt_template ADD COLUMN vendor TEXT NOT NULL DEFAULT 'GROQ'"
+                )
+                db.execSQL(
+                    "ALTER TABLE prompt_template ADD COLUMN model TEXT NOT NULL " +
+                        "DEFAULT 'openai/gpt-oss-120b'"
+                )
+                db.execSQL(
+                    "ALTER TABLE conversation ADD COLUMN vendor TEXT NOT NULL DEFAULT 'GROQ'"
+                )
+                db.execSQL(
+                    "ALTER TABLE conversation ADD COLUMN model TEXT NOT NULL " +
+                        "DEFAULT 'openai/gpt-oss-120b'"
+                )
+            }
+        }
+
+        val MIGRATION_8_7 = object : Migration(8, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """CREATE TABLE prompt_template_backup (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        name TEXT NOT NULL,
+                        template TEXT NOT NULL,
+                        sortOrder INTEGER NOT NULL DEFAULT 0,
+                        reasoningLevel TEXT NOT NULL DEFAULT 'DEFAULT'
+                    )""".trimIndent()
+                )
+                db.execSQL(
+                    "INSERT INTO prompt_template_backup " +
+                        "(id, name, template, sortOrder, reasoningLevel) " +
+                        "SELECT id, name, template, sortOrder, reasoningLevel " +
+                        "FROM prompt_template"
+                )
+                db.execSQL("DROP TABLE prompt_template")
+                db.execSQL("ALTER TABLE prompt_template_backup RENAME TO prompt_template")
+                db.execSQL("DROP INDEX IF EXISTS index_conversation_mangaId")
+                db.execSQL(
+                    """CREATE TABLE conversation_backup (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        title TEXT NOT NULL,
+                        mangaId INTEGER,
+                        pageIndex INTEGER,
+                        regionIndex INTEGER,
+                        createdAt INTEGER NOT NULL,
+                        updatedAt INTEGER NOT NULL,
+                        reasoningLevel TEXT NOT NULL DEFAULT 'DEFAULT',
+                        FOREIGN KEY(mangaId) REFERENCES manga(id) ON DELETE SET NULL
+                    )""".trimIndent()
+                )
+                db.execSQL(
+                    "INSERT INTO conversation_backup " +
+                        "(id, title, mangaId, pageIndex, regionIndex, createdAt, updatedAt, " +
+                        "reasoningLevel) " +
+                        "SELECT id, title, mangaId, pageIndex, regionIndex, createdAt, " +
+                        "updatedAt, reasoningLevel FROM conversation"
                 )
                 db.execSQL("DROP TABLE conversation")
                 db.execSQL("ALTER TABLE conversation_backup RENAME TO conversation")

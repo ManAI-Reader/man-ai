@@ -27,12 +27,10 @@ class SettingsScreenAiTest {
     val composeTestRule = createComposeRule()
 
     private data class AiArgs(
-        val llmApiKey: String = "",
-        val onLlmApiKeyChange: (String) -> Unit = {},
-        val llmBaseUrl: String = "",
-        val onLlmBaseUrlChange: (String) -> Unit = {},
-        val llmModel: String = "",
-        val onLlmModelChange: (String) -> Unit = {},
+        val groqApiKey: String = "",
+        val onGroqApiKeyChange: (String) -> Unit = {},
+        val deepseekApiKey: String = "",
+        val onDeepseekApiKeyChange: (String) -> Unit = {},
         val onManagePromptsClick: () -> Unit = {},
     )
 
@@ -53,12 +51,10 @@ class SettingsScreenAiTest {
                 onTapToNavigatePortraitChange = {},
                 tapToNavigateLandscape = true,
                 onTapToNavigateLandscapeChange = {},
-                llmApiKey = args.llmApiKey,
-                onLlmApiKeyChange = args.onLlmApiKeyChange,
-                llmBaseUrl = args.llmBaseUrl,
-                onLlmBaseUrlChange = args.onLlmBaseUrlChange,
-                llmModel = args.llmModel,
-                onLlmModelChange = args.onLlmModelChange,
+                groqApiKey = args.groqApiKey,
+                onGroqApiKeyChange = args.onGroqApiKeyChange,
+                deepseekApiKey = args.deepseekApiKey,
+                onDeepseekApiKeyChange = args.onDeepseekApiKeyChange,
                 onManagePromptsClick = args.onManagePromptsClick,
                 onBack = {},
             )
@@ -73,20 +69,40 @@ class SettingsScreenAiTest {
     }
 
     @Test
-    fun llmFieldsDisplayed() {
+    fun bothVendorKeyFieldsDisplayed() {
         setSettingsContent()
 
-        composeTestRule.onNodeWithTag("llm_api_key_field").performScrollTo().assertIsDisplayed()
-        composeTestRule.onNodeWithTag("llm_base_url_field").performScrollTo().assertIsDisplayed()
-        composeTestRule.onNodeWithTag("llm_model_field").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithTag("groq_api_key_field").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithTag("deepseek_api_key_field").performScrollTo().assertIsDisplayed()
     }
 
     @Test
-    fun typingApiKeyInvokesCallback() {
-        var typed: String? = null
-        setSettingsContent(AiArgs(onLlmApiKeyChange = { typed = it }))
+    fun baseUrlAndModelFieldsAreGone() {
+        setSettingsContent()
 
-        composeTestRule.onNodeWithTag("llm_api_key_field")
+        composeTestRule.onNodeWithTag("llm_base_url_field").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("llm_model_field").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("llm_api_key_field").assertDoesNotExist()
+    }
+
+    @Test
+    fun typingGroqApiKeyInvokesCallback() {
+        var typed: String? = null
+        setSettingsContent(AiArgs(onGroqApiKeyChange = { typed = it }))
+
+        composeTestRule.onNodeWithTag("groq_api_key_field")
+            .performScrollTo()
+            .performTextInput("gsk-test")
+
+        assertEquals("gsk-test", typed)
+    }
+
+    @Test
+    fun typingDeepseekApiKeyInvokesCallback() {
+        var typed: String? = null
+        setSettingsContent(AiArgs(onDeepseekApiKeyChange = { typed = it }))
+
+        composeTestRule.onNodeWithTag("deepseek_api_key_field")
             .performScrollTo()
             .performTextInput("sk-test")
 
@@ -94,43 +110,35 @@ class SettingsScreenAiTest {
     }
 
     @Test
-    fun typingBaseUrlInvokesCallback() {
-        var typed: String? = null
-        setSettingsContent(AiArgs(onLlmBaseUrlChange = { typed = it }))
+    fun groqApiKeyMaskedByDefaultAndToggleReveals() {
+        setSettingsContent(AiArgs(groqApiKey = "secret123"))
 
-        composeTestRule.onNodeWithTag("llm_base_url_field")
-            .performScrollTo()
-            .performTextInput("https://api.example.com")
-
-        assertEquals("https://api.example.com", typed)
-    }
-
-    @Test
-    fun typingModelInvokesCallback() {
-        var typed: String? = null
-        setSettingsContent(AiArgs(onLlmModelChange = { typed = it }))
-
-        composeTestRule.onNodeWithTag("llm_model_field")
-            .performScrollTo()
-            .performTextInput("gpt-4o-mini")
-
-        assertEquals("gpt-4o-mini", typed)
-    }
-
-    @Test
-    fun apiKeyMaskedByDefaultAndToggleReveals() {
-        setSettingsContent(AiArgs(llmApiKey = "secret123"))
-
-        composeTestRule.onNodeWithTag("llm_api_key_field").performScrollTo()
+        composeTestRule.onNodeWithTag("groq_api_key_field").performScrollTo()
         composeTestRule.onNodeWithText("secret123").assertDoesNotExist()
 
         composeTestRule.onNode(
-            hasAnyAncestor(hasTestTag("llm_api_key_field")) and
+            hasAnyAncestor(hasTestTag("groq_api_key_field")) and
                 SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button),
             useUnmergedTree = true,
         ).performClick()
 
-        composeTestRule.onNodeWithTag("llm_api_key_field").assertTextContains("secret123")
+        composeTestRule.onNodeWithTag("groq_api_key_field").assertTextContains("secret123")
+    }
+
+    @Test
+    fun deepseekApiKeyMaskedByDefaultAndToggleReveals() {
+        setSettingsContent(AiArgs(deepseekApiKey = "secret456"))
+
+        composeTestRule.onNodeWithTag("deepseek_api_key_field").performScrollTo()
+        composeTestRule.onNodeWithText("secret456").assertDoesNotExist()
+
+        composeTestRule.onNode(
+            hasAnyAncestor(hasTestTag("deepseek_api_key_field")) and
+                SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button),
+            useUnmergedTree = true,
+        ).performClick()
+
+        composeTestRule.onNodeWithTag("deepseek_api_key_field").assertTextContains("secret456")
     }
 
     @Test

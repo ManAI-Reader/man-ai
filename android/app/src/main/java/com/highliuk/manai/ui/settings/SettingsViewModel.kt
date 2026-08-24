@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.highliuk.manai.data.llm.LlmCredentialsManager
 import com.highliuk.manai.data.translation.DeepLCredentialsManager
 import com.highliuk.manai.domain.model.AppLanguage
+import com.highliuk.manai.domain.model.LlmVendor
 import com.highliuk.manai.domain.model.ReadingMode
 import com.highliuk.manai.domain.model.TargetLanguage
 import com.highliuk.manai.domain.model.ThemeMode
@@ -14,7 +15,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -130,43 +130,29 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    private val _llmApiKey = MutableStateFlow(llmCredentialsManager.getApiKey().orEmpty())
-    val llmApiKey: StateFlow<String> = _llmApiKey
+    private val _groqApiKey =
+        MutableStateFlow(llmCredentialsManager.getApiKey(LlmVendor.GROQ).orEmpty())
+    val groqApiKey: StateFlow<String> = _groqApiKey.asStateFlow()
 
-    fun setLlmApiKey(key: String) {
+    fun setGroqApiKey(key: String) {
+        setVendorApiKey(LlmVendor.GROQ, key, _groqApiKey)
+    }
+
+    private val _deepseekApiKey =
+        MutableStateFlow(llmCredentialsManager.getApiKey(LlmVendor.DEEPSEEK).orEmpty())
+    val deepseekApiKey: StateFlow<String> = _deepseekApiKey.asStateFlow()
+
+    fun setDeepseekApiKey(key: String) {
+        setVendorApiKey(LlmVendor.DEEPSEEK, key, _deepseekApiKey)
+    }
+
+    private fun setVendorApiKey(vendor: LlmVendor, key: String, state: MutableStateFlow<String>) {
         if (key.isBlank()) {
-            llmCredentialsManager.clearApiKey()
-            _llmApiKey.value = ""
+            llmCredentialsManager.clearApiKey(vendor)
+            state.value = ""
         } else {
-            llmCredentialsManager.saveApiKey(key)
-            _llmApiKey.value = key
-        }
-    }
-
-    private val _llmBaseUrl = MutableStateFlow(UserPreferencesRepository.DEFAULT_LLM_BASE_URL)
-    val llmBaseUrl: StateFlow<String> = _llmBaseUrl.asStateFlow()
-
-    private val _llmModel = MutableStateFlow(UserPreferencesRepository.DEFAULT_LLM_MODEL)
-    val llmModel: StateFlow<String> = _llmModel.asStateFlow()
-
-    init {
-        viewModelScope.launch {
-            _llmBaseUrl.value = userPreferencesRepository.llmBaseUrl.first()
-            _llmModel.value = userPreferencesRepository.llmModel.first()
-        }
-    }
-
-    fun setLlmBaseUrl(url: String) {
-        _llmBaseUrl.value = url
-        viewModelScope.launch {
-            userPreferencesRepository.setLlmBaseUrl(url)
-        }
-    }
-
-    fun setLlmModel(model: String) {
-        _llmModel.value = model
-        viewModelScope.launch {
-            userPreferencesRepository.setLlmModel(model)
+            llmCredentialsManager.saveApiKey(vendor, key)
+            state.value = key
         }
     }
 }

@@ -96,10 +96,10 @@
 
     <!-- AI Assistant settings -->
     <string name="ai_section">ผู้ช่วย AI</string>
-    <string name="llm_api_key">คีย์ API</string>
-    <string name="llm_api_key_hint">ป้อนคีย์ API ของคุณ (เช่น Groq)</string>
-    <string name="llm_base_url">URL พื้นฐานของ API</string>
-    <string name="llm_model">โมเดล</string>
+    <string name="settings_groq_api_key">คีย์ API ของ Groq</string>
+    <string name="settings_deepseek_api_key">คีย์ API ของ DeepSeek</string>
+    <string name="prompt_vendor_label">ผู้ให้บริการ</string>
+    <string name="prompt_model_label">โมเดล</string>
     <string name="manage_prompts">จัดการพรอมต์</string>
 
     <!-- Prompt management -->

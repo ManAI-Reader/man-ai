@@ -146,6 +146,63 @@ class ManAiDatabaseTest {
     }
 
     @Test
+    fun `migration 7 to 8 adds vendor and model columns`() {
+        ManAiDatabase.MIGRATION_7_8.migrate(db)
+
+        verifyOrder {
+            db.execSQL(
+                "ALTER TABLE prompt_template ADD COLUMN vendor TEXT NOT NULL DEFAULT 'GROQ'"
+            )
+            db.execSQL(
+                "ALTER TABLE prompt_template ADD COLUMN model TEXT NOT NULL " +
+                    "DEFAULT 'openai/gpt-oss-120b'"
+            )
+            db.execSQL(
+                "ALTER TABLE conversation ADD COLUMN vendor TEXT NOT NULL DEFAULT 'GROQ'"
+            )
+            db.execSQL(
+                "ALTER TABLE conversation ADD COLUMN model TEXT NOT NULL " +
+                    "DEFAULT 'openai/gpt-oss-120b'"
+            )
+        }
+    }
+
+    @Test
+    fun `migration 8 to 7 removes vendor and model via backup tables`() {
+        ManAiDatabase.MIGRATION_8_7.migrate(db)
+
+        verifyOrder {
+            db.execSQL(match {
+                it.contains("CREATE TABLE prompt_template_backup") &&
+                    !it.contains("vendor") && !it.contains("model")
+            })
+            db.execSQL(match {
+                it.contains("INSERT INTO prompt_template_backup") &&
+                    it.contains("id, name, template, sortOrder, reasoningLevel") &&
+                    !it.contains("vendor") && !it.contains("model")
+            })
+            db.execSQL("DROP TABLE prompt_template")
+            db.execSQL("ALTER TABLE prompt_template_backup RENAME TO prompt_template")
+            db.execSQL("DROP INDEX IF EXISTS index_conversation_mangaId")
+            db.execSQL(match {
+                it.contains("CREATE TABLE conversation_backup") &&
+                    !it.contains("vendor") && !it.contains("model")
+            })
+            db.execSQL(match {
+                it.contains("INSERT INTO conversation_backup") &&
+                    it.contains(
+                        "id, title, mangaId, pageIndex, regionIndex, createdAt, updatedAt, " +
+                            "reasoningLevel"
+                    ) &&
+                    !it.contains("vendor") && !it.contains("model")
+            })
+            db.execSQL("DROP TABLE conversation")
+            db.execSQL("ALTER TABLE conversation_backup RENAME TO conversation")
+            db.execSQL("CREATE INDEX index_conversation_mangaId ON conversation(mangaId)")
+        }
+    }
+
+    @Test
     fun `migration 2 to 1 removes lastReadPage via backup table`() {
         ManAiDatabase.MIGRATION_2_1.migrate(db)
 

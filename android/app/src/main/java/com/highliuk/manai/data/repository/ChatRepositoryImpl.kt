@@ -4,9 +4,11 @@ import com.highliuk.manai.data.local.dao.ChatMessageDao
 import com.highliuk.manai.data.local.dao.ConversationDao
 import com.highliuk.manai.data.local.entity.ChatMessageEntity
 import com.highliuk.manai.data.local.entity.ConversationEntity
+import com.highliuk.manai.domain.llm.LlmRequestConfig
 import com.highliuk.manai.domain.model.ChatMessage
 import com.highliuk.manai.domain.model.ChatRole
 import com.highliuk.manai.domain.model.Conversation
+import com.highliuk.manai.domain.model.LlmVendor
 import com.highliuk.manai.domain.model.ReasoningLevel
 import com.highliuk.manai.domain.repository.ChatRepository
 import kotlinx.coroutines.flow.Flow
@@ -36,7 +38,7 @@ class ChatRepositoryImpl(
         mangaId: Long?,
         pageIndex: Int?,
         regionIndex: Int?,
-        reasoningLevel: ReasoningLevel,
+        llmConfig: LlmRequestConfig,
     ): Long {
         val now = clock()
         return conversationDao.insert(
@@ -47,7 +49,9 @@ class ChatRepositoryImpl(
                 regionIndex = regionIndex,
                 createdAt = now,
                 updatedAt = now,
-                reasoningLevel = reasoningLevel.name,
+                reasoningLevel = llmConfig.reasoning.name,
+                vendor = llmConfig.vendor.name,
+                model = llmConfig.model,
             )
         )
     }
@@ -78,6 +82,8 @@ class ChatRepositoryImpl(
         createdAt = createdAt,
         updatedAt = updatedAt,
         reasoningLevel = ReasoningLevel.valueOfOrDefault(reasoningLevel),
+        vendor = LlmVendor.valueOfOrDefault(vendor),
+        model = model,
     )
 
     private fun ChatMessageEntity.toDomain(): ChatMessage = ChatMessage(

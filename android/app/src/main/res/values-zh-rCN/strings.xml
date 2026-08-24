@@ -96,10 +96,10 @@
 
     <!-- AI Assistant settings -->
     <string name="ai_section">AI 助手</string>
-    <string name="llm_api_key">API 密钥</string>
-    <string name="llm_api_key_hint">输入你的 API 密钥（例如 Groq）</string>
-    <string name="llm_base_url">API 基础 URL</string>
-    <string name="llm_model">模型</string>
+    <string name="settings_groq_api_key">Groq API 密钥</string>
+    <string name="settings_deepseek_api_key">DeepSeek API 密钥</string>
+    <string name="prompt_vendor_label">提供商</string>
+    <string name="prompt_model_label">模型</string>
     <string name="manage_prompts">管理提示词</string>
 
     <!-- Prompt management -->

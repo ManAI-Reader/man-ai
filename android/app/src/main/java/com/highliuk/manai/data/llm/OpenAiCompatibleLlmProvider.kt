@@ -4,8 +4,10 @@ import com.highliuk.manai.domain.llm.LlmEvent
 import com.highliuk.manai.domain.llm.LlmFailure
 import com.highliuk.manai.domain.llm.LlmMessage
 import com.highliuk.manai.domain.llm.LlmProvider
+import com.highliuk.manai.domain.llm.LlmRequestConfig
 import com.highliuk.manai.domain.llm.LlmToolSpec
 import com.highliuk.manai.domain.logging.Logger
+import com.highliuk.manai.domain.model.LlmVendor
 import com.highliuk.manai.domain.model.ReasoningLevel
 import io.ktor.client.HttpClient
 import io.ktor.client.request.header
@@ -35,24 +37,22 @@ import java.nio.channels.UnresolvedAddressException
 
 class OpenAiCompatibleLlmProvider(
     private val httpClient: HttpClient,
-    private val apiKeyProvider: suspend () -> String,
-    private val baseUrlProvider: suspend () -> String,
-    private val modelProvider: suspend () -> String,
+    private val apiKeyProvider: suspend (LlmVendor) -> String,
     private val logger: Logger? = null,
 ) : LlmProvider {
 
     override fun chat(
         messages: List<LlmMessage>,
         tools: List<LlmToolSpec>,
-        reasoning: ReasoningLevel,
+        config: LlmRequestConfig,
     ): Flow<LlmEvent> = flow {
-        val apiKey = apiKeyProvider()
+        val apiKey = apiKeyProvider(config.vendor)
         if (apiKey.isBlank()) {
             emit(LlmEvent.Failure(LlmFailure.Generic("LLM API key is not configured")))
             return@flow
         }
         try {
-            stream(apiKey, StreamRequest(messages, tools, reasoning))
+            stream(apiKey, StreamRequest(messages, tools, config))
         } catch (e: CancellationException) {
             throw e
         } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
@@ -70,11 +70,11 @@ class OpenAiCompatibleLlmProvider(
     private data class StreamRequest(
         val messages: List<LlmMessage>,
         val tools: List<LlmToolSpec>,
-        val reasoning: ReasoningLevel,
+        val config: LlmRequestConfig,
     )
 
     private suspend fun FlowCollector<LlmEvent>.stream(apiKey: String, request: StreamRequest) {
-        val url = baseUrlProvider().trimEnd('/') + "/chat/completions"
+        val url = request.config.vendor.baseUrl + "/chat/completions"
         val body = buildRequestBody(request).toString()
         httpClient.preparePost(url) {
             header(HttpHeaders.Authorization, "Bearer $apiKey")
@@ -109,35 +109,54 @@ class OpenAiCompatibleLlmProvider(
         emit(LlmEvent.Completed(finishReason))
     }
 
-    private suspend fun buildRequestBody(request: StreamRequest): JsonObject {
-        val model = modelProvider()
-        return buildJsonObject {
-            put("model", model)
-            put("stream", true)
-            request.reasoning.toApiValue()?.let { put("reasoning_effort", it) }
-            putJsonArray("messages") {
-                request.messages.forEach { message -> add(message.toJson()) }
-            }
-            if (request.tools.isNotEmpty()) {
-                putJsonArray("tools") {
-                    request.tools.forEach { tool -> add(tool.toJson()) }
-                }
+    private fun buildRequestBody(request: StreamRequest): JsonObject = buildJsonObject {
+        put("model", request.config.model)
+        put("stream", true)
+        if (request.config.vendor == LlmVendor.DEEPSEEK) {
+            // DeepSeek's thinking tokens consume the completion budget, so an
+            // explicit generous cap keeps long reasoning from being cut short
+            // by the (smaller) server default.
+            put("max_tokens", DEEPSEEK_MAX_TOKENS)
+        }
+        request.config.reasoningApiValue()?.let { put("reasoning_effort", it) }
+        putJsonArray("messages") {
+            request.messages.forEach { message -> add(message.toJson()) }
+        }
+        if (request.tools.isNotEmpty()) {
+            putJsonArray("tools") {
+                request.tools.forEach { tool -> add(tool.toJson()) }
             }
         }
     }
 
     /**
-     * Maps the level to the `reasoning_effort` value, or null when the parameter must be
-     * omitted. OFF is also sent as an omission: providers such as Groq only accept
-     * low/medium/high and reject `"none"` with a 400.
+     * Maps the reasoning level to the vendor's `reasoning_effort` value, or
+     * null when the parameter must be omitted.
+     *
+     * Groq only accepts low/medium/high and rejects `"none"` (and any other
+     * value) with a 400 on gpt-oss models, so both [ReasoningLevel.DEFAULT]
+     * and [ReasoningLevel.OFF] are sent as an omission. DeepSeek accepts
+     * `"none"` to disable thinking, so only [ReasoningLevel.DEFAULT] is
+     * omitted there.
      */
-    private fun ReasoningLevel.toApiValue(): String? = when (this) {
+    private fun LlmRequestConfig.reasoningApiValue(): String? = when (reasoning) {
         ReasoningLevel.DEFAULT -> null
-        ReasoningLevel.OFF -> null
+        ReasoningLevel.OFF -> if (vendor == LlmVendor.DEEPSEEK) "none" else null
         ReasoningLevel.LOW -> "low"
         ReasoningLevel.MEDIUM -> "medium"
         ReasoningLevel.HIGH -> "high"
     }
+
+    /**
+     * Groq is intentionally absent from any `max_tokens` handling: on its
+     * free tier the per-minute token limit counts prompt plus `max_tokens`,
+     * so sending the parameter triggers spurious 413s.
+     */
+    private val LlmVendor.baseUrl: String
+        get() = when (this) {
+            LlmVendor.GROQ -> "https://api.groq.com/openai/v1"
+            LlmVendor.DEEPSEEK -> "https://api.deepseek.com/v1"
+        }
 
     private fun LlmMessage.toJson(): JsonObject = buildJsonObject {
         put("role", role)
@@ -174,5 +193,8 @@ class OpenAiCompatibleLlmProvider(
         const val FINISH_TOOL_CALLS = "tool_calls"
         const val MAX_ERROR_BODY = 200
         const val LOG_TAG = "OpenAiCompatibleLlmProvider"
+
+        /** See [buildRequestBody]: thinking counts against this completion budget. */
+        const val DEEPSEEK_MAX_TOKENS = 8192
     }
 }

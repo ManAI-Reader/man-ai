@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.highliuk.manai.data.llm.LlmCredentialsManager
 import com.highliuk.manai.data.translation.DeepLCredentialsManager
 import com.highliuk.manai.domain.model.AppLanguage
+import com.highliuk.manai.domain.model.LlmVendor
 import com.highliuk.manai.domain.model.ReadingMode
 import com.highliuk.manai.domain.model.TargetLanguage
 import com.highliuk.manai.domain.model.ThemeMode
@@ -32,8 +33,6 @@ class SettingsViewModelTest {
     private val translationTargetLangFlow = MutableStateFlow(TargetLanguage.EN)
     private val credentialsManager = mockk<DeepLCredentialsManager>(relaxed = true)
     private val llmCredentialsManager = mockk<LlmCredentialsManager>(relaxed = true)
-    private val llmBaseUrlFlow = MutableStateFlow("https://api.groq.com/openai/v1")
-    private val llmModelFlow = MutableStateFlow("llama-3.3-70b-versatile")
     private val gridColumnsFlow = MutableStateFlow(2)
     private val readingModeFlow = MutableStateFlow(ReadingMode.LTR)
     private val themeModeFlow = MutableStateFlow(ThemeMode.SYSTEM)
@@ -57,8 +56,6 @@ class SettingsViewModelTest {
         every { userPreferencesRepository.tapToNavigateLandscape } returns tapToNavigateLandscapeFlow
         every { userPreferencesRepository.translationTargetLang } returns translationTargetLangFlow
         every { userPreferencesRepository.showFurigana } returns showFuriganaFlow
-        every { userPreferencesRepository.llmBaseUrl } returns llmBaseUrlFlow
-        every { userPreferencesRepository.llmModel } returns llmModelFlow
     }
 
     @After
@@ -286,77 +283,63 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `llmApiKey emits value from credentials manager`() = runTest(testDispatcher) {
-        every { llmCredentialsManager.getApiKey() } returns "llm-key"
+    fun `groqApiKey emits value from credentials manager`() = runTest(testDispatcher) {
+        every { llmCredentialsManager.getApiKey(LlmVendor.GROQ) } returns "groq-key"
 
         val viewModel = createViewModel()
 
-        assertEquals("llm-key", viewModel.llmApiKey.value)
+        assertEquals("groq-key", viewModel.groqApiKey.value)
     }
 
     @Test
-    fun `setLlmApiKey saves key via credentials manager`() = runTest(testDispatcher) {
+    fun `setGroqApiKey saves key via credentials manager`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
 
-        viewModel.setLlmApiKey("new-llm-key")
+        viewModel.setGroqApiKey("new-groq-key")
 
-        verify { llmCredentialsManager.saveApiKey("new-llm-key") }
-        assertEquals("new-llm-key", viewModel.llmApiKey.value)
+        verify { llmCredentialsManager.saveApiKey(LlmVendor.GROQ, "new-groq-key") }
+        assertEquals("new-groq-key", viewModel.groqApiKey.value)
     }
 
     @Test
-    fun `setLlmApiKey clears when blank`() = runTest(testDispatcher) {
-        every { llmCredentialsManager.getApiKey() } returns "old-key"
+    fun `setGroqApiKey clears when blank`() = runTest(testDispatcher) {
+        every { llmCredentialsManager.getApiKey(LlmVendor.GROQ) } returns "old-key"
         val viewModel = createViewModel()
 
-        viewModel.setLlmApiKey("")
+        viewModel.setGroqApiKey("")
 
-        verify { llmCredentialsManager.clearApiKey() }
-        assertEquals("", viewModel.llmApiKey.value)
+        verify { llmCredentialsManager.clearApiKey(LlmVendor.GROQ) }
+        assertEquals("", viewModel.groqApiKey.value)
     }
 
     @Test
-    fun `llmBaseUrl seeds from stored preference`() = runTest(testDispatcher) {
-        llmBaseUrlFlow.value = "https://stored.example.com/v1"
+    fun `deepseekApiKey emits value from credentials manager`() = runTest(testDispatcher) {
+        every { llmCredentialsManager.getApiKey(LlmVendor.DEEPSEEK) } returns "deepseek-key"
 
         val viewModel = createViewModel()
-        testDispatcher.scheduler.advanceUntilIdle()
 
-        assertEquals("https://stored.example.com/v1", viewModel.llmBaseUrl.value)
+        assertEquals("deepseek-key", viewModel.deepseekApiKey.value)
     }
 
     @Test
-    fun `setLlmBaseUrl updates flow synchronously and persists`() = runTest(testDispatcher) {
+    fun `setDeepseekApiKey saves key via credentials manager`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
-        testDispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.setLlmBaseUrl("https://example.com/v1")
+        viewModel.setDeepseekApiKey("new-deepseek-key")
 
-        assertEquals("https://example.com/v1", viewModel.llmBaseUrl.value)
-        testDispatcher.scheduler.advanceUntilIdle()
-        coVerify { userPreferencesRepository.setLlmBaseUrl("https://example.com/v1") }
+        verify { llmCredentialsManager.saveApiKey(LlmVendor.DEEPSEEK, "new-deepseek-key") }
+        assertEquals("new-deepseek-key", viewModel.deepseekApiKey.value)
     }
 
     @Test
-    fun `llmModel seeds from stored preference`() = runTest(testDispatcher) {
-        llmModelFlow.value = "stored-model"
-
+    fun `setDeepseekApiKey clears when blank`() = runTest(testDispatcher) {
+        every { llmCredentialsManager.getApiKey(LlmVendor.DEEPSEEK) } returns "old-key"
         val viewModel = createViewModel()
-        testDispatcher.scheduler.advanceUntilIdle()
 
-        assertEquals("stored-model", viewModel.llmModel.value)
-    }
+        viewModel.setDeepseekApiKey("")
 
-    @Test
-    fun `setLlmModel updates flow synchronously and persists`() = runTest(testDispatcher) {
-        val viewModel = createViewModel()
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        viewModel.setLlmModel("gemma2-9b-it")
-
-        assertEquals("gemma2-9b-it", viewModel.llmModel.value)
-        testDispatcher.scheduler.advanceUntilIdle()
-        coVerify { userPreferencesRepository.setLlmModel("gemma2-9b-it") }
+        verify { llmCredentialsManager.clearApiKey(LlmVendor.DEEPSEEK) }
+        assertEquals("", viewModel.deepseekApiKey.value)
     }
 
     @Test

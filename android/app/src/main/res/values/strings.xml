@@ -99,11 +99,10 @@
 
     <!-- AI Assistant settings -->
     <string name="ai_section">AI Assistant</string>
-    <string name="llm_api_key">API Key</string>
-    <string name="llm_api_key_hint">Enter your API key (e.g. Groq)</string>
-    <string name="llm_base_url">API Base URL</string>
-    <string name="llm_base_url_placeholder" translatable="false">https://api.groq.com/openai/v1</string>
-    <string name="llm_model">Model</string>
+    <string name="settings_groq_api_key">Groq API key</string>
+    <string name="settings_deepseek_api_key">DeepSeek API key</string>
+    <string name="prompt_vendor_label">Provider</string>
+    <string name="prompt_model_label">Model</string>
     <string name="manage_prompts">Manage prompts</string>
 
     <!-- Prompt management -->

@@ -34,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.highliuk.manai.R
+import com.highliuk.manai.domain.model.LlmVendor
 import com.highliuk.manai.domain.model.PromptTemplate
 import com.highliuk.manai.domain.model.ReasoningLevel
 
@@ -48,22 +49,40 @@ internal fun reasoningLevelLabelRes(level: ReasoningLevel): Int = when (level) {
     ReasoningLevel.HIGH -> R.string.reasoning_high
 }
 
+/** Save callback carrying every editable field of the template. */
+typealias OnSavePrompt = (
+    name: String,
+    template: String,
+    reasoningLevel: ReasoningLevel,
+    vendor: LlmVendor,
+    model: String,
+) -> Unit
+
 /**
  * Full-screen prompt editor: replaces the cramped edit dialog with room for
- * the template text and a vertical reasoning-level selector.
+ * the template text, a provider/model section and a vertical reasoning-level
+ * selector.
+ *
+ * @param modelForVendorChange resolves the model shown after a vendor switch
+ * (swapping vendor defaults while keeping user-customized models).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PromptEditScreen(
     template: PromptTemplate?,
     @StringRes errorRes: Int?,
-    onSave: (name: String, template: String, reasoningLevel: ReasoningLevel) -> Unit,
+    onSave: OnSavePrompt,
+    modelForVendorChange: (String, LlmVendor) -> String,
     onBack: () -> Unit,
 ) {
     var name by remember(template) { mutableStateOf(template?.name.orEmpty()) }
     var text by remember(template) { mutableStateOf(template?.template.orEmpty()) }
     var reasoning by remember(template) {
         mutableStateOf(template?.reasoningLevel ?: ReasoningLevel.DEFAULT)
+    }
+    var vendor by remember(template) { mutableStateOf(template?.vendor ?: LlmVendor.GROQ) }
+    var model by remember(template) {
+        mutableStateOf(template?.model ?: LlmVendor.GROQ.defaultModel)
     }
 
     Scaffold(
@@ -90,7 +109,7 @@ fun PromptEditScreen(
                 },
                 actions = {
                     TextButton(
-                        onClick = { onSave(name, text, reasoning) },
+                        onClick = { onSave(name, text, reasoning, vendor, model) },
                         modifier = Modifier.testTag("save_prompt"),
                     ) {
                         Text(stringResource(R.string.save))
@@ -132,6 +151,28 @@ fun PromptEditScreen(
                 modifier = Modifier.padding(top = 8.dp),
             )
             Text(
+                text = stringResource(R.string.prompt_vendor_label),
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(top = 16.dp),
+            )
+            VendorSelector(
+                selected = vendor,
+                onSelect = { newVendor ->
+                    model = modelForVendorChange(model, newVendor)
+                    vendor = newVendor
+                },
+            )
+            OutlinedTextField(
+                value = model,
+                onValueChange = { model = it },
+                label = { Text(stringResource(R.string.prompt_model_label)) },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp)
+                    .testTag("prompt_model_field"),
+            )
+            Text(
                 text = stringResource(R.string.reasoning_level),
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier.padding(top = 16.dp),
@@ -152,6 +193,45 @@ fun PromptEditScreen(
             }
         }
     }
+}
+
+@Composable
+private fun VendorSelector(
+    selected: LlmVendor,
+    onSelect: (LlmVendor) -> Unit,
+) {
+    Column(modifier = Modifier.selectableGroup()) {
+        LlmVendor.entries.forEach { vendor ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .selectable(
+                        selected = vendor == selected,
+                        role = Role.RadioButton,
+                        onClick = { onSelect(vendor) },
+                    )
+                    .padding(vertical = 8.dp)
+                    .testTag("vendor_radio_${vendor.name}"),
+            ) {
+                RadioButton(
+                    selected = vendor == selected,
+                    onClick = null,
+                )
+                Text(
+                    text = vendorLabel(vendor),
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(start = 12.dp),
+                )
+            }
+        }
+    }
+}
+
+/** Vendor display names are brand names, identical in every locale. */
+internal fun vendorLabel(vendor: LlmVendor): String = when (vendor) {
+    LlmVendor.GROQ -> "Groq"
+    LlmVendor.DEEPSEEK -> "DeepSeek"
 }
 
 @Composable

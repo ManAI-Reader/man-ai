@@ -13,6 +13,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import com.highliuk.manai.R
+import com.highliuk.manai.domain.model.LlmVendor
 import com.highliuk.manai.domain.model.PromptTemplate
 import com.highliuk.manai.domain.model.ReasoningLevel
 import org.junit.Assert.assertEquals
@@ -36,7 +37,7 @@ class PromptEditScreenTest {
     private fun setScreenContent(
         template: PromptTemplate? = newTemplate,
         errorRes: Int? = null,
-        onSave: (String, String, ReasoningLevel) -> Unit = { _, _, _ -> },
+        onSave: OnSavePrompt = { _, _, _, _, _ -> },
         onBack: () -> Unit = {},
     ) {
         composeTestRule.setContent {
@@ -44,6 +45,16 @@ class PromptEditScreenTest {
                 template = template,
                 errorRes = errorRes,
                 onSave = onSave,
+                modelForVendorChange = { model, vendor ->
+                    if (model.isBlank() || LlmVendor.entries.any {
+                            it != vendor && it.defaultModel == model
+                        }
+                    ) {
+                        vendor.defaultModel
+                    } else {
+                        model
+                    }
+                },
                 onBack = onBack,
             )
         }
@@ -107,12 +118,16 @@ class PromptEditScreenTest {
         var savedName: String? = null
         var savedTemplate: String? = null
         var savedLevel: ReasoningLevel? = null
+        var savedVendor: LlmVendor? = null
+        var savedModel: String? = null
         setScreenContent(
             template = newTemplate,
-            onSave = { name, template, level ->
+            onSave = { name, template, level, vendor, model ->
                 savedName = name
                 savedTemplate = template
                 savedLevel = level
+                savedVendor = vendor
+                savedModel = model
             },
         )
 
@@ -123,6 +138,8 @@ class PromptEditScreenTest {
         assertEquals("My prompt", savedName)
         assertEquals("Explain {text}", savedTemplate)
         assertEquals(ReasoningLevel.DEFAULT, savedLevel)
+        assertEquals(LlmVendor.GROQ, savedVendor)
+        assertEquals(LlmVendor.GROQ.defaultModel, savedModel)
     }
 
     @Test
@@ -130,7 +147,7 @@ class PromptEditScreenTest {
         var savedName: String? = null
         setScreenContent(
             template = existingTemplate,
-            onSave = { name, _, _ -> savedName = name },
+            onSave = { name, _, _, _, _ -> savedName = name },
         )
 
         composeTestRule.onNodeWithTag("prompt_name_field").performTextClearance()
@@ -162,7 +179,7 @@ class PromptEditScreenTest {
         var savedLevel: ReasoningLevel? = null
         setScreenContent(
             template = existingTemplate,
-            onSave = { _, _, level -> savedLevel = level },
+            onSave = { _, _, level, _, _ -> savedLevel = level },
         )
 
         composeTestRule.onNodeWithTag("reasoning_radio_HIGH").performScrollTo().performClick()
@@ -170,6 +187,86 @@ class PromptEditScreenTest {
         composeTestRule.onNodeWithTag("save_prompt").performClick()
 
         assertEquals(ReasoningLevel.HIGH, savedLevel)
+    }
+
+    @Test
+    fun vendorSelectorShowsBothVendorsWithGroqPreselected() {
+        setScreenContent(template = newTemplate)
+
+        composeTestRule.onNodeWithTag("vendor_radio_GROQ").assertExists().assertIsSelected()
+        composeTestRule.onNodeWithTag("vendor_radio_DEEPSEEK").assertExists().assertIsNotSelected()
+    }
+
+    @Test
+    fun vendorSelectorPreselectsTemplateVendor() {
+        setScreenContent(
+            template = existingTemplate.copy(
+                vendor = LlmVendor.DEEPSEEK,
+                model = "deepseek-chat",
+            ),
+        )
+
+        composeTestRule.onNodeWithTag("vendor_radio_DEEPSEEK").assertIsSelected()
+        composeTestRule.onNodeWithTag("vendor_radio_GROQ").assertIsNotSelected()
+    }
+
+    @Test
+    fun modelFieldPrefilledWithTemplateModel() {
+        setScreenContent(
+            template = existingTemplate.copy(
+                vendor = LlmVendor.DEEPSEEK,
+                model = "deepseek-reasoner",
+            ),
+        )
+
+        composeTestRule.onNodeWithTag("prompt_model_field")
+            .performScrollTo()
+            .assertTextContains("deepseek-reasoner")
+    }
+
+    @Test
+    fun switchingVendorSwapsTheDefaultModel() {
+        setScreenContent(template = newTemplate)
+
+        composeTestRule.onNodeWithTag("vendor_radio_DEEPSEEK").performScrollTo().performClick()
+
+        composeTestRule.onNodeWithTag("prompt_model_field")
+            .performScrollTo()
+            .assertTextContains(LlmVendor.DEEPSEEK.defaultModel)
+    }
+
+    @Test
+    fun switchingVendorKeepsACustomizedModel() {
+        setScreenContent(template = newTemplate)
+
+        composeTestRule.onNodeWithTag("prompt_model_field").performScrollTo()
+            .performTextClearance()
+        composeTestRule.onNodeWithTag("prompt_model_field")
+            .performTextInput("llama-3.3-70b-versatile")
+        composeTestRule.onNodeWithTag("vendor_radio_DEEPSEEK").performScrollTo().performClick()
+
+        composeTestRule.onNodeWithTag("prompt_model_field")
+            .performScrollTo()
+            .assertTextContains("llama-3.3-70b-versatile")
+    }
+
+    @Test
+    fun selectedVendorAndModelAreReflectedInSaveCallback() {
+        var savedVendor: LlmVendor? = null
+        var savedModel: String? = null
+        setScreenContent(
+            template = existingTemplate,
+            onSave = { _, _, _, vendor, model ->
+                savedVendor = vendor
+                savedModel = model
+            },
+        )
+
+        composeTestRule.onNodeWithTag("vendor_radio_DEEPSEEK").performScrollTo().performClick()
+        composeTestRule.onNodeWithTag("save_prompt").performClick()
+
+        assertEquals(LlmVendor.DEEPSEEK, savedVendor)
+        assertEquals(LlmVendor.DEEPSEEK.defaultModel, savedModel)
     }
 
     @Test

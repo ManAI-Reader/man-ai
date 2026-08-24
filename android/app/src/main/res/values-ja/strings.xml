@@ -96,10 +96,10 @@
 
     <!-- AI Assistant settings -->
     <string name="ai_section">AIアシスタント</string>
-    <string name="llm_api_key">APIキー</string>
-    <string name="llm_api_key_hint">APIキーを入力（例: Groq）</string>
-    <string name="llm_base_url">APIベースURL</string>
-    <string name="llm_model">モデル</string>
+    <string name="settings_groq_api_key">Groq APIキー</string>
+    <string name="settings_deepseek_api_key">DeepSeek APIキー</string>
+    <string name="prompt_vendor_label">プロバイダー</string>
+    <string name="prompt_model_label">モデル</string>
     <string name="manage_prompts">プロンプトを管理</string>
 
     <!-- Prompt management -->

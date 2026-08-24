@@ -3,6 +3,7 @@ package com.highliuk.manai.data.repository
 import com.highliuk.manai.R
 import com.highliuk.manai.data.local.dao.PromptTemplateDao
 import com.highliuk.manai.data.local.entity.PromptTemplateEntity
+import com.highliuk.manai.domain.model.LlmVendor
 import com.highliuk.manai.domain.model.PromptTemplate
 import com.highliuk.manai.domain.model.ReasoningLevel
 import com.highliuk.manai.domain.repository.UserPreferencesRepository
@@ -79,6 +80,72 @@ class PromptTemplateRepositoryImplTest {
         val result = repository.observeTemplates().first()
 
         assertEquals(ReasoningLevel.DEFAULT, result.single().reasoningLevel)
+    }
+
+    @Test
+    fun `observeTemplates maps vendor and model to domain with groq fallback`() = runTest {
+        every { dao.observeAll() } returns flowOf(
+            listOf(
+                PromptTemplateEntity(
+                    id = 1L,
+                    name = "DeepSeek prompt",
+                    template = "Do {text}",
+                    vendor = "DEEPSEEK",
+                    model = "deepseek-reasoner",
+                ),
+                PromptTemplateEntity(
+                    id = 2L,
+                    name = "Broken vendor",
+                    template = "Do {text}",
+                    vendor = "BANANAS",
+                    model = "some-model",
+                ),
+            )
+        )
+        coEvery { dao.count() } returns 2
+
+        val result = repository.observeTemplates().first()
+
+        assertEquals(LlmVendor.DEEPSEEK, result[0].vendor)
+        assertEquals("deepseek-reasoner", result[0].model)
+        assertEquals(LlmVendor.GROQ, result[1].vendor)
+        assertEquals("some-model", result[1].model)
+    }
+
+    @Test
+    fun `save stores vendor name and model on the entity`() = runTest {
+        val entitySlot = slot<PromptTemplateEntity>()
+        coEvery { dao.upsert(capture(entitySlot)) } returns 1L
+
+        repository.save(
+            PromptTemplate(
+                id = 4L,
+                name = "Deep",
+                template = "Think about {text}",
+                vendor = LlmVendor.DEEPSEEK,
+                model = "deepseek-chat",
+            )
+        )
+
+        assertEquals("DEEPSEEK", entitySlot.captured.vendor)
+        assertEquals("deepseek-chat", entitySlot.captured.model)
+    }
+
+    @Test
+    fun `seeded default templates use groq with its default model`() = runTest {
+        every { dao.observeAll() } returns flowOf(emptyList())
+        coEvery { dao.count() } returns 0
+        every { userPreferences.promptDefaultsSeeded } returns flowOf(false)
+        val inserted = mutableListOf<PromptTemplateEntity>()
+        coEvery { dao.upsert(capture(inserted)) } returns 1L
+
+        repository.observeTemplates().first()
+
+        assertEquals(2, inserted.size)
+        inserted.forEach { entity ->
+            assertEquals("GROQ", entity.vendor)
+            assertEquals("openai/gpt-oss-120b", entity.model)
+        }
     }
 
     @Test

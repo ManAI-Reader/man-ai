@@ -13,4 +13,8 @@ data class PromptTemplateEntity(
     val sortOrder: Int = 0,
     @ColumnInfo(defaultValue = "DEFAULT")
     val reasoningLevel: String = "DEFAULT",
+    @ColumnInfo(defaultValue = "GROQ")
+    val vendor: String = "GROQ",
+    @ColumnInfo(defaultValue = "openai/gpt-oss-120b")
+    val model: String = "openai/gpt-oss-120b",
 )

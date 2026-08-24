@@ -5,14 +5,12 @@ import com.highliuk.manai.data.llm.LlmCredentialsManager
 import com.highliuk.manai.data.llm.OpenAiCompatibleLlmProvider
 import com.highliuk.manai.domain.llm.LlmProvider
 import com.highliuk.manai.domain.logging.Logger
-import com.highliuk.manai.domain.repository.UserPreferencesRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
-import kotlinx.coroutines.flow.first
 import javax.inject.Qualifier
 import javax.inject.Singleton
 
@@ -45,13 +43,10 @@ object LlmModule {
     fun provideLlmProvider(
         @LlmHttpClient httpClient: HttpClient,
         credentialsManager: LlmCredentialsManager,
-        userPreferencesRepository: UserPreferencesRepository,
         logger: Logger,
     ): LlmProvider = OpenAiCompatibleLlmProvider(
         httpClient = httpClient,
-        apiKeyProvider = { credentialsManager.getApiKey().orEmpty() },
-        baseUrlProvider = { userPreferencesRepository.llmBaseUrl.first() },
-        modelProvider = { userPreferencesRepository.llmModel.first() },
+        apiKeyProvider = { vendor -> credentialsManager.getApiKey(vendor).orEmpty() },
         logger = logger,
     )
 }

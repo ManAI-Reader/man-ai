@@ -6,4 +6,6 @@ data class PromptTemplate(
     val template: String,
     val sortOrder: Int = 0,
     val reasoningLevel: ReasoningLevel = ReasoningLevel.DEFAULT,
+    val vendor: LlmVendor = LlmVendor.GROQ,
+    val model: String = LlmVendor.GROQ.defaultModel,
 )

@@ -3,6 +3,7 @@ package com.highliuk.manai.data.repository
 import com.highliuk.manai.R
 import com.highliuk.manai.data.local.dao.PromptTemplateDao
 import com.highliuk.manai.data.local.entity.PromptTemplateEntity
+import com.highliuk.manai.domain.model.LlmVendor
 import com.highliuk.manai.domain.model.PromptTemplate
 import com.highliuk.manai.domain.model.ReasoningLevel
 import com.highliuk.manai.domain.repository.PromptTemplateRepository
@@ -52,16 +53,24 @@ class PromptTemplateRepositoryImpl(
     private suspend fun needsSeeding(): Boolean =
         dao.count() == 0 && !userPreferences.promptDefaultsSeeded.first()
 
+    /**
+     * The two seeded defaults explicitly target Groq with its default model
+     * (openai/gpt-oss-120b): out of the box the app talks to Groq.
+     */
     private fun defaultTemplates(): List<PromptTemplateEntity> = listOf(
         PromptTemplateEntity(
             name = resolveString(R.string.prompt_default_word),
             template = resolveString(R.string.prompt_template_word),
             sortOrder = 0,
+            vendor = LlmVendor.GROQ.name,
+            model = LlmVendor.GROQ.defaultModel,
         ),
         PromptTemplateEntity(
             name = resolveString(R.string.prompt_default_grammar),
             template = resolveString(R.string.prompt_template_grammar),
             sortOrder = 1,
+            vendor = LlmVendor.GROQ.name,
+            model = LlmVendor.GROQ.defaultModel,
         ),
     )
 
@@ -71,6 +80,8 @@ class PromptTemplateRepositoryImpl(
         template = template,
         sortOrder = sortOrder,
         reasoningLevel = ReasoningLevel.valueOfOrDefault(reasoningLevel),
+        vendor = LlmVendor.valueOfOrDefault(vendor),
+        model = model,
     )
 
     private fun PromptTemplate.toEntity(): PromptTemplateEntity = PromptTemplateEntity(
@@ -79,5 +90,7 @@ class PromptTemplateRepositoryImpl(
         template = template,
         sortOrder = sortOrder,
         reasoningLevel = reasoningLevel.name,
+        vendor = vendor.name,
+        model = model,
     )
 }

@@ -3,6 +3,7 @@ package com.highliuk.manai.ui.prompts
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.highliuk.manai.R
+import com.highliuk.manai.domain.model.LlmVendor
 import com.highliuk.manai.domain.model.PromptTemplate
 import com.highliuk.manai.domain.model.ReasoningLevel
 import com.highliuk.manai.domain.repository.PromptTemplateRepository
@@ -86,7 +87,13 @@ class PromptEditViewModelTest {
             advanceUntilIdle()
 
             viewModel.saved.test {
-                viewModel.save("  New name  ", "  New body  ", ReasoningLevel.HIGH)
+                viewModel.save(
+                    "  New name  ",
+                    "  New body  ",
+                    ReasoningLevel.HIGH,
+                    LlmVendor.GROQ,
+                    LlmVendor.GROQ.defaultModel,
+                )
                 awaitItem()
             }
 
@@ -110,7 +117,7 @@ class PromptEditViewModelTest {
         val viewModel = createViewModel(id = 7L)
         advanceUntilIdle()
 
-        viewModel.save("   ", "body", ReasoningLevel.DEFAULT)
+        viewModel.save("   ", "body", ReasoningLevel.DEFAULT, LlmVendor.GROQ, "m")
         advanceUntilIdle()
 
         coVerify(exactly = 0) { repository.save(any()) }
@@ -122,7 +129,7 @@ class PromptEditViewModelTest {
         val viewModel = createViewModel(id = -1L)
         advanceUntilIdle()
 
-        viewModel.save("name", "   ", ReasoningLevel.DEFAULT)
+        viewModel.save("name", "   ", ReasoningLevel.DEFAULT, LlmVendor.GROQ, "m")
         advanceUntilIdle()
 
         coVerify(exactly = 0) { repository.save(any()) }
@@ -134,10 +141,10 @@ class PromptEditViewModelTest {
         val viewModel = createViewModel(id = -1L)
         advanceUntilIdle()
 
-        viewModel.save("", "", ReasoningLevel.DEFAULT)
+        viewModel.save("", "", ReasoningLevel.DEFAULT, LlmVendor.GROQ, "m")
         assertEquals(R.string.prompt_name_required, viewModel.editError.value)
 
-        viewModel.save("name", "body", ReasoningLevel.DEFAULT)
+        viewModel.save("name", "body", ReasoningLevel.DEFAULT, LlmVendor.GROQ, "m")
         advanceUntilIdle()
 
         assertNull(viewModel.editError.value)
@@ -149,10 +156,101 @@ class PromptEditViewModelTest {
         val viewModel = createViewModel(id = 7L)
         advanceUntilIdle()
 
-        viewModel.save("name", "body", ReasoningLevel.DEFAULT)
-        viewModel.save("name", "body", ReasoningLevel.DEFAULT)
+        viewModel.save("name", "body", ReasoningLevel.DEFAULT, LlmVendor.GROQ, "m")
+        viewModel.save("name", "body", ReasoningLevel.DEFAULT, LlmVendor.GROQ, "m")
         advanceUntilIdle()
 
         coVerify(exactly = 1) { repository.save(any()) }
+    }
+
+    @Test
+    fun `save persists vendor and model`() = runTest(testDispatcher) {
+        templatesFlow.value = listOf(template)
+        val viewModel = createViewModel(id = 7L)
+        advanceUntilIdle()
+
+        viewModel.saved.test {
+            viewModel.save(
+                "name",
+                "body",
+                ReasoningLevel.DEFAULT,
+                LlmVendor.DEEPSEEK,
+                "deepseek-reasoner",
+            )
+            awaitItem()
+        }
+
+        coVerify {
+            repository.save(
+                match { it.vendor == LlmVendor.DEEPSEEK && it.model == "deepseek-reasoner" },
+            )
+        }
+    }
+
+    @Test
+    fun `save falls back to the vendor default model when model is blank`() =
+        runTest(testDispatcher) {
+            templatesFlow.value = listOf(template)
+            val viewModel = createViewModel(id = 7L)
+            advanceUntilIdle()
+
+            viewModel.saved.test {
+                viewModel.save("name", "body", ReasoningLevel.DEFAULT, LlmVendor.DEEPSEEK, "   ")
+                awaitItem()
+            }
+
+            coVerify { repository.save(match { it.model == LlmVendor.DEEPSEEK.defaultModel }) }
+        }
+
+    @Test
+    fun `modelForVendorChange replaces a blank model with the new vendor default`() {
+        val viewModel = createViewModel(id = -1L)
+
+        assertEquals(
+            "deepseek-chat",
+            viewModel.modelForVendorChange("", LlmVendor.DEEPSEEK),
+        )
+        assertEquals(
+            "deepseek-chat",
+            viewModel.modelForVendorChange("   ", LlmVendor.DEEPSEEK),
+        )
+    }
+
+    @Test
+    fun `modelForVendorChange swaps the other vendor default for the new vendor default`() {
+        val viewModel = createViewModel(id = -1L)
+
+        assertEquals(
+            "deepseek-chat",
+            viewModel.modelForVendorChange("openai/gpt-oss-120b", LlmVendor.DEEPSEEK),
+        )
+        assertEquals(
+            "openai/gpt-oss-120b",
+            viewModel.modelForVendorChange("deepseek-chat", LlmVendor.GROQ),
+        )
+    }
+
+    @Test
+    fun `modelForVendorChange keeps a user customized model`() {
+        val viewModel = createViewModel(id = -1L)
+
+        assertEquals(
+            "deepseek-reasoner",
+            viewModel.modelForVendorChange("deepseek-reasoner", LlmVendor.GROQ),
+        )
+        assertEquals(
+            "llama-3.3-70b-versatile",
+            viewModel.modelForVendorChange("llama-3.3-70b-versatile", LlmVendor.DEEPSEEK),
+        )
+    }
+
+    @Test
+    fun `modelForVendorChange keeps the model when it already is the new vendor default`() {
+        val viewModel = createViewModel(id = -1L)
+
+        assertEquals(
+            "deepseek-chat",
+            viewModel.modelForVendorChange("deepseek-chat", LlmVendor.DEEPSEEK),
+        )
     }
 }

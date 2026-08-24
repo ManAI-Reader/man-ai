@@ -352,9 +352,8 @@ fun ManAiNavHost(
                     val deeplApiKey by viewModel.deeplApiKey.collectAsState()
                     val translationTargetLang by viewModel.translationTargetLang.collectAsState()
                     val showFurigana by viewModel.showFurigana.collectAsState()
-                    val llmApiKey by viewModel.llmApiKey.collectAsState()
-                    val llmBaseUrl by viewModel.llmBaseUrl.collectAsState()
-                    val llmModel by viewModel.llmModel.collectAsState()
+                    val groqApiKey by viewModel.groqApiKey.collectAsState()
+                    val deepseekApiKey by viewModel.deepseekApiKey.collectAsState()
 
                     SettingsScreen(
                         gridColumns = gridColumns,
@@ -387,12 +386,10 @@ fun ManAiNavHost(
                         onDeeplApiKeyChange = viewModel::setDeeplApiKey,
                         translationTargetLang = translationTargetLang,
                         onTranslationTargetLangChange = viewModel::setTranslationTargetLang,
-                        llmApiKey = llmApiKey,
-                        onLlmApiKeyChange = viewModel::setLlmApiKey,
-                        llmBaseUrl = llmBaseUrl,
-                        onLlmBaseUrlChange = viewModel::setLlmBaseUrl,
-                        llmModel = llmModel,
-                        onLlmModelChange = viewModel::setLlmModel,
+                        groqApiKey = groqApiKey,
+                        onGroqApiKeyChange = viewModel::setGroqApiKey,
+                        deepseekApiKey = deepseekApiKey,
+                        onDeepseekApiKeyChange = viewModel::setDeepseekApiKey,
                         onManagePromptsClick = { navController.navigate("prompts") },
                         onBack = { navController.popBackStack() }
                     )
@@ -492,6 +489,7 @@ fun ManAiNavHost(
                         template = template,
                         errorRes = editError,
                         onSave = viewModel::save,
+                        modelForVendorChange = viewModel::modelForVendorChange,
                         onBack = { navController.popBackStack() }
                     )
                 }

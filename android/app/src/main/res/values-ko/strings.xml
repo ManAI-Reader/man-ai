@@ -96,10 +96,10 @@
 
     <!-- AI Assistant settings -->
     <string name="ai_section">AI 어시스턴트</string>
-    <string name="llm_api_key">API 키</string>
-    <string name="llm_api_key_hint">API 키를 입력하세요 (예: Groq)</string>
-    <string name="llm_base_url">API 기본 URL</string>
-    <string name="llm_model">모델</string>
+    <string name="settings_groq_api_key">Groq API 키</string>
+    <string name="settings_deepseek_api_key">DeepSeek API 키</string>
+    <string name="prompt_vendor_label">제공업체</string>
+    <string name="prompt_model_label">모델</string>
     <string name="manage_prompts">프롬프트 관리</string>
 
     <!-- Prompt management -->

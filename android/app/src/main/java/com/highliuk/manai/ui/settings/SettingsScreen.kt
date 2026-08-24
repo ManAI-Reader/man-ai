@@ -97,19 +97,18 @@ fun SettingsScreen(
     onDeeplApiKeyChange: (String) -> Unit = {},
     translationTargetLang: TargetLanguage = TargetLanguage.EN,
     onTranslationTargetLangChange: (TargetLanguage) -> Unit = {},
-    llmApiKey: String = "",
-    onLlmApiKeyChange: (String) -> Unit = {},
-    llmBaseUrl: String = "",
-    onLlmBaseUrlChange: (String) -> Unit = {},
-    llmModel: String = "",
-    onLlmModelChange: (String) -> Unit = {},
+    groqApiKey: String = "",
+    onGroqApiKeyChange: (String) -> Unit = {},
+    deepseekApiKey: String = "",
+    onDeepseekApiKeyChange: (String) -> Unit = {},
     onManagePromptsClick: () -> Unit = {},
     versionName: String = BuildConfig.VERSION_NAME,
     versionCode: Int = BuildConfig.VERSION_CODE,
     onBack: () -> Unit
 ) {
     var apiKeyVisible by remember { mutableStateOf(false) }
-    var llmApiKeyVisible by remember { mutableStateOf(false) }
+    var groqApiKeyVisible by remember { mutableStateOf(false) }
+    var deepseekApiKeyVisible by remember { mutableStateOf(false) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -373,15 +372,15 @@ fun SettingsScreen(
             )
 
             AiSection(
-                llmApiKey = llmApiKey,
-                onLlmApiKeyChange = onLlmApiKeyChange,
-                llmBaseUrl = llmBaseUrl,
-                onLlmBaseUrlChange = onLlmBaseUrlChange,
-                llmModel = llmModel,
-                onLlmModelChange = onLlmModelChange,
+                groqApiKey = groqApiKey,
+                onGroqApiKeyChange = onGroqApiKeyChange,
+                deepseekApiKey = deepseekApiKey,
+                onDeepseekApiKeyChange = onDeepseekApiKeyChange,
                 onManagePromptsClick = onManagePromptsClick,
-                apiKeyVisible = llmApiKeyVisible,
-                onApiKeyVisibleChange = { llmApiKeyVisible = it },
+                groqApiKeyVisible = groqApiKeyVisible,
+                onGroqApiKeyVisibleChange = { groqApiKeyVisible = it },
+                deepseekApiKeyVisible = deepseekApiKeyVisible,
+                onDeepseekApiKeyVisibleChange = { deepseekApiKeyVisible = it },
             )
 
             Text(
@@ -462,15 +461,15 @@ private fun TranslationSection(
 
 @Composable
 private fun AiSection(
-    llmApiKey: String,
-    onLlmApiKeyChange: (String) -> Unit,
-    llmBaseUrl: String,
-    onLlmBaseUrlChange: (String) -> Unit,
-    llmModel: String,
-    onLlmModelChange: (String) -> Unit,
+    groqApiKey: String,
+    onGroqApiKeyChange: (String) -> Unit,
+    deepseekApiKey: String,
+    onDeepseekApiKeyChange: (String) -> Unit,
     onManagePromptsClick: () -> Unit,
-    apiKeyVisible: Boolean,
-    onApiKeyVisibleChange: (Boolean) -> Unit,
+    groqApiKeyVisible: Boolean,
+    onGroqApiKeyVisibleChange: (Boolean) -> Unit,
+    deepseekApiKeyVisible: Boolean,
+    onDeepseekApiKeyVisibleChange: (Boolean) -> Unit,
 ) {
     Text(
         text = stringResource(R.string.ai_section),
@@ -478,49 +477,23 @@ private fun AiSection(
         modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
     )
 
-    OutlinedTextField(
-        value = llmApiKey,
-        onValueChange = onLlmApiKeyChange,
-        label = { Text(stringResource(R.string.llm_api_key)) },
-        placeholder = { Text(stringResource(R.string.llm_api_key_hint)) },
-        visualTransformation = if (apiKeyVisible) VisualTransformation.None
-            else PasswordVisualTransformation(),
-        trailingIcon = {
-            IconButton(onClick = { onApiKeyVisibleChange(!apiKeyVisible) }) {
-                Icon(
-                    imageVector = if (apiKeyVisible) Icons.Default.VisibilityOff
-                        else Icons.Default.Visibility,
-                    contentDescription = null,
-                )
-            }
-        },
-        singleLine = true,
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("llm_api_key_field"),
+    VendorApiKeyField(
+        value = groqApiKey,
+        onValueChange = onGroqApiKeyChange,
+        labelRes = R.string.settings_groq_api_key,
+        visible = groqApiKeyVisible,
+        onVisibleChange = onGroqApiKeyVisibleChange,
+        testTag = "groq_api_key_field",
     )
 
-    OutlinedTextField(
-        value = llmBaseUrl,
-        onValueChange = onLlmBaseUrlChange,
-        label = { Text(stringResource(R.string.llm_base_url)) },
-        placeholder = { Text(stringResource(R.string.llm_base_url_placeholder)) },
-        singleLine = true,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp)
-            .testTag("llm_base_url_field"),
-    )
-
-    OutlinedTextField(
-        value = llmModel,
-        onValueChange = onLlmModelChange,
-        label = { Text(stringResource(R.string.llm_model)) },
-        singleLine = true,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp)
-            .testTag("llm_model_field"),
+    VendorApiKeyField(
+        value = deepseekApiKey,
+        onValueChange = onDeepseekApiKeyChange,
+        labelRes = R.string.settings_deepseek_api_key,
+        visible = deepseekApiKeyVisible,
+        onVisibleChange = onDeepseekApiKeyVisibleChange,
+        testTag = "deepseek_api_key_field",
+        modifier = Modifier.padding(top = 8.dp),
     )
 
     TextButton(
@@ -529,4 +502,36 @@ private fun AiSection(
     ) {
         Text(stringResource(R.string.manage_prompts))
     }
+}
+
+@Composable
+private fun VendorApiKeyField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    @StringRes labelRes: Int,
+    visible: Boolean,
+    onVisibleChange: (Boolean) -> Unit,
+    testTag: String,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(stringResource(labelRes)) },
+        visualTransformation = if (visible) VisualTransformation.None
+            else PasswordVisualTransformation(),
+        trailingIcon = {
+            IconButton(onClick = { onVisibleChange(!visible) }) {
+                Icon(
+                    imageVector = if (visible) Icons.Default.VisibilityOff
+                        else Icons.Default.Visibility,
+                    contentDescription = null,
+                )
+            }
+        },
+        singleLine = true,
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag(testTag),
+    )
 }

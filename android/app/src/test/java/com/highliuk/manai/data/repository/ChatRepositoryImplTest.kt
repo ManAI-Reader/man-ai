@@ -4,9 +4,11 @@ import com.highliuk.manai.data.local.dao.ChatMessageDao
 import com.highliuk.manai.data.local.dao.ConversationDao
 import com.highliuk.manai.data.local.entity.ChatMessageEntity
 import com.highliuk.manai.data.local.entity.ConversationEntity
+import com.highliuk.manai.domain.llm.LlmRequestConfig
 import com.highliuk.manai.domain.model.ChatMessage
 import com.highliuk.manai.domain.model.ChatRole
 import com.highliuk.manai.domain.model.Conversation
+import com.highliuk.manai.domain.model.LlmVendor
 import com.highliuk.manai.domain.model.ReasoningLevel
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -107,7 +109,7 @@ class ChatRepositoryImplTest {
             mangaId = 1L,
             pageIndex = 0,
             regionIndex = null,
-            reasoningLevel = ReasoningLevel.DEFAULT,
+            llmConfig = groqConfig(ReasoningLevel.DEFAULT),
         )
 
         assertEquals(42L, id)
@@ -127,7 +129,7 @@ class ChatRepositoryImplTest {
             mangaId = 1L,
             pageIndex = 0,
             regionIndex = null,
-            reasoningLevel = ReasoningLevel.OFF,
+            llmConfig = groqConfig(ReasoningLevel.OFF),
         )
 
         assertEquals("OFF", entitySlot.captured.reasoningLevel)
@@ -143,6 +145,43 @@ class ChatRepositoryImplTest {
 
         assertEquals(ReasoningLevel.HIGH, result[0].reasoningLevel)
         assertEquals(ReasoningLevel.DEFAULT, result[1].reasoningLevel)
+    }
+
+    @Test
+    fun `createConversation stores vendor name and model`() = runTest {
+        val entitySlot = slot<ConversationEntity>()
+        coEvery { conversationDao.insert(capture(entitySlot)) } returns 42L
+
+        repository.createConversation(
+            title = "New chat",
+            mangaId = 1L,
+            pageIndex = 0,
+            regionIndex = null,
+            llmConfig = LlmRequestConfig(
+                vendor = LlmVendor.DEEPSEEK,
+                model = "deepseek-reasoner",
+                reasoning = ReasoningLevel.DEFAULT,
+            ),
+        )
+
+        assertEquals("DEEPSEEK", entitySlot.captured.vendor)
+        assertEquals("deepseek-reasoner", entitySlot.captured.model)
+    }
+
+    @Test
+    fun `conversation vendor and model map back with groq fallback`() = runTest {
+        val valid = conversationEntity(id = 1L, reasoningLevel = "HIGH")
+            .copy(vendor = "DEEPSEEK", model = "deepseek-chat")
+        val invalid = conversationEntity(id = 2L, reasoningLevel = "HIGH")
+            .copy(vendor = "BANANAS", model = "some-model")
+        every { conversationDao.observeAll() } returns flowOf(listOf(valid, invalid))
+
+        val result = repository.observeConversations().first()
+
+        assertEquals(LlmVendor.DEEPSEEK, result[0].vendor)
+        assertEquals("deepseek-chat", result[0].model)
+        assertEquals(LlmVendor.GROQ, result[1].vendor)
+        assertEquals("some-model", result[1].model)
     }
 
     @Test
@@ -175,6 +214,12 @@ class ChatRepositoryImplTest {
         createdAt = 100L,
         updatedAt = 200L,
         reasoningLevel = reasoningLevel,
+    )
+
+    private fun groqConfig(reasoning: ReasoningLevel) = LlmRequestConfig(
+        vendor = LlmVendor.GROQ,
+        model = LlmVendor.GROQ.defaultModel,
+        reasoning = reasoning,
     )
 
     private companion object {

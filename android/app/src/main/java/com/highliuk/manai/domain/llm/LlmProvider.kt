@@ -1,6 +1,5 @@
 package com.highliuk.manai.domain.llm
 
-import com.highliuk.manai.domain.model.ReasoningLevel
 import kotlinx.coroutines.flow.Flow
 
 data class LlmMessage(
@@ -67,14 +66,13 @@ interface LlmProvider {
     /**
      * Streams the model reply for [messages], advertising [tools] to the model.
      *
-     * @param reasoning reasoning effort to request from the model. Providers
-     * must not send any reasoning parameter when the level is
-     * [ReasoningLevel.DEFAULT]; [ReasoningLevel.OFF] maps to the provider
-     * value `"none"`.
+     * @param config vendor, model and reasoning level for this request.
+     * Implementations resolve the endpoint, credentials and vendor-specific
+     * body parameters from it.
      */
     fun chat(
         messages: List<LlmMessage>,
         tools: List<LlmToolSpec>,
-        reasoning: ReasoningLevel = ReasoningLevel.DEFAULT,
+        config: LlmRequestConfig,
     ): Flow<LlmEvent>
 }

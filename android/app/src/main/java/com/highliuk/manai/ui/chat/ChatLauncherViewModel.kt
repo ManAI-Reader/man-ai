@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.highliuk.manai.domain.chat.PromptContext
 import com.highliuk.manai.domain.chat.PromptTemplateRenderer
+import com.highliuk.manai.domain.llm.LlmRequestConfig
 import com.highliuk.manai.domain.model.ChatRole
 import com.highliuk.manai.domain.model.PageRegion
 import com.highliuk.manai.domain.model.PromptTemplate
@@ -35,7 +36,8 @@ data class ChatLaunchOptions(
 
 /**
  * Starts a chat conversation from a manga page region: creates the
- * conversation (snapshotting the template's reasoning level), appends the
+ * conversation (snapshotting the template's vendor, model and reasoning
+ * level), appends the
  * rendered prompt as the first user message and emits a navigation event with
  * the new conversation id.
  */
@@ -72,7 +74,11 @@ class ChatLauncherViewModel @Inject constructor(
                 mangaId = mangaId,
                 pageIndex = region.pageIndex,
                 regionIndex = region.regionIndex,
-                reasoningLevel = template.reasoningLevel,
+                llmConfig = LlmRequestConfig(
+                    vendor = template.vendor,
+                    model = template.model,
+                    reasoning = template.reasoningLevel,
+                ),
             )
             chatRepository.appendMessage(
                 conversationId = conversationId,

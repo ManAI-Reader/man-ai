@@ -99,10 +99,10 @@
 
     <!-- AI Assistant settings -->
     <string name="ai_section">Asistente de IA</string>
-    <string name="llm_api_key">Clave API</string>
-    <string name="llm_api_key_hint">Introduce tu clave API (p. ej. Groq)</string>
-    <string name="llm_base_url">URL base de la API</string>
-    <string name="llm_model">Modelo</string>
+    <string name="settings_groq_api_key">Clave API de Groq</string>
+    <string name="settings_deepseek_api_key">Clave API de DeepSeek</string>
+    <string name="prompt_vendor_label">Proveedor</string>
+    <string name="prompt_model_label">Modelo</string>
     <string name="manage_prompts">Gestionar prompts</string>
 
     <!-- Prompt management -->

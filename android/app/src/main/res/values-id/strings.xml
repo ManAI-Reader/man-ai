@@ -96,10 +96,10 @@
 
     <!-- AI Assistant settings -->
     <string name="ai_section">Asisten AI</string>
-    <string name="llm_api_key">Kunci API</string>
-    <string name="llm_api_key_hint">Masukkan kunci API Anda (mis. Groq)</string>
-    <string name="llm_base_url">URL dasar API</string>
-    <string name="llm_model">Model</string>
+    <string name="settings_groq_api_key">Kunci API Groq</string>
+    <string name="settings_deepseek_api_key">Kunci API DeepSeek</string>
+    <string name="prompt_vendor_label">Penyedia</string>
+    <string name="prompt_model_label">Model</string>
     <string name="manage_prompts">Kelola prompt</string>
 
     <!-- Prompt management -->

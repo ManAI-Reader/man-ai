@@ -1,7 +1,9 @@
 package com.highliuk.manai.ui.chat
 
 import app.cash.turbine.test
+import com.highliuk.manai.domain.llm.LlmRequestConfig
 import com.highliuk.manai.domain.model.ChatRole
+import com.highliuk.manai.domain.model.LlmVendor
 import com.highliuk.manai.domain.model.Manga
 import com.highliuk.manai.domain.model.PageRegion
 import com.highliuk.manai.domain.model.PromptTemplate
@@ -111,7 +113,11 @@ class ChatLauncherViewModelTest {
                 mangaId = 5L,
                 pageIndex = 12,
                 regionIndex = 3,
-                reasoningLevel = ReasoningLevel.DEFAULT,
+                llmConfig = LlmRequestConfig(
+                    vendor = LlmVendor.GROQ,
+                    model = LlmVendor.GROQ.defaultModel,
+                    reasoning = ReasoningLevel.DEFAULT,
+                ),
             )
         }
     }
@@ -130,7 +136,33 @@ class ChatLauncherViewModelTest {
         advanceUntilIdle()
 
         coVerify {
-            chatRepository.createConversation(any(), any(), any(), any(), ReasoningLevel.LOW)
+            chatRepository.createConversation(
+                any(), any(), any(), any(),
+                match { it.reasoning == ReasoningLevel.LOW },
+            )
+        }
+    }
+
+    @Test
+    fun startConversationCopiesTemplateVendorAndModelToConversation() = runTest {
+        coEvery {
+            chatRepository.createConversation(any(), any(), any(), any(), any())
+        } returns 42L
+        val viewModel = createViewModel()
+
+        viewModel.startConversation(
+            template = template.copy(vendor = LlmVendor.DEEPSEEK, model = "deepseek-reasoner"),
+            region = region,
+            mangaId = 5L,
+            options = options,
+        )
+        advanceUntilIdle()
+
+        coVerify {
+            chatRepository.createConversation(
+                any(), any(), any(), any(),
+                match { it.vendor == LlmVendor.DEEPSEEK && it.model == "deepseek-reasoner" },
+            )
         }
     }
 
@@ -353,7 +385,11 @@ class ChatLauncherViewModelTest {
                 mangaId = 5L,
                 pageIndex = 12,
                 regionIndex = 3,
-                reasoningLevel = ReasoningLevel.DEFAULT,
+                llmConfig = LlmRequestConfig(
+                    vendor = LlmVendor.GROQ,
+                    model = LlmVendor.GROQ.defaultModel,
+                    reasoning = ReasoningLevel.DEFAULT,
+                ),
             )
         }
     }

@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.highliuk.manai.R
+import com.highliuk.manai.domain.model.LlmVendor
 import com.highliuk.manai.domain.model.PromptTemplate
 import com.highliuk.manai.domain.model.ReasoningLevel
 import com.highliuk.manai.domain.repository.PromptTemplateRepository
@@ -63,7 +64,13 @@ class PromptEditViewModel @Inject constructor(
         }
     }
 
-    fun save(name: String, template: String, reasoningLevel: ReasoningLevel) {
+    fun save(
+        name: String,
+        template: String,
+        reasoningLevel: ReasoningLevel,
+        vendor: LlmVendor,
+        model: String,
+    ) {
         val trimmedName = name.trim()
         val trimmedTemplate = template.trim()
         if (trimmedName.isEmpty() || trimmedTemplate.isEmpty()) {
@@ -80,10 +87,25 @@ class PromptEditViewModel @Inject constructor(
                     name = trimmedName,
                     template = trimmedTemplate,
                     reasoningLevel = reasoningLevel,
+                    vendor = vendor,
+                    model = model.trim().ifEmpty { vendor.defaultModel },
                 )
             )
             _saved.emit(Unit)
         }
+    }
+
+    /**
+     * Model value the editor should show after switching to [newVendor]:
+     * a blank model or one that is just another vendor's default is replaced
+     * with [newVendor]'s default, while a user-customized model is kept.
+     */
+    fun modelForVendorChange(currentModel: String, newVendor: LlmVendor): String {
+        val trimmed = currentModel.trim()
+        val isOtherVendorDefault = LlmVendor.entries.any {
+            it != newVendor && it.defaultModel == trimmed
+        }
+        return if (trimmed.isEmpty() || isOtherVendorDefault) newVendor.defaultModel else trimmed
     }
 
     companion object {

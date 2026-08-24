@@ -60,12 +60,6 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         val SHOW_FURIGANA = booleanPreferencesKey("show_furigana")
         const val DEFAULT_SHOW_FURIGANA = false
 
-        val LLM_BASE_URL = stringPreferencesKey("llm_base_url")
-        const val DEFAULT_LLM_BASE_URL = UserPreferencesRepository.DEFAULT_LLM_BASE_URL
-
-        val LLM_MODEL = stringPreferencesKey("llm_model")
-        const val DEFAULT_LLM_MODEL = UserPreferencesRepository.DEFAULT_LLM_MODEL
-
         val PROMPT_DEFAULTS_SEEDED = booleanPreferencesKey("prompt_defaults_seeded")
         const val DEFAULT_PROMPT_DEFAULTS_SEEDED = false
     }
@@ -216,26 +210,6 @@ class UserPreferencesRepositoryImpl @Inject constructor(
     override suspend fun setShowFurigana(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[SHOW_FURIGANA] = enabled
-        }
-    }
-
-    override val llmBaseUrl: Flow<String> = dataStore.data.map { preferences ->
-        preferences[LLM_BASE_URL] ?: DEFAULT_LLM_BASE_URL
-    }
-
-    override suspend fun setLlmBaseUrl(url: String) {
-        dataStore.edit { preferences ->
-            preferences[LLM_BASE_URL] = url
-        }
-    }
-
-    override val llmModel: Flow<String> = dataStore.data.map { preferences ->
-        preferences[LLM_MODEL] ?: DEFAULT_LLM_MODEL
-    }
-
-    override suspend fun setLlmModel(model: String) {
-        dataStore.edit { preferences ->
-            preferences[LLM_MODEL] = model
         }
     }
 

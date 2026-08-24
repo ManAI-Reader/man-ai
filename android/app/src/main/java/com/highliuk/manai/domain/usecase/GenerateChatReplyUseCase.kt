@@ -6,10 +6,12 @@ import com.highliuk.manai.domain.llm.LlmEvent
 import com.highliuk.manai.domain.llm.LlmFailure
 import com.highliuk.manai.domain.llm.LlmMessage
 import com.highliuk.manai.domain.llm.LlmProvider
+import com.highliuk.manai.domain.llm.LlmRequestConfig
 import com.highliuk.manai.domain.llm.LlmToolCall
 import com.highliuk.manai.domain.llm.LlmToolSpec
 import com.highliuk.manai.domain.model.ChatMessage
 import com.highliuk.manai.domain.model.ChatRole
+import com.highliuk.manai.domain.model.LlmVendor
 import com.highliuk.manai.domain.model.ReasoningLevel
 import com.highliuk.manai.domain.model.TargetLanguage
 import com.highliuk.manai.domain.repository.ChatRepository
@@ -47,8 +49,12 @@ class GenerateChatReplyUseCase @Inject constructor(
      */
     operator fun invoke(conversationId: Long): Flow<ChatGenerationEvent> = flow {
         val targetLang = userPreferencesRepository.translationTargetLang.first()
-        val reasoning = chatRepository.observeConversation(conversationId).first()
-            ?.reasoningLevel ?: ReasoningLevel.DEFAULT
+        val conversation = chatRepository.observeConversation(conversationId).first()
+        val llmConfig = LlmRequestConfig(
+            vendor = conversation?.vendor ?: LlmVendor.GROQ,
+            model = conversation?.model ?: LlmVendor.GROQ.defaultModel,
+            reasoning = conversation?.reasoningLevel ?: ReasoningLevel.DEFAULT,
+        )
         val persisted = chatRepository.getMessages(conversationId)
         val vanillaFirstTurn = isVanillaFirstTurn(persisted)
         val tools = if (vanillaFirstTurn) emptyList() else MemoryToolExecutor.SPECS
@@ -58,7 +64,7 @@ class GenerateChatReplyUseCase @Inject constructor(
         var finished = false
         while (!finished && rounds < MAX_TOOL_ROUNDS) {
             rounds++
-            finished = runRound(RoundInput(conversationId, reasoning, history, tools), fullText)
+            finished = runRound(RoundInput(conversationId, llmConfig, history, tools), fullText)
         }
         if (!finished) {
             emit(ChatGenerationEvent.Error(LlmFailure.Generic("Tool-call limit reached")))
@@ -84,7 +90,7 @@ class GenerateChatReplyUseCase @Inject constructor(
     /** Immutable per-generation inputs shared by every round. */
     private data class RoundInput(
         val conversationId: Long,
-        val reasoning: ReasoningLevel,
+        val llmConfig: LlmRequestConfig,
         val history: MutableList<LlmMessage>,
         val tools: List<LlmToolSpec>,
     )
@@ -98,7 +104,7 @@ class GenerateChatReplyUseCase @Inject constructor(
         var failure: LlmFailure? = null
         var finishReason: String? = null
         val roundText = StringBuilder()
-        llmProvider.chat(history, input.tools, input.reasoning).collect { event ->
+        llmProvider.chat(history, input.tools, input.llmConfig).collect { event ->
             when (event) {
                 is LlmEvent.TextDelta -> {
                     roundText.append(event.text)

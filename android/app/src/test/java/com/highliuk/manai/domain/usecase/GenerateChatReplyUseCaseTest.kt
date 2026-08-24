@@ -7,11 +7,13 @@ import com.highliuk.manai.domain.llm.LlmEvent
 import com.highliuk.manai.domain.llm.LlmFailure
 import com.highliuk.manai.domain.llm.LlmMessage
 import com.highliuk.manai.domain.llm.LlmProvider
+import com.highliuk.manai.domain.llm.LlmRequestConfig
 import com.highliuk.manai.domain.llm.LlmToolCall
 import com.highliuk.manai.domain.llm.LlmToolSpec
 import com.highliuk.manai.domain.model.ChatMessage
 import com.highliuk.manai.domain.model.ChatRole
 import com.highliuk.manai.domain.model.Conversation
+import com.highliuk.manai.domain.model.LlmVendor
 import com.highliuk.manai.domain.model.ReasoningLevel
 import com.highliuk.manai.domain.model.TargetLanguage
 import com.highliuk.manai.domain.repository.ChatRepository
@@ -43,17 +45,17 @@ class GenerateChatReplyUseCaseTest {
         private val responses: List<List<LlmEvent>>,
     ) : LlmProvider {
         val recordedMessages = mutableListOf<List<LlmMessage>>()
-        val recordedReasonings = mutableListOf<ReasoningLevel>()
+        val recordedConfigs = mutableListOf<LlmRequestConfig>()
         val recordedTools = mutableListOf<List<LlmToolSpec>>()
         private var callIndex = 0
 
         override fun chat(
             messages: List<LlmMessage>,
             tools: List<LlmToolSpec>,
-            reasoning: ReasoningLevel,
+            config: LlmRequestConfig,
         ): Flow<LlmEvent> {
             recordedMessages += messages.toList()
-            recordedReasonings += reasoning
+            recordedConfigs += config
             recordedTools += tools.toList()
             val events = responses[minOf(callIndex, responses.lastIndex)]
             callIndex++
@@ -294,7 +296,47 @@ class GenerateChatReplyUseCaseTest {
             awaitComplete()
         }
 
-        assertEquals(listOf(ReasoningLevel.HIGH, ReasoningLevel.HIGH), provider.recordedReasonings)
+        assertEquals(
+            listOf(ReasoningLevel.HIGH, ReasoningLevel.HIGH),
+            provider.recordedConfigs.map { it.reasoning },
+        )
+    }
+
+    @Test
+    fun `conversation vendor and model are passed to the provider on every round`() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns followUpHistory()
+        coEvery { memoryRepository.listTitles() } returns emptyList()
+        every { chatRepository.observeConversation(42L) } returns flowOf(
+            Conversation(
+                id = 42L,
+                title = "Chat",
+                createdAt = 0L,
+                updatedAt = 0L,
+                reasoningLevel = ReasoningLevel.LOW,
+                vendor = LlmVendor.DEEPSEEK,
+                model = "deepseek-reasoner",
+            )
+        )
+        val toolCall = LlmToolCall(id = "call-1", name = "memory_list", arguments = "{}")
+        val provider = FakeLlmProvider(
+            listOf(
+                listOf(LlmEvent.ToolCalls(listOf(toolCall)), LlmEvent.Completed()),
+                listOf(LlmEvent.TextDelta("Hi"), LlmEvent.Completed()),
+            ),
+        )
+
+        useCase(provider).invoke(42L).test {
+            assertEquals(ChatGenerationEvent.Delta("Hi"), awaitItem())
+            assertEquals(ChatGenerationEvent.Done(), awaitItem())
+            awaitComplete()
+        }
+
+        val expected = LlmRequestConfig(
+            vendor = LlmVendor.DEEPSEEK,
+            model = "deepseek-reasoner",
+            reasoning = ReasoningLevel.LOW,
+        )
+        assertEquals(listOf(expected, expected), provider.recordedConfigs)
     }
 
     @Test
@@ -310,7 +352,16 @@ class GenerateChatReplyUseCaseTest {
             awaitComplete()
         }
 
-        assertEquals(listOf(ReasoningLevel.DEFAULT), provider.recordedReasonings)
+        assertEquals(
+            listOf(
+                LlmRequestConfig(
+                    vendor = LlmVendor.GROQ,
+                    model = LlmVendor.GROQ.defaultModel,
+                    reasoning = ReasoningLevel.DEFAULT,
+                )
+            ),
+            provider.recordedConfigs,
+        )
     }
 
     @Test
@@ -400,7 +451,7 @@ class GenerateChatReplyUseCaseTest {
             awaitComplete()
         }
 
-        assertEquals(listOf(ReasoningLevel.HIGH), provider.recordedReasonings)
+        assertEquals(listOf(ReasoningLevel.HIGH), provider.recordedConfigs.map { it.reasoning })
         assertEquals(listOf(emptyList<LlmToolSpec>()), provider.recordedTools)
     }
 

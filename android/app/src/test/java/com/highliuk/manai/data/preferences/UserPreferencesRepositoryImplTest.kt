@@ -395,38 +395,6 @@ class UserPreferencesRepositoryImplTest {
     }
 
     @Test
-    fun `llmBaseUrl emits Groq default`() = runTest(testDispatcher) {
-        val repository = createRepository()
-
-        assertEquals("https://api.groq.com/openai/v1", repository.llmBaseUrl.first())
-    }
-
-    @Test
-    fun `setLlmBaseUrl persists value`() = runTest(testDispatcher) {
-        val repository = createRepository()
-
-        repository.setLlmBaseUrl("https://api.openai.com/v1")
-
-        assertEquals("https://api.openai.com/v1", repository.llmBaseUrl.first())
-    }
-
-    @Test
-    fun `llmModel emits default model`() = runTest(testDispatcher) {
-        val repository = createRepository()
-
-        assertEquals("llama-3.3-70b-versatile", repository.llmModel.first())
-    }
-
-    @Test
-    fun `setLlmModel persists value`() = runTest(testDispatcher) {
-        val repository = createRepository()
-
-        repository.setLlmModel("qwen-2.5-72b")
-
-        assertEquals("qwen-2.5-72b", repository.llmModel.first())
-    }
-
-    @Test
     fun `promptDefaultsSeeded emits default false`() = runTest(testDispatcher) {
         val repository = createRepository()
 
