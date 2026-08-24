@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.test.espresso.Espresso
+import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.ChatMessage
 import com.highliuk.manai.domain.model.ChatRole
 import com.highliuk.manai.domain.model.Conversation
@@ -47,17 +48,20 @@ class ChatScreenTest {
         val messages: List<ChatMessage> = emptyList(),
         val streamingText: String? = null,
         val isGenerating: Boolean = false,
-        val error: String? = null,
+        val error: ChatUiError? = null,
+        val truncated: Boolean = false,
         val resolveFurigana: FuriganaResolver? = null,
     )
 
-    private fun setChatContent(
-        state: ChatState,
-        onSend: (String) -> Unit = {},
-        onRetry: () -> Unit = {},
-        onJumpToSource: () -> Unit = {},
-        onBack: () -> Unit = {},
-    ) {
+    private data class ChatCallbacks(
+        val onSend: (String) -> Unit = {},
+        val onRetry: () -> Unit = {},
+        val onOpenSourcePage: () -> Unit = {},
+        val onDeleteConversation: () -> Unit = {},
+        val onBack: () -> Unit = {},
+    )
+
+    private fun setChatContent(state: ChatState, callbacks: ChatCallbacks = ChatCallbacks()) {
         composeTestRule.setContent {
             ChatScreen(
                 conversation = state.conversation,
@@ -65,10 +69,12 @@ class ChatScreenTest {
                 streamingText = state.streamingText,
                 isGenerating = state.isGenerating,
                 error = state.error,
-                onSend = onSend,
-                onRetry = onRetry,
-                onJumpToSource = onJumpToSource,
-                onBack = onBack,
+                truncated = state.truncated,
+                onSend = callbacks.onSend,
+                onRetry = callbacks.onRetry,
+                onOpenSourcePage = callbacks.onOpenSourcePage,
+                onDeleteConversation = callbacks.onDeleteConversation,
+                onBack = callbacks.onBack,
                 resolveFurigana = state.resolveFurigana,
             )
         }
@@ -217,7 +223,7 @@ class ChatScreenTest {
     @Test
     fun typingAndSendInvokesCallbackAndClearsInput() {
         var sent: String? = null
-        setChatContent(ChatState(conversation), onSend = { sent = it })
+        setChatContent(ChatState(conversation), ChatCallbacks(onSend = { sent = it }))
 
         composeTestRule.onNodeWithTag("chat_input").performTextInput("Hello")
         composeTestRule.onNodeWithContentDescription("Send").performClick()
@@ -252,44 +258,199 @@ class ChatScreenTest {
     }
 
     @Test
-    fun errorShowsMessageAndRetryInvokesCallback() {
+    fun errorShowsLocalizedMessageAndRetryInvokesCallback() {
         var retried = false
         setChatContent(
-            ChatState(conversation, error = "Network down"),
-            onRetry = { retried = true },
+            ChatState(conversation, error = ChatUiError(R.string.chat_error_network)),
+            ChatCallbacks(onRetry = { retried = true }),
         )
 
-        composeTestRule.onNodeWithText("Network down").assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText("Network error — check your connection")
+            .assertIsDisplayed()
         composeTestRule.onNodeWithText("Retry").performClick()
 
         assertTrue(retried)
     }
 
     @Test
-    fun blankErrorFallsBackToGenericMessage() {
-        setChatContent(ChatState(conversation, error = " "))
-
-        composeTestRule.onNodeWithText("Something went wrong").assertIsDisplayed()
-    }
-
-    @Test
-    fun jumpToSourceVisibleAndClickableWhenConversationHasSource() {
-        var jumped = false
+    fun httpErrorShowsStatusCode() {
         setChatContent(
-            ChatState(conversationWithSource),
-            onJumpToSource = { jumped = true },
+            ChatState(conversation, error = ChatUiError(R.string.chat_error_http, 502)),
         )
 
-        composeTestRule.onNodeWithTag("jump_to_source").assertIsDisplayed().performClick()
-
-        assertTrue(jumped)
+        composeTestRule.onNodeWithText("Request failed (HTTP 502)").assertIsDisplayed()
     }
 
     @Test
-    fun jumpToSourceHiddenWithoutSource() {
+    fun menuShowsOpenSourceEntryWhenConversationHasSource() {
+        var opened = false
+        setChatContent(
+            ChatState(conversationWithSource),
+            ChatCallbacks(onOpenSourcePage = { opened = true }),
+        )
+
+        composeTestRule.onNodeWithTag("chat_menu").performClick()
+        composeTestRule.onNodeWithTag("menu_open_source").assertIsDisplayed().performClick()
+
+        assertTrue(opened)
+    }
+
+    @Test
+    fun menuHidesOpenSourceEntryWithoutSource() {
         setChatContent(ChatState(conversation))
 
-        composeTestRule.onNodeWithTag("jump_to_source").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("chat_menu").performClick()
+
+        composeTestRule.onNodeWithTag("menu_open_source").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("menu_delete").assertIsDisplayed()
+    }
+
+    @Test
+    fun deleteFlowConfirmsBeforeInvokingCallback() {
+        var deleted = false
+        setChatContent(
+            ChatState(conversation),
+            ChatCallbacks(onDeleteConversation = { deleted = true }),
+        )
+
+        composeTestRule.onNodeWithTag("chat_menu").performClick()
+        composeTestRule.onNodeWithTag("menu_delete").performClick()
+        composeTestRule.onNodeWithText("Delete this conversation?").assertIsDisplayed()
+        assertEquals(false, deleted)
+
+        composeTestRule.onNodeWithText("Delete").performClick()
+
+        assertTrue(deleted)
+    }
+
+    @Test
+    fun cancellingDeleteDialogDoesNotInvokeCallback() {
+        var deleted = false
+        setChatContent(
+            ChatState(conversation),
+            ChatCallbacks(onDeleteConversation = { deleted = true }),
+        )
+
+        composeTestRule.onNodeWithTag("chat_menu").performClick()
+        composeTestRule.onNodeWithTag("menu_delete").performClick()
+        composeTestRule.onNodeWithText("Cancel").performClick()
+
+        composeTestRule.onNodeWithText("Delete this conversation?").assertDoesNotExist()
+        assertEquals(false, deleted)
+    }
+
+    @Test
+    fun renderedPromptHiddenInTemplateLaunchedConversation() {
+        setChatContent(
+            ChatState(
+                conversation = conversationWithSource,
+                messages = listOf(
+                    ChatMessage(
+                        id = 1L,
+                        conversationId = 1L,
+                        role = ChatRole.USER,
+                        content = "You are my tutor… huge rendered prompt",
+                        timestamp = 0L,
+                    ),
+                    ChatMessage(
+                        id = 2L,
+                        conversationId = 1L,
+                        role = ChatRole.ASSISTANT,
+                        content = "It is a greeting.",
+                        timestamp = 1L,
+                    ),
+                    ChatMessage(
+                        id = 3L,
+                        conversationId = 1L,
+                        role = ChatRole.USER,
+                        content = "A follow-up question",
+                        timestamp = 2L,
+                    ),
+                ),
+            ),
+        )
+
+        composeTestRule
+            .onNodeWithText("You are my tutor… huge rendered prompt")
+            .assertDoesNotExist()
+        composeTestRule.onNodeWithText("It is a greeting.").assertIsDisplayed()
+        composeTestRule.onNodeWithText("A follow-up question").assertIsDisplayed()
+    }
+
+    @Test
+    fun firstUserMessageShownWhenConversationHasNoSource() {
+        setChatContent(
+            ChatState(
+                conversation = conversation,
+                messages = listOf(
+                    ChatMessage(
+                        id = 1L,
+                        conversationId = 1L,
+                        role = ChatRole.USER,
+                        content = "Free question",
+                        timestamp = 0L,
+                    ),
+                ),
+            ),
+        )
+
+        composeTestRule.onNodeWithText("Free question").assertIsDisplayed()
+    }
+
+    @Test
+    fun truncatedNoticeShownUnderMessagesWhenReplyWasCutShort() {
+        setChatContent(
+            ChatState(
+                conversation = conversation,
+                messages = listOf(
+                    ChatMessage(
+                        id = 1L,
+                        conversationId = 1L,
+                        role = ChatRole.ASSISTANT,
+                        content = "Cut mid-sen",
+                        timestamp = 0L,
+                    ),
+                ),
+                truncated = true,
+            ),
+        )
+
+        composeTestRule.onNodeWithTag("chat_truncated_notice").assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText("Response was cut short by the length limit")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun truncatedNoticeAbsentByDefault() {
+        setChatContent(ChatState(conversation))
+
+        composeTestRule.onNodeWithTag("chat_truncated_notice").assertDoesNotExist()
+    }
+
+    @Test
+    fun assistantMarkdownRendersHorizontalRuleAndBlockquote() {
+        setChatContent(
+            ChatState(
+                conversation = conversation,
+                messages = listOf(
+                    ChatMessage(
+                        id = 1L,
+                        conversationId = 1L,
+                        role = ChatRole.ASSISTANT,
+                        content = "Before the rule\n\n---\n\n> quoted words",
+                        timestamp = 0L,
+                    ),
+                ),
+            ),
+        )
+
+        composeTestRule.onNodeWithText("Before the rule").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("markdown_blockquote").assertIsDisplayed()
+        composeTestRule.onNodeWithText("quoted words").assertIsDisplayed()
+        composeTestRule.onNodeWithText("---").assertDoesNotExist()
+        composeTestRule.onNodeWithText("> quoted words").assertDoesNotExist()
     }
 
     private fun inputHeight(): Dp =
@@ -361,7 +522,7 @@ class ChatScreenTest {
     @Test
     fun backButtonInvokesCallback() {
         var backed = false
-        setChatContent(ChatState(conversation), onBack = { backed = true })
+        setChatContent(ChatState(conversation), ChatCallbacks(onBack = { backed = true }))
 
         composeTestRule.onNodeWithContentDescription("Back").performClick()
 

@@ -108,6 +108,7 @@
 
     <!-- Prompt management -->
     <string name="prompts_title">Prompts</string>
+    <string name="save">Save</string>
     <string name="add_prompt">Add prompt</string>
     <string name="edit_prompt">Edit prompt</string>
     <string name="prompt_name">Name</string>
@@ -133,7 +134,11 @@
     <string name="chat_input_hint">Ask about this sentence…</string>
     <string name="send_message">Send</string>
     <string name="jump_to_source">Open source page</string>
+    <string name="more_options">More options</string>
     <string name="chat_error_generic">Something went wrong</string>
+    <string name="chat_error_network">Network error — check your connection</string>
+    <string name="chat_error_http">Request failed (HTTP %1$d)</string>
+    <string name="chat_truncated">Response was cut short by the length limit</string>
     <string name="assistant_thinking">Waiting for the assistant…</string>
     <string name="conversations">Conversations</string>
     <string name="no_conversations">No conversations yet</string>

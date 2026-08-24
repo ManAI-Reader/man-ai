@@ -2,6 +2,7 @@ package com.highliuk.manai.data.llm
 
 import app.cash.turbine.test
 import com.highliuk.manai.domain.llm.LlmEvent
+import com.highliuk.manai.domain.llm.LlmFailure
 import com.highliuk.manai.domain.llm.LlmMessage
 import com.highliuk.manai.domain.llm.LlmToolSpec
 import com.highliuk.manai.domain.logging.Logger
@@ -21,6 +22,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.IOException
+import java.nio.channels.UnresolvedAddressException
 
 class OpenAiCompatibleLlmProviderTest {
 
@@ -55,7 +57,7 @@ class OpenAiCompatibleLlmProviderTest {
         provider(engine).chat(listOf(LlmMessage(LlmMessage.ROLE_USER, "hi")), emptyList()).test {
             assertEquals(LlmEvent.TextDelta("Hel"), awaitItem())
             assertEquals(LlmEvent.TextDelta("lo"), awaitItem())
-            assertEquals(LlmEvent.Completed, awaitItem())
+            assertEquals(LlmEvent.Completed("stop"), awaitItem())
             awaitComplete()
         }
     }
@@ -80,18 +82,31 @@ class OpenAiCompatibleLlmProviderTest {
             val toolCalls = awaitItem() as LlmEvent.ToolCalls
             assertEquals("memory_read", toolCalls.calls[0].name)
             assertEquals("""{"title":"kanji"}""", toolCalls.calls[0].arguments)
-            assertEquals(LlmEvent.Completed, awaitItem())
+            assertEquals(LlmEvent.Completed("tool_calls"), awaitItem())
             awaitComplete()
         }
     }
 
     @Test
-    fun `emits failure on http error status`() = runTest {
-        val engine = MockEngine { respond("unauthorized", HttpStatusCode.Unauthorized) }
+    fun `emits typed http failure on error status without leaking the body`() = runTest {
+        val engine = MockEngine { respond("secret provider body", HttpStatusCode.Unauthorized) }
         provider(engine).chat(listOf(LlmMessage(LlmMessage.ROLE_USER, "hi")), emptyList()).test {
-            assertTrue(awaitItem() is LlmEvent.Failure)
+            assertEquals(LlmEvent.Failure(LlmFailure.Http(401)), awaitItem())
             awaitComplete()
         }
+    }
+
+    @Test
+    fun `http error body is logged but never surfaced in the event`() = runTest {
+        val logger = mockk<Logger>(relaxed = true)
+        val engine = MockEngine { respond("secret provider body", HttpStatusCode.BadGateway) }
+        provider(engine, logger = logger)
+            .chat(listOf(LlmMessage(LlmMessage.ROLE_USER, "hi")), emptyList())
+            .test {
+                assertEquals(LlmEvent.Failure(LlmFailure.Http(502)), awaitItem())
+                awaitComplete()
+            }
+        verify { logger.e("OpenAiCompatibleLlmProvider", match { it.contains("secret provider body") }) }
     }
 
     @Test
@@ -109,27 +124,68 @@ class OpenAiCompatibleLlmProviderTest {
             )
         }
         provider(engine, logger = logger).chat(listOf(LlmMessage(LlmMessage.ROLE_USER, "hi")), emptyList()).test {
-            assertEquals(LlmEvent.Completed, awaitItem())
+            assertEquals(LlmEvent.Completed("stop"), awaitItem())
             awaitComplete()
         }
         verify { logger.e("OpenAiStreamParser", match { it.contains("{broken json") }) }
     }
 
     @Test
-    fun `emits failure and completes when engine throws io exception`() = runTest {
-        val engine = MockEngine { throw IOException("boom") }
+    fun `emits network failure and logs the exception when engine throws io exception`() = runTest {
+        val logger = mockk<Logger>(relaxed = true)
+        val engine = MockEngine { throw IOException("dns timeout") }
+        provider(engine, logger = logger)
+            .chat(listOf(LlmMessage(LlmMessage.ROLE_USER, "hi")), emptyList())
+            .test {
+                assertEquals(LlmEvent.Failure(LlmFailure.Network), awaitItem())
+                awaitComplete()
+            }
+        verify { logger.e("OpenAiCompatibleLlmProvider", any(), any<IOException>()) }
+    }
+
+    @Test
+    fun `emits network failure on unresolved address`() = runTest {
+        val engine = MockEngine { throw UnresolvedAddressException() }
         provider(engine).chat(listOf(LlmMessage(LlmMessage.ROLE_USER, "hi")), emptyList()).test {
-            val failure = awaitItem() as LlmEvent.Failure
-            assertTrue(failure.message.contains("boom"))
+            assertEquals(LlmEvent.Failure(LlmFailure.Network), awaitItem())
             awaitComplete()
         }
     }
 
     @Test
-    fun `emits failure when api key is blank`() = runTest {
+    fun `emits generic failure when engine throws a non-io exception`() = runTest {
+        val engine = MockEngine { throw IllegalStateException("weird") }
+        provider(engine).chat(listOf(LlmMessage(LlmMessage.ROLE_USER, "hi")), emptyList()).test {
+            assertEquals(LlmEvent.Failure(LlmFailure.Generic("weird")), awaitItem())
+            awaitComplete()
+        }
+    }
+
+    @Test
+    fun `emits generic failure when api key is blank`() = runTest {
         val engine = MockEngine { respond("never called") }
         provider(engine, apiKey = "").chat(listOf(LlmMessage(LlmMessage.ROLE_USER, "hi")), emptyList()).test {
-            assertTrue(awaitItem() is LlmEvent.Failure)
+            assertTrue((awaitItem() as LlmEvent.Failure).failure is LlmFailure.Generic)
+            awaitComplete()
+        }
+    }
+
+    @Test
+    fun `completed event carries the length finish reason`() = runTest {
+        val engine = MockEngine {
+            respond(
+                content = sse(
+                    """data: {"choices":[{"delta":{"content":"cut"},"finish_reason":null}]}""",
+                    """data: {"choices":[{"delta":{},"finish_reason":"length"}]}""",
+                    "data: [DONE]",
+                ),
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, "text/event-stream"),
+            )
+        }
+        provider(engine).chat(listOf(LlmMessage(LlmMessage.ROLE_USER, "hi")), emptyList()).test {
+            assertEquals(LlmEvent.TextDelta("cut"), awaitItem())
+            assertEquals(LlmEvent.Completed("length"), awaitItem())
             awaitComplete()
         }
     }
@@ -151,7 +207,7 @@ class OpenAiCompatibleLlmProviderTest {
             )
         )
         provider(engine).chat(listOf(LlmMessage(LlmMessage.ROLE_USER, "hi")), tools).test {
-            assertEquals(LlmEvent.Completed, awaitItem())
+            assertEquals(LlmEvent.Completed(), awaitItem())
             awaitComplete()
         }
         val body = engine.requestHistory.single().body.toByteArray().decodeToString()
@@ -159,6 +215,23 @@ class OpenAiCompatibleLlmProviderTest {
         assertTrue(body.contains(""""stream":true"""))
         assertTrue(body.contains(""""role":"user""""))
         assertTrue(body.contains(""""name":"memory_read""""))
+    }
+
+    @Test
+    fun `request body caps the completion size with an explicit max_tokens`() = runTest {
+        val engine = MockEngine {
+            respond(
+                content = sse("data: [DONE]"),
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, "text/event-stream"),
+            )
+        }
+        provider(engine).chat(listOf(LlmMessage(LlmMessage.ROLE_USER, "hi")), emptyList()).test {
+            assertEquals(LlmEvent.Completed(), awaitItem())
+            awaitComplete()
+        }
+        val body = engine.requestHistory.single().body.toByteArray().decodeToString()
+        assertTrue(body.contains(""""max_tokens":8192"""))
     }
 
     @Test
@@ -171,7 +244,7 @@ class OpenAiCompatibleLlmProviderTest {
             )
         }
         provider(engine).chat(listOf(LlmMessage(LlmMessage.ROLE_USER, "hi")), emptyList()).test {
-            assertEquals(LlmEvent.Completed, awaitItem())
+            assertEquals(LlmEvent.Completed(), awaitItem())
             awaitComplete()
         }
         val body = engine.requestHistory.single().body.toByteArray().decodeToString()
@@ -189,7 +262,7 @@ class OpenAiCompatibleLlmProviderTest {
         provider(engine)
             .chat(listOf(LlmMessage(LlmMessage.ROLE_USER, "hi")), emptyList(), reasoning)
             .test {
-                assertEquals(LlmEvent.Completed, awaitItem())
+                assertEquals(LlmEvent.Completed(), awaitItem())
                 awaitComplete()
             }
         return engine.requestHistory.single().body.toByteArray().decodeToString()

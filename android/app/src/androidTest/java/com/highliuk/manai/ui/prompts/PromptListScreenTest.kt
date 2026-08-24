@@ -7,7 +7,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.highliuk.manai.domain.model.PromptTemplate
-import com.highliuk.manai.domain.model.ReasoningLevel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -32,14 +31,10 @@ class PromptListScreenTest {
 
     private data class PromptListArgs(
         val templates: List<PromptTemplate> = emptyList(),
-        val editing: PromptTemplate? = null,
-        val editError: Int? = null,
         val pendingDelete: PromptTemplate? = null,
         val onAddClick: () -> Unit = {},
         val onEditClick: (PromptTemplate) -> Unit = {},
         val onDeleteClick: (PromptTemplate) -> Unit = {},
-        val onSave: (String, String, ReasoningLevel) -> Unit = { _, _, _ -> },
-        val onDismissEdit: () -> Unit = {},
         val onConfirmDelete: () -> Unit = {},
         val onDismissDelete: () -> Unit = {},
         val onBack: () -> Unit = {},
@@ -49,14 +44,10 @@ class PromptListScreenTest {
         composeTestRule.setContent {
             PromptListScreen(
                 templates = args.templates,
-                editing = args.editing,
-                editError = args.editError,
                 pendingDelete = args.pendingDelete,
                 onAddClick = args.onAddClick,
                 onEditClick = args.onEditClick,
                 onDeleteClick = args.onDeleteClick,
-                onSave = args.onSave,
-                onDismissEdit = args.onDismissEdit,
                 onConfirmDelete = args.onConfirmDelete,
                 onDismissDelete = args.onDismissDelete,
                 onBack = args.onBack,
@@ -167,19 +158,6 @@ class PromptListScreenTest {
         composeTestRule.onNodeWithText("Cancel").performClick()
 
         assertTrue(dismissed)
-    }
-
-    @Test
-    fun editDialogShownWhenEditing() {
-        setPromptListContent(
-            PromptListArgs(
-                templates = listOf(grammarTemplate),
-                editing = grammarTemplate,
-            )
-        )
-
-        composeTestRule.onNodeWithTag("prompt_name_field").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("prompt_template_field").assertIsDisplayed()
     }
 
     @Test

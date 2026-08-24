@@ -270,6 +270,121 @@ class MarkdownParserTest {
 
     // endregion
 
+    // region horizontal rules
+
+    @Test
+    fun dashesAloneOnALineBecomeAHorizontalRule() {
+        val blocks = MarkdownParser.parse("---")
+
+        assertEquals(listOf(MarkdownBlock.HorizontalRule), blocks)
+    }
+
+    @Test
+    fun asterisksUnderscoresAndLongerMarkersAlsoFormHorizontalRules() {
+        assertEquals(listOf(MarkdownBlock.HorizontalRule), MarkdownParser.parse("***"))
+        assertEquals(listOf(MarkdownBlock.HorizontalRule), MarkdownParser.parse("___"))
+        assertEquals(listOf(MarkdownBlock.HorizontalRule), MarkdownParser.parse("-----"))
+    }
+
+    @Test
+    fun horizontalRuleBetweenParagraphsSplitsThem() {
+        val blocks = MarkdownParser.parse("First\n\n---\n\nSecond")
+
+        assertEquals(
+            listOf(
+                MarkdownBlock.Paragraph(listOf(text("First"))),
+                MarkdownBlock.HorizontalRule,
+                MarkdownBlock.Paragraph(listOf(text("Second"))),
+            ),
+            blocks,
+        )
+    }
+
+    @Test
+    fun horizontalRuleDirectlyUnderAParagraphLineStillSplits() {
+        val blocks = MarkdownParser.parse("First\n---\nSecond")
+
+        assertEquals(
+            listOf(
+                MarkdownBlock.Paragraph(listOf(text("First"))),
+                MarkdownBlock.HorizontalRule,
+                MarkdownBlock.Paragraph(listOf(text("Second"))),
+            ),
+            blocks,
+        )
+    }
+
+    @Test
+    fun dashesInsideASentenceAreNotARule() {
+        val blocks = MarkdownParser.parse("please --- not a rule")
+
+        assertEquals(
+            listOf(MarkdownBlock.Paragraph(listOf(text("please --- not a rule")))),
+            blocks,
+        )
+    }
+
+    @Test
+    fun fewerThanThreeMarkerCharsIsNotARule() {
+        val blocks = MarkdownParser.parse("--")
+
+        assertEquals(listOf(MarkdownBlock.Paragraph(listOf(text("--")))), blocks)
+    }
+
+    // endregion
+
+    // region blockquotes
+
+    @Test
+    fun quotedLineBecomesABlockquote() {
+        val blocks = MarkdownParser.parse("> quoted")
+
+        assertEquals(listOf(MarkdownBlock.Blockquote(listOf(text("quoted")))), blocks)
+    }
+
+    @Test
+    fun consecutiveQuoteLinesGroupIntoOneBlockquote() {
+        val blocks = MarkdownParser.parse("> one\n> two")
+
+        assertEquals(listOf(MarkdownBlock.Blockquote(listOf(text("one\ntwo")))), blocks)
+    }
+
+    @Test
+    fun blockquoteSupportsInlineStyles() {
+        val blocks = MarkdownParser.parse("> **bold** words")
+
+        assertEquals(
+            listOf(
+                MarkdownBlock.Blockquote(
+                    listOf(MarkdownInline.Bold(listOf(text("bold"))), text(" words")),
+                ),
+            ),
+            blocks,
+        )
+    }
+
+    @Test
+    fun quoteMarkerWithoutSpaceIsStillAQuote() {
+        val blocks = MarkdownParser.parse(">quoted")
+
+        assertEquals(listOf(MarkdownBlock.Blockquote(listOf(text("quoted")))), blocks)
+    }
+
+    @Test
+    fun blockquoteEndsAtTheFirstNonQuoteLine() {
+        val blocks = MarkdownParser.parse("> quoted\nplain")
+
+        assertEquals(
+            listOf(
+                MarkdownBlock.Blockquote(listOf(text("quoted"))),
+                MarkdownBlock.Paragraph(listOf(text("plain"))),
+            ),
+            blocks,
+        )
+    }
+
+    // endregion
+
     // region robustness
 
     @Test

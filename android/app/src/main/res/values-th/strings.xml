@@ -104,6 +104,7 @@
 
     <!-- Prompt management -->
     <string name="prompts_title">พรอมต์</string>
+    <string name="save">บันทึก</string>
     <string name="add_prompt">เพิ่มพรอมต์</string>
     <string name="edit_prompt">แก้ไขพรอมต์</string>
     <string name="prompt_name">ชื่อ</string>
@@ -129,7 +130,11 @@
     <string name="chat_input_hint">ถามเกี่ยวกับประโยคนี้…</string>
     <string name="send_message">ส่ง</string>
     <string name="jump_to_source">เปิดหน้าที่มา</string>
+    <string name="more_options">ตัวเลือกเพิ่มเติม</string>
     <string name="chat_error_generic">เกิดข้อผิดพลาดบางอย่าง</string>
+    <string name="chat_error_network">ข้อผิดพลาดเครือข่าย — โปรดตรวจสอบการเชื่อมต่อ</string>
+    <string name="chat_error_http">คำขอล้มเหลว (HTTP %1$d)</string>
+    <string name="chat_truncated">คำตอบถูกตัดเนื่องจากขีดจำกัดความยาว</string>
     <string name="assistant_thinking">กำลังรอผู้ช่วย…</string>
     <string name="conversations">การสนทนา</string>
     <string name="no_conversations">ยังไม่มีการสนทนา</string>

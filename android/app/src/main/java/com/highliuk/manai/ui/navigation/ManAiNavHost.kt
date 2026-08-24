@@ -63,6 +63,8 @@ import com.highliuk.manai.ui.chat.ChatScreen
 import com.highliuk.manai.ui.chat.ChatViewModel
 import com.highliuk.manai.ui.chat.ConversationListScreen
 import com.highliuk.manai.ui.chat.ConversationListViewModel
+import com.highliuk.manai.ui.prompts.PromptEditScreen
+import com.highliuk.manai.ui.prompts.PromptEditViewModel
 import com.highliuk.manai.ui.prompts.PromptListScreen
 import com.highliuk.manai.ui.prompts.PromptListViewModel
 import com.highliuk.manai.ui.reader.ReaderScreen
@@ -424,22 +426,72 @@ fun ManAiNavHost(
                 ) {
                     val viewModel: PromptListViewModel = hiltViewModel()
                     val templates by viewModel.templates.collectAsState()
-                    val editing by viewModel.editing.collectAsState()
-                    val editError by viewModel.editError.collectAsState()
                     val pendingDelete by viewModel.pendingDelete.collectAsState()
 
                     PromptListScreen(
                         templates = templates,
-                        editing = editing,
-                        editError = editError,
                         pendingDelete = pendingDelete,
-                        onAddClick = viewModel::requestNew,
-                        onEditClick = viewModel::requestEdit,
+                        onAddClick = {
+                            navController.navigate(
+                                "prompts/edit?id=${PromptEditViewModel.NEW_TEMPLATE_ID}"
+                            )
+                        },
+                        onEditClick = { template ->
+                            navController.navigate("prompts/edit?id=${template.id}")
+                        },
                         onDeleteClick = viewModel::requestDelete,
-                        onSave = viewModel::saveTemplate,
-                        onDismissEdit = viewModel::dismissEdit,
                         onConfirmDelete = viewModel::confirmDelete,
                         onDismissDelete = viewModel::dismissDelete,
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+                composable(
+                    "prompts/edit?id={id}",
+                    arguments = listOf(
+                        navArgument("id") {
+                            type = NavType.LongType
+                            defaultValue = PromptEditViewModel.NEW_TEMPLATE_ID
+                        },
+                    ),
+                    enterTransition = {
+                        slideInHorizontally(
+                            initialOffsetX = { it },
+                            animationSpec = tween(300, easing = FastOutSlowInEasing)
+                        )
+                    },
+                    exitTransition = {
+                        slideOutHorizontally(
+                            targetOffsetX = { it },
+                            animationSpec = tween(300, easing = FastOutSlowInEasing)
+                        )
+                    },
+                    popEnterTransition = {
+                        slideInHorizontally(
+                            initialOffsetX = { it },
+                            animationSpec = tween(300, easing = FastOutSlowInEasing)
+                        )
+                    },
+                    popExitTransition = {
+                        slideOutHorizontally(
+                            targetOffsetX = { it },
+                            animationSpec = tween(300, easing = FastOutSlowInEasing)
+                        )
+                    }
+                ) {
+                    val viewModel: PromptEditViewModel = hiltViewModel()
+                    val template by viewModel.template.collectAsState()
+                    val editError by viewModel.editError.collectAsState()
+
+                    LaunchedEffect(viewModel) {
+                        viewModel.saved.collect {
+                            navController.popBackStack()
+                        }
+                    }
+
+                    PromptEditScreen(
+                        template = template,
+                        errorRes = editError,
+                        onSave = viewModel::save,
                         onBack = { navController.popBackStack() }
                     )
                 }
@@ -463,6 +515,13 @@ private fun NavGraphBuilder.chatDestination(navController: NavHostController) {
         val streamingText by viewModel.streamingText.collectAsStateWithLifecycle()
         val isGenerating by viewModel.isGenerating.collectAsStateWithLifecycle()
         val error by viewModel.error.collectAsStateWithLifecycle()
+        val truncated by viewModel.truncated.collectAsStateWithLifecycle()
+
+        LaunchedEffect(viewModel) {
+            viewModel.deleted.collect {
+                navController.popBackStack()
+            }
+        }
 
         ChatScreen(
             conversation = conversation,
@@ -470,9 +529,10 @@ private fun NavGraphBuilder.chatDestination(navController: NavHostController) {
             streamingText = streamingText,
             isGenerating = isGenerating,
             error = error,
+            truncated = truncated,
             onSend = viewModel::sendMessage,
             onRetry = viewModel::retry,
-            onJumpToSource = {
+            onOpenSourcePage = {
                 conversation?.let { c ->
                     if (c.mangaId != null && c.pageIndex != null) {
                         navController.navigate("reader/${c.mangaId}?page=${c.pageIndex}") {
@@ -481,6 +541,7 @@ private fun NavGraphBuilder.chatDestination(navController: NavHostController) {
                     }
                 }
             },
+            onDeleteConversation = viewModel::deleteConversation,
             onBack = { navController.popBackStack() },
             resolveFurigana = viewModel::resolveFurigana,
         )

@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.highliuk.manai.domain.chat.MemoryToolExecutor
 import com.highliuk.manai.domain.chat.SystemPromptBuilder
 import com.highliuk.manai.domain.llm.LlmEvent
+import com.highliuk.manai.domain.llm.LlmFailure
 import com.highliuk.manai.domain.llm.LlmMessage
 import com.highliuk.manai.domain.llm.LlmProvider
 import com.highliuk.manai.domain.llm.LlmToolCall
@@ -87,14 +88,14 @@ class GenerateChatReplyUseCaseTest {
         coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage("Hello"))
         val provider = FakeLlmProvider(
             listOf(
-                listOf(LlmEvent.TextDelta("A"), LlmEvent.TextDelta("B"), LlmEvent.Completed),
+                listOf(LlmEvent.TextDelta("A"), LlmEvent.TextDelta("B"), LlmEvent.Completed()),
             ),
         )
 
         useCase(provider).invoke(42L).test {
             assertEquals(ChatGenerationEvent.Delta("A"), awaitItem())
             assertEquals(ChatGenerationEvent.Delta("AB"), awaitItem())
-            assertEquals(ChatGenerationEvent.Done, awaitItem())
+            assertEquals(ChatGenerationEvent.Done(), awaitItem())
             awaitComplete()
         }
 
@@ -108,14 +109,14 @@ class GenerateChatReplyUseCaseTest {
         val toolCall = LlmToolCall(id = "call-1", name = "memory_list", arguments = "{}")
         val provider = FakeLlmProvider(
             listOf(
-                listOf(LlmEvent.ToolCalls(listOf(toolCall)), LlmEvent.Completed),
-                listOf(LlmEvent.TextDelta("Hi"), LlmEvent.Completed),
+                listOf(LlmEvent.ToolCalls(listOf(toolCall)), LlmEvent.Completed()),
+                listOf(LlmEvent.TextDelta("Hi"), LlmEvent.Completed()),
             ),
         )
 
         useCase(provider).invoke(42L).test {
             assertEquals(ChatGenerationEvent.Delta("Hi"), awaitItem())
-            assertEquals(ChatGenerationEvent.Done, awaitItem())
+            assertEquals(ChatGenerationEvent.Done(), awaitItem())
             awaitComplete()
         }
 
@@ -140,9 +141,9 @@ class GenerateChatReplyUseCaseTest {
         val callTwo = LlmToolCall(id = "call-2", name = "memory_read", arguments = """{"title":"Level"}""")
         val provider = FakeLlmProvider(
             listOf(
-                listOf(LlmEvent.TextDelta("One"), LlmEvent.ToolCalls(listOf(callOne)), LlmEvent.Completed),
-                listOf(LlmEvent.TextDelta("Two"), LlmEvent.ToolCalls(listOf(callTwo)), LlmEvent.Completed),
-                listOf(LlmEvent.TextDelta("!"), LlmEvent.Completed),
+                listOf(LlmEvent.TextDelta("One"), LlmEvent.ToolCalls(listOf(callOne)), LlmEvent.Completed()),
+                listOf(LlmEvent.TextDelta("Two"), LlmEvent.ToolCalls(listOf(callTwo)), LlmEvent.Completed()),
+                listOf(LlmEvent.TextDelta("!"), LlmEvent.Completed()),
             ),
         )
 
@@ -150,7 +151,7 @@ class GenerateChatReplyUseCaseTest {
             assertEquals(ChatGenerationEvent.Delta("One"), awaitItem())
             assertEquals(ChatGenerationEvent.Delta("OneTwo"), awaitItem())
             assertEquals(ChatGenerationEvent.Delta("OneTwo!"), awaitItem())
-            assertEquals(ChatGenerationEvent.Done, awaitItem())
+            assertEquals(ChatGenerationEvent.Done(), awaitItem())
             awaitComplete()
         }
 
@@ -178,15 +179,15 @@ class GenerateChatReplyUseCaseTest {
                 listOf(
                     LlmEvent.ToolCalls(listOf(callA)),
                     LlmEvent.ToolCalls(listOf(callB)),
-                    LlmEvent.Completed,
+                    LlmEvent.Completed(),
                 ),
-                listOf(LlmEvent.TextDelta("ok"), LlmEvent.Completed),
+                listOf(LlmEvent.TextDelta("ok"), LlmEvent.Completed()),
             ),
         )
 
         useCase(provider).invoke(42L).test {
             assertEquals(ChatGenerationEvent.Delta("ok"), awaitItem())
-            assertEquals(ChatGenerationEvent.Done, awaitItem())
+            assertEquals(ChatGenerationEvent.Done(), awaitItem())
             awaitComplete()
         }
 
@@ -205,16 +206,46 @@ class GenerateChatReplyUseCaseTest {
     fun `provider failure emits error and persists nothing`() = runTest {
         coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage("Hello"))
         val provider = FakeLlmProvider(
-            listOf(listOf(LlmEvent.TextDelta("partial"), LlmEvent.Failure("boom"))),
+            listOf(listOf(LlmEvent.TextDelta("partial"), LlmEvent.Failure(LlmFailure.Generic("boom")))),
         )
 
         useCase(provider).invoke(42L).test {
             assertEquals(ChatGenerationEvent.Delta("partial"), awaitItem())
-            assertEquals(ChatGenerationEvent.Error("boom"), awaitItem())
+            assertEquals(ChatGenerationEvent.Error(LlmFailure.Generic("boom")), awaitItem())
             awaitComplete()
         }
 
         coVerify(exactly = 0) { chatRepository.appendMessage(any(), any(), any()) }
+    }
+
+    @Test
+    fun `length finish reason marks the persisted reply as truncated`() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage("Hello"))
+        val provider = FakeLlmProvider(
+            listOf(listOf(LlmEvent.TextDelta("cut off"), LlmEvent.Completed("length"))),
+        )
+
+        useCase(provider).invoke(42L).test {
+            assertEquals(ChatGenerationEvent.Delta("cut off"), awaitItem())
+            assertEquals(ChatGenerationEvent.Done(truncated = true), awaitItem())
+            awaitComplete()
+        }
+
+        coVerify(exactly = 1) { chatRepository.appendMessage(42L, ChatRole.ASSISTANT, "cut off") }
+    }
+
+    @Test
+    fun `stop finish reason is not reported as truncated`() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage("Hello"))
+        val provider = FakeLlmProvider(
+            listOf(listOf(LlmEvent.TextDelta("done"), LlmEvent.Completed("stop"))),
+        )
+
+        useCase(provider).invoke(42L).test {
+            assertEquals(ChatGenerationEvent.Delta("done"), awaitItem())
+            assertEquals(ChatGenerationEvent.Done(truncated = false), awaitItem())
+            awaitComplete()
+        }
     }
 
     @Test
@@ -223,7 +254,7 @@ class GenerateChatReplyUseCaseTest {
         coEvery { memoryRepository.listTitles() } returns emptyList()
         val toolCall = LlmToolCall(id = "call-1", name = "memory_list", arguments = "{}")
         val provider = FakeLlmProvider(
-            listOf(listOf(LlmEvent.ToolCalls(listOf(toolCall)), LlmEvent.Completed)),
+            listOf(listOf(LlmEvent.ToolCalls(listOf(toolCall)), LlmEvent.Completed())),
         )
 
         useCase(provider).invoke(42L).test {
@@ -252,14 +283,14 @@ class GenerateChatReplyUseCaseTest {
         val toolCall = LlmToolCall(id = "call-1", name = "memory_list", arguments = "{}")
         val provider = FakeLlmProvider(
             listOf(
-                listOf(LlmEvent.ToolCalls(listOf(toolCall)), LlmEvent.Completed),
-                listOf(LlmEvent.TextDelta("Hi"), LlmEvent.Completed),
+                listOf(LlmEvent.ToolCalls(listOf(toolCall)), LlmEvent.Completed()),
+                listOf(LlmEvent.TextDelta("Hi"), LlmEvent.Completed()),
             ),
         )
 
         useCase(provider).invoke(42L).test {
             assertEquals(ChatGenerationEvent.Delta("Hi"), awaitItem())
-            assertEquals(ChatGenerationEvent.Done, awaitItem())
+            assertEquals(ChatGenerationEvent.Done(), awaitItem())
             awaitComplete()
         }
 
@@ -270,12 +301,12 @@ class GenerateChatReplyUseCaseTest {
     fun `missing conversation falls back to DEFAULT reasoning`() = runTest {
         coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage("Hello"))
         val provider = FakeLlmProvider(
-            listOf(listOf(LlmEvent.TextDelta("ok"), LlmEvent.Completed)),
+            listOf(listOf(LlmEvent.TextDelta("ok"), LlmEvent.Completed())),
         )
 
         useCase(provider).invoke(42L).test {
             assertEquals(ChatGenerationEvent.Delta("ok"), awaitItem())
-            assertEquals(ChatGenerationEvent.Done, awaitItem())
+            assertEquals(ChatGenerationEvent.Done(), awaitItem())
             awaitComplete()
         }
 
@@ -290,12 +321,12 @@ class GenerateChatReplyUseCaseTest {
             ChatMessage(3L, 42L, ChatRole.USER, "Q2", 2L),
         )
         val provider = FakeLlmProvider(
-            listOf(listOf(LlmEvent.TextDelta("ok"), LlmEvent.Completed)),
+            listOf(listOf(LlmEvent.TextDelta("ok"), LlmEvent.Completed())),
         )
 
         useCase(provider).invoke(42L).test {
             assertEquals(ChatGenerationEvent.Delta("ok"), awaitItem())
-            assertEquals(ChatGenerationEvent.Done, awaitItem())
+            assertEquals(ChatGenerationEvent.Done(), awaitItem())
             awaitComplete()
         }
 
@@ -315,12 +346,12 @@ class GenerateChatReplyUseCaseTest {
     fun `first turn is vanilla - no tools and minimal system prompt`() = runTest {
         coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage("rendered template"))
         val provider = FakeLlmProvider(
-            listOf(listOf(LlmEvent.TextDelta("ok"), LlmEvent.Completed)),
+            listOf(listOf(LlmEvent.TextDelta("ok"), LlmEvent.Completed())),
         )
 
         useCase(provider).invoke(42L).test {
             assertEquals(ChatGenerationEvent.Delta("ok"), awaitItem())
-            assertEquals(ChatGenerationEvent.Done, awaitItem())
+            assertEquals(ChatGenerationEvent.Done(), awaitItem())
             awaitComplete()
         }
 
@@ -335,12 +366,12 @@ class GenerateChatReplyUseCaseTest {
     fun `follow-up turn advertises the memory tools`() = runTest {
         coEvery { chatRepository.getMessages(42L) } returns followUpHistory()
         val provider = FakeLlmProvider(
-            listOf(listOf(LlmEvent.TextDelta("ok"), LlmEvent.Completed)),
+            listOf(listOf(LlmEvent.TextDelta("ok"), LlmEvent.Completed())),
         )
 
         useCase(provider).invoke(42L).test {
             assertEquals(ChatGenerationEvent.Delta("ok"), awaitItem())
-            assertEquals(ChatGenerationEvent.Done, awaitItem())
+            assertEquals(ChatGenerationEvent.Done(), awaitItem())
             awaitComplete()
         }
 
@@ -360,12 +391,12 @@ class GenerateChatReplyUseCaseTest {
             )
         )
         val provider = FakeLlmProvider(
-            listOf(listOf(LlmEvent.TextDelta("ok"), LlmEvent.Completed)),
+            listOf(listOf(LlmEvent.TextDelta("ok"), LlmEvent.Completed())),
         )
 
         useCase(provider).invoke(42L).test {
             assertEquals(ChatGenerationEvent.Delta("ok"), awaitItem())
-            assertEquals(ChatGenerationEvent.Done, awaitItem())
+            assertEquals(ChatGenerationEvent.Done(), awaitItem())
             awaitComplete()
         }
 
@@ -380,12 +411,12 @@ class GenerateChatReplyUseCaseTest {
             ChatMessage(2L, 42L, ChatRole.USER, "Q2", 1L),
         )
         val provider = FakeLlmProvider(
-            listOf(listOf(LlmEvent.TextDelta("ok"), LlmEvent.Completed)),
+            listOf(listOf(LlmEvent.TextDelta("ok"), LlmEvent.Completed())),
         )
 
         useCase(provider).invoke(42L).test {
             assertEquals(ChatGenerationEvent.Delta("ok"), awaitItem())
-            assertEquals(ChatGenerationEvent.Done, awaitItem())
+            assertEquals(ChatGenerationEvent.Done(), awaitItem())
             awaitComplete()
         }
 

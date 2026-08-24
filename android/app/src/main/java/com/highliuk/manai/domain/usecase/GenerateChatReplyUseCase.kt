@@ -3,6 +3,7 @@ package com.highliuk.manai.domain.usecase
 import com.highliuk.manai.domain.chat.MemoryToolExecutor
 import com.highliuk.manai.domain.chat.SystemPromptBuilder
 import com.highliuk.manai.domain.llm.LlmEvent
+import com.highliuk.manai.domain.llm.LlmFailure
 import com.highliuk.manai.domain.llm.LlmMessage
 import com.highliuk.manai.domain.llm.LlmProvider
 import com.highliuk.manai.domain.llm.LlmToolCall
@@ -21,8 +22,10 @@ import javax.inject.Inject
 
 sealed class ChatGenerationEvent {
     data class Delta(val accumulatedText: String) : ChatGenerationEvent()
-    data object Done : ChatGenerationEvent()
-    data class Error(val message: String) : ChatGenerationEvent()
+
+    /** [truncated] is true when the provider stopped at its completion-token limit. */
+    data class Done(val truncated: Boolean = false) : ChatGenerationEvent()
+    data class Error(val failure: LlmFailure) : ChatGenerationEvent()
 }
 
 /**
@@ -58,7 +61,7 @@ class GenerateChatReplyUseCase @Inject constructor(
             finished = runRound(RoundInput(conversationId, reasoning, history, tools), fullText)
         }
         if (!finished) {
-            emit(ChatGenerationEvent.Error("Tool-call limit reached"))
+            emit(ChatGenerationEvent.Error(LlmFailure.Generic("Tool-call limit reached")))
         }
     }
 
@@ -92,7 +95,8 @@ class GenerateChatReplyUseCase @Inject constructor(
     ): Boolean {
         val history = input.history
         var pendingToolCalls: List<LlmToolCall> = emptyList()
-        var failure: String? = null
+        var failure: LlmFailure? = null
+        var finishReason: String? = null
         val roundText = StringBuilder()
         llmProvider.chat(history, input.tools, input.reasoning).collect { event ->
             when (event) {
@@ -102,14 +106,14 @@ class GenerateChatReplyUseCase @Inject constructor(
                     emit(ChatGenerationEvent.Delta(fullText.toString()))
                 }
                 is LlmEvent.ToolCalls -> pendingToolCalls = pendingToolCalls + event.calls
-                is LlmEvent.Failure -> failure = event.message
-                LlmEvent.Completed -> Unit
+                is LlmEvent.Failure -> failure = event.failure
+                is LlmEvent.Completed -> finishReason = event.finishReason
             }
         }
-        val failureMessage = failure
+        val roundFailure = failure
         return when {
-            failureMessage != null -> {
-                emit(ChatGenerationEvent.Error(failureMessage))
+            roundFailure != null -> {
+                emit(ChatGenerationEvent.Error(roundFailure))
                 true
             }
             pendingToolCalls.isEmpty() -> {
@@ -118,7 +122,7 @@ class GenerateChatReplyUseCase @Inject constructor(
                     ChatRole.ASSISTANT,
                     fullText.toString(),
                 )
-                emit(ChatGenerationEvent.Done)
+                emit(ChatGenerationEvent.Done(truncated = finishReason == FINISH_LENGTH))
                 true
             }
             else -> {
@@ -164,5 +168,8 @@ class GenerateChatReplyUseCase @Inject constructor(
 
     private companion object {
         const val MAX_TOOL_ROUNDS = 5
+
+        /** OpenAI-compatible finish_reason meaning the completion-token cap was hit. */
+        const val FINISH_LENGTH = "length"
     }
 }

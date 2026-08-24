@@ -104,6 +104,7 @@
 
     <!-- Prompt management -->
     <string name="prompts_title">提示词</string>
+    <string name="save">保存</string>
     <string name="add_prompt">添加提示词</string>
     <string name="edit_prompt">编辑提示词</string>
     <string name="prompt_name">名称</string>
@@ -129,7 +130,11 @@
     <string name="chat_input_hint">询问这个句子…</string>
     <string name="send_message">发送</string>
     <string name="jump_to_source">打开来源页面</string>
+    <string name="more_options">更多选项</string>
     <string name="chat_error_generic">出了点问题</string>
+    <string name="chat_error_network">网络错误——请检查网络连接</string>
+    <string name="chat_error_http">请求失败（HTTP %1$d）</string>
+    <string name="chat_truncated">回复因长度限制被截断</string>
     <string name="assistant_thinking">正在等待助手…</string>
     <string name="conversations">对话</string>
     <string name="no_conversations">暂无对话</string>

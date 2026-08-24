@@ -9,12 +9,17 @@ import android.text.style.TypefaceSpan
 import android.util.TypedValue
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -25,11 +30,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
@@ -56,6 +63,7 @@ typealias FuriganaResolver = suspend (String) -> List<FuriganaToken>
 private val TABLE_CELL_WIDTH = 140.dp
 private val BLOCK_SPACING = 8.dp
 private val LIST_INDENT_PER_LEVEL = 16.dp
+private val BLOCKQUOTE_BAR_WIDTH = 3.dp
 private const val BOLD_WEIGHT_THRESHOLD = 600
 
 /**
@@ -128,6 +136,44 @@ private fun MarkdownBlockView(
         is MarkdownBlock.Table -> MarkdownTableView(block, lookup)
 
         is MarkdownBlock.CodeBlock -> MarkdownCodeBlockView(block)
+
+        is MarkdownBlock.HorizontalRule -> HorizontalDivider()
+
+        is MarkdownBlock.Blockquote -> MarkdownBlockquoteView(block, isTail, lookup)
+    }
+}
+
+@Composable
+private fun MarkdownBlockquoteView(
+    block: MarkdownBlock.Blockquote,
+    isTail: Boolean,
+    lookup: (String) -> List<FuriganaToken>?,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
+            .testTag("markdown_blockquote"),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(BLOCKQUOTE_BAR_WIDTH)
+                .background(MaterialTheme.colorScheme.outlineVariant),
+        )
+        CompositionLocalProvider(
+            LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
+        ) {
+            FuriganaRichText(
+                runs = block.inlines.toStyledRuns(),
+                isTail = isTail,
+                lookup = lookup,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = BLOCK_SPACING),
+            )
+        }
     }
 }
 

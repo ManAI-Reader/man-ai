@@ -107,6 +107,7 @@
 
     <!-- Prompt management -->
     <string name="prompts_title">Prompts</string>
+    <string name="save">Salvar</string>
     <string name="add_prompt">Adicionar prompt</string>
     <string name="edit_prompt">Editar prompt</string>
     <string name="prompt_name">Nome</string>
@@ -132,7 +133,11 @@
     <string name="chat_input_hint">Pergunte sobre esta frase…</string>
     <string name="send_message">Enviar</string>
     <string name="jump_to_source">Abrir página de origem</string>
+    <string name="more_options">Mais opções</string>
     <string name="chat_error_generic">Algo deu errado</string>
+    <string name="chat_error_network">Erro de rede — verifique sua conexão</string>
+    <string name="chat_error_http">Falha na solicitação (HTTP %1$d)</string>
+    <string name="chat_truncated">A resposta foi cortada pelo limite de comprimento</string>
     <string name="assistant_thinking">Aguardando o assistente…</string>
     <string name="conversations">Conversas</string>
     <string name="no_conversations">Nenhuma conversa ainda</string>

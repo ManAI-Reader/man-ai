@@ -30,6 +30,21 @@ data class LlmToolSpec(
 )
 
 /**
+ * Categorized reason an LLM request failed, so the UI can map each category
+ * to a localized message without ever exposing raw provider payloads.
+ */
+sealed class LlmFailure {
+    /** Connectivity problem: DNS, timeout, unreachable host, dropped socket. */
+    data object Network : LlmFailure()
+
+    /** Non-2xx HTTP response. Only the status code is surfaced, never the body. */
+    data class Http(val status: Int) : LlmFailure()
+
+    /** Anything else; [message] is for logs, not for user-facing display. */
+    data class Generic(val message: String? = null) : LlmFailure()
+}
+
+/**
  * Streaming events emitted by [LlmProvider.chat].
  *
  * Terminal contract: the flow ends with exactly one of [Failure] or [Completed].
@@ -38,8 +53,14 @@ data class LlmToolSpec(
 sealed class LlmEvent {
     data class TextDelta(val text: String) : LlmEvent()
     data class ToolCalls(val calls: List<LlmToolCall>) : LlmEvent()
-    data class Failure(val message: String) : LlmEvent()
-    data object Completed : LlmEvent()
+    data class Failure(val failure: LlmFailure) : LlmEvent()
+
+    /**
+     * Terminal success event. [finishReason] is the provider's raw
+     * `finish_reason` (e.g. "stop", "length", "tool_calls"), or null when the
+     * stream ended without reporting one.
+     */
+    data class Completed(val finishReason: String? = null) : LlmEvent()
 }
 
 interface LlmProvider {

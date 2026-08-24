@@ -104,6 +104,7 @@
 
     <!-- Prompt management -->
     <string name="prompts_title">프롬프트</string>
+    <string name="save">저장</string>
     <string name="add_prompt">프롬프트 추가</string>
     <string name="edit_prompt">프롬프트 편집</string>
     <string name="prompt_name">이름</string>
@@ -129,7 +130,11 @@
     <string name="chat_input_hint">이 문장에 대해 질문하기…</string>
     <string name="send_message">보내기</string>
     <string name="jump_to_source">원본 페이지 열기</string>
+    <string name="more_options">더보기 옵션</string>
     <string name="chat_error_generic">문제가 발생했습니다</string>
+    <string name="chat_error_network">네트워크 오류 — 연결을 확인하세요</string>
+    <string name="chat_error_http">요청 실패 (HTTP %1$d)</string>
+    <string name="chat_truncated">응답이 길이 제한으로 잘렸습니다</string>
     <string name="assistant_thinking">어시스턴트를 기다리는 중…</string>
     <string name="conversations">대화</string>
     <string name="no_conversations">아직 대화가 없습니다</string>

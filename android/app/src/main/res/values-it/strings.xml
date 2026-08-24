@@ -107,6 +107,7 @@
 
     <!-- Prompt management -->
     <string name="prompts_title">Prompt</string>
+    <string name="save">Salva</string>
     <string name="add_prompt">Aggiungi prompt</string>
     <string name="edit_prompt">Modifica prompt</string>
     <string name="prompt_name">Nome</string>
@@ -132,7 +133,11 @@
     <string name="chat_input_hint">Chiedi qualcosa su questa frase…</string>
     <string name="send_message">Invia</string>
     <string name="jump_to_source">Apri la pagina d\'origine</string>
+    <string name="more_options">Altre opzioni</string>
     <string name="chat_error_generic">Qualcosa è andato storto</string>
+    <string name="chat_error_network">Errore di rete: controlla la connessione</string>
+    <string name="chat_error_http">Richiesta non riuscita (HTTP %1$d)</string>
+    <string name="chat_truncated">La risposta è stata troncata dal limite di lunghezza</string>
     <string name="assistant_thinking">In attesa dell\'assistente…</string>
     <string name="conversations">Conversazioni</string>
     <string name="no_conversations">Nessuna conversazione</string>

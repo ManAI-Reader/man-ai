@@ -50,4 +50,10 @@ sealed interface MarkdownBlock {
     ) : MarkdownBlock
 
     data class CodeBlock(val text: String) : MarkdownBlock
+
+    /** Thematic break ("---", "***" or "___" alone on a line). */
+    data object HorizontalRule : MarkdownBlock
+
+    /** One group of consecutive "> " quoted lines, joined like a paragraph. */
+    data class Blockquote(val inlines: List<MarkdownInline>) : MarkdownBlock
 }

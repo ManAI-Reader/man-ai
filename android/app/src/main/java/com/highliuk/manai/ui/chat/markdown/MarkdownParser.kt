@@ -14,6 +14,8 @@ object MarkdownParser {
     private val headingRegex = Regex("""^(#{1,6})\s+(.*)$""")
     private val listItemRegex = Regex("""^(\s*)(?:([-+*])|(\d{1,9})[.)])\s+(.*)$""")
     private val tableSeparatorRegex = Regex("""^\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?$""")
+    private val horizontalRuleRegex = Regex("""^(-{3,}|\*{3,}|_{3,})$""")
+    private val blockquoteLineRegex = Regex("""^>\s?(.*)$""")
 
     fun parse(markdown: String): List<MarkdownBlock> {
         val lines = markdown.replace("\r\n", "\n").replace('\r', '\n').split("\n")
@@ -36,6 +38,17 @@ object MarkdownParser {
                 isTableStart(lines, i) -> {
                     flushParagraph(paragraph, blocks)
                     consumeTable(lines, i, blocks)
+                }
+
+                horizontalRuleRegex.matches(line.trim()) -> {
+                    flushParagraph(paragraph, blocks)
+                    blocks.add(MarkdownBlock.HorizontalRule)
+                    i + 1
+                }
+
+                blockquoteLineRegex.matches(line.trim()) -> {
+                    flushParagraph(paragraph, blocks)
+                    consumeBlockquote(lines, i, blocks)
                 }
 
                 parseLineBlock(line, blocks, paragraph) -> i + 1
@@ -102,6 +115,23 @@ object MarkdownParser {
         }
         blocks.add(MarkdownBlock.CodeBlock(body.joinToString("\n")))
         return if (i < lines.size) i + 1 else i
+    }
+
+    /** Consumes the consecutive "> " lines starting at [start] into one blockquote. */
+    private fun consumeBlockquote(
+        lines: List<String>,
+        start: Int,
+        blocks: MutableList<MarkdownBlock>,
+    ): Int {
+        val quoted = mutableListOf<String>()
+        var i = start
+        while (i < lines.size) {
+            val match = blockquoteLineRegex.matchEntire(lines[i].trim()) ?: break
+            quoted.add(match.groupValues[1])
+            i++
+        }
+        blocks.add(MarkdownBlock.Blockquote(parseInlines(quoted.joinToString("\n"))))
+        return i
     }
 
     private fun isTableStart(lines: List<String>, i: Int): Boolean =

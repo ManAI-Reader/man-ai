@@ -104,6 +104,7 @@
 
     <!-- Prompt management -->
     <string name="prompts_title">Prompt</string>
+    <string name="save">Simpan</string>
     <string name="add_prompt">Tambah prompt</string>
     <string name="edit_prompt">Edit prompt</string>
     <string name="prompt_name">Nama</string>
@@ -129,7 +130,11 @@
     <string name="chat_input_hint">Tanyakan tentang kalimat ini…</string>
     <string name="send_message">Kirim</string>
     <string name="jump_to_source">Buka halaman sumber</string>
+    <string name="more_options">Opsi lainnya</string>
     <string name="chat_error_generic">Terjadi kesalahan</string>
+    <string name="chat_error_network">Kesalahan jaringan — periksa koneksi Anda</string>
+    <string name="chat_error_http">Permintaan gagal (HTTP %1$d)</string>
+    <string name="chat_truncated">Jawaban terpotong karena batas panjang</string>
     <string name="assistant_thinking">Menunggu asisten…</string>
     <string name="conversations">Percakapan</string>
     <string name="no_conversations">Belum ada percakapan</string>

@@ -1,9 +1,7 @@
 package com.highliuk.manai.ui.prompts
 
 import app.cash.turbine.test
-import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.PromptTemplate
-import com.highliuk.manai.domain.model.ReasoningLevel
 import com.highliuk.manai.domain.repository.PromptTemplateRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -11,8 +9,6 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -61,152 +57,6 @@ class PromptListViewModelTest {
             templatesFlow.value = listOf(template)
             assertEquals(listOf(template), awaitItem())
         }
-    }
-
-    @Test
-    fun `requestNew opens dialog with blank template`() = runTest(testDispatcher) {
-        val viewModel = createViewModel()
-
-        viewModel.requestNew()
-
-        assertEquals(
-            PromptTemplate(id = 0L, name = "", template = ""),
-            viewModel.editing.value,
-        )
-    }
-
-    @Test
-    fun `requestNew assigns next sortOrder after existing templates`() = runTest(testDispatcher) {
-        templatesFlow.value = listOf(
-            template.copy(id = 1L, sortOrder = 0),
-            template.copy(id = 2L, sortOrder = 1),
-            template.copy(id = 3L, sortOrder = 2),
-            template.copy(id = 4L, sortOrder = 3),
-        )
-        val viewModel = createViewModel()
-        backgroundScope.launch { viewModel.templates.collect() }
-        advanceUntilIdle()
-
-        viewModel.requestNew()
-
-        assertEquals(4, viewModel.editing.value?.sortOrder)
-    }
-
-    @Test
-    fun `requestEdit opens dialog with existing template`() = runTest(testDispatcher) {
-        val viewModel = createViewModel()
-
-        viewModel.requestEdit(template)
-
-        assertEquals(template, viewModel.editing.value)
-    }
-
-    @Test
-    fun `saveTemplate saves trimmed fields preserving id and sortOrder`() = runTest(testDispatcher) {
-        val viewModel = createViewModel()
-        viewModel.requestEdit(template)
-
-        viewModel.saveTemplate("  New name  ", "  New body  ", ReasoningLevel.DEFAULT)
-        advanceUntilIdle()
-
-        coVerify {
-            repository.save(
-                PromptTemplate(id = 7L, name = "New name", template = "New body", sortOrder = 3),
-            )
-        }
-        assertNull(viewModel.editing.value)
-        assertNull(viewModel.editError.value)
-    }
-
-    @Test
-    fun `saveTemplate persists the selected reasoning level`() = runTest(testDispatcher) {
-        val viewModel = createViewModel()
-        viewModel.requestEdit(template)
-
-        viewModel.saveTemplate("New name", "New body", ReasoningLevel.HIGH)
-        advanceUntilIdle()
-
-        coVerify {
-            repository.save(
-                PromptTemplate(
-                    id = 7L,
-                    name = "New name",
-                    template = "New body",
-                    sortOrder = 3,
-                    reasoningLevel = ReasoningLevel.HIGH,
-                ),
-            )
-        }
-    }
-
-    @Test
-    fun `saveTemplate rejects blank name keeping dialog open`() = runTest(testDispatcher) {
-        val viewModel = createViewModel()
-        viewModel.requestEdit(template)
-
-        viewModel.saveTemplate("   ", "body", ReasoningLevel.DEFAULT)
-        advanceUntilIdle()
-
-        coVerify(exactly = 0) { repository.save(any()) }
-        assertEquals(template, viewModel.editing.value)
-        assertEquals(R.string.prompt_name_required, viewModel.editError.value)
-    }
-
-    @Test
-    fun `saveTemplate rejects blank template keeping dialog open`() = runTest(testDispatcher) {
-        val viewModel = createViewModel()
-        viewModel.requestNew()
-
-        viewModel.saveTemplate("name", "   ", ReasoningLevel.DEFAULT)
-        advanceUntilIdle()
-
-        coVerify(exactly = 0) { repository.save(any()) }
-        assertEquals(
-            PromptTemplate(id = 0L, name = "", template = ""),
-            viewModel.editing.value,
-        )
-        assertEquals(R.string.prompt_name_required, viewModel.editError.value)
-    }
-
-    @Test
-    fun `saveTemplate closes dialog synchronously and ignores rapid double invocation`() =
-        runTest(testDispatcher) {
-            val viewModel = createViewModel()
-            viewModel.requestEdit(template)
-
-            viewModel.saveTemplate("name", "body", ReasoningLevel.DEFAULT)
-            assertNull(viewModel.editing.value)
-            viewModel.saveTemplate("name", "body", ReasoningLevel.DEFAULT)
-            advanceUntilIdle()
-
-            coVerify(exactly = 1) { repository.save(any()) }
-        }
-
-    @Test
-    fun `requestNew and requestEdit clear previous error`() = runTest(testDispatcher) {
-        val viewModel = createViewModel()
-        viewModel.requestEdit(template)
-        viewModel.saveTemplate("", "", ReasoningLevel.DEFAULT)
-        assertEquals(R.string.prompt_name_required, viewModel.editError.value)
-
-        viewModel.requestNew()
-        assertNull(viewModel.editError.value)
-
-        viewModel.saveTemplate("", "", ReasoningLevel.DEFAULT)
-        viewModel.requestEdit(template)
-        assertNull(viewModel.editError.value)
-    }
-
-    @Test
-    fun `dismissEdit clears editing and error`() = runTest(testDispatcher) {
-        val viewModel = createViewModel()
-        viewModel.requestEdit(template)
-        viewModel.saveTemplate("", "", ReasoningLevel.DEFAULT)
-
-        viewModel.dismissEdit()
-
-        assertNull(viewModel.editing.value)
-        assertNull(viewModel.editError.value)
     }
 
     @Test

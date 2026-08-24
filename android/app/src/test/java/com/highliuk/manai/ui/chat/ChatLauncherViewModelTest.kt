@@ -318,6 +318,46 @@ class ChatLauncherViewModelTest {
         assertEquals("…", viewModel.buildTitle("\nbody"))
     }
 
+    @Test
+    fun buildTitlePrefersTheSelectionWhenPresent() {
+        val viewModel = createViewModel()
+
+        assertEquals("食べる", viewModel.buildTitle("私は食べる", "食べる"))
+        assertEquals("あ".repeat(40), viewModel.buildTitle("text", "あ".repeat(50)))
+    }
+
+    @Test
+    fun buildTitleFallsBackToSentenceWhenSelectionIsBlank() {
+        val viewModel = createViewModel()
+
+        assertEquals("私は食べる", viewModel.buildTitle("私は食べる", "   "))
+        assertEquals("私は食べる", viewModel.buildTitle("私は食べる", null))
+    }
+
+    @Test
+    fun startConversationUsesSelectionAsConversationTitle() = runTest {
+        coEvery { chatRepository.createConversation(any(), any(), any(), any(), any()) } returns 42L
+        val viewModel = createViewModel()
+
+        viewModel.startConversation(
+            template = template,
+            region = region,
+            mangaId = 5L,
+            options = options.copy(selection = "食べる"),
+        )
+        advanceUntilIdle()
+
+        coVerify {
+            chatRepository.createConversation(
+                title = "食べる",
+                mangaId = 5L,
+                pageIndex = 12,
+                regionIndex = 3,
+                reasoningLevel = ReasoningLevel.DEFAULT,
+            )
+        }
+    }
+
     private companion object {
         const val NO_PAGE_BALLOONS = "No other balloons on this page"
         const val NO_PREVIOUS_BALLOONS = "No balloons on the previous pages"

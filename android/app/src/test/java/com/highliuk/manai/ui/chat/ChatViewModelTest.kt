@@ -1,9 +1,12 @@
 package com.highliuk.manai.ui.chat
 
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.viewModelScope
 import app.cash.turbine.test
+import com.highliuk.manai.R
 import com.highliuk.manai.domain.furigana.FuriganaPipeline
 import com.highliuk.manai.domain.furigana.KanjiReadingsDataSource
+import com.highliuk.manai.domain.llm.LlmFailure
 import com.highliuk.manai.domain.logging.Logger
 import com.highliuk.manai.domain.ml.JapaneseTokenizer
 import com.highliuk.manai.domain.model.ChatMessage
@@ -22,6 +25,7 @@ import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
@@ -32,10 +36,12 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
 
 private class MessagelessException : RuntimeException()
 
@@ -186,7 +192,7 @@ class ChatViewModelTest {
         every { generateChatReply(42L) } returns flowOf(
             ChatGenerationEvent.Delta("Hel"),
             ChatGenerationEvent.Delta("Hello"),
-            ChatGenerationEvent.Done,
+            ChatGenerationEvent.Done(),
         )
 
         val viewModel = createViewModel()
@@ -215,7 +221,7 @@ class ChatViewModelTest {
         coEvery { chatRepository.getMessages(42L) } returns emptyList()
         every { generateChatReply(42L) } returns flowOf(
             ChatGenerationEvent.Delta("Sure"),
-            ChatGenerationEvent.Done,
+            ChatGenerationEvent.Done(),
         )
 
         val viewModel = createViewModel()
@@ -303,7 +309,7 @@ class ChatViewModelTest {
         coEvery { chatRepository.getMessages(42L) } returns emptyList()
         every { generateChatReply(42L) } returns flowOf(
             ChatGenerationEvent.Delta("Hi"),
-            ChatGenerationEvent.Done,
+            ChatGenerationEvent.Done(),
         )
 
         val viewModel = createViewModel()
@@ -330,8 +336,9 @@ class ChatViewModelTest {
         viewModel.sendMessage("hello")
         advanceUntilIdle()
 
-        assertEquals("db full", viewModel.error.value)
+        assertEquals(ChatUiError(R.string.chat_error_generic), viewModel.error.value)
         assertEquals(false, viewModel.isGenerating.value)
+        verify { logger.e("ChatViewModel", any(), any<IllegalStateException>()) }
         verify(exactly = 0) { generateChatReply(any()) }
     }
 
@@ -340,18 +347,18 @@ class ChatViewModelTest {
         coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage())
         every { generateChatReply(42L) } returns flowOf(
             ChatGenerationEvent.Delta("par"),
-            ChatGenerationEvent.Error("provider down"),
+            ChatGenerationEvent.Error(LlmFailure.Generic("provider down")),
         )
 
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        assertEquals("provider down", viewModel.error.value)
+        assertEquals(ChatUiError(R.string.chat_error_generic), viewModel.error.value)
         assertNull(viewModel.streamingText.value)
 
         every { generateChatReply(42L) } returns flowOf(
             ChatGenerationEvent.Delta("ok"),
-            ChatGenerationEvent.Done,
+            ChatGenerationEvent.Done(),
         )
         viewModel.retry()
         advanceUntilIdle()
@@ -384,12 +391,13 @@ class ChatViewModelTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        assertEquals("repository exploded", viewModel.error.value)
+        assertEquals(ChatUiError(R.string.chat_error_generic), viewModel.error.value)
         assertNull(viewModel.streamingText.value)
+        verify { logger.e("ChatViewModel", any(), any<IllegalStateException>()) }
     }
 
     @Test
-    fun thrownExceptionWithoutMessageStoresBlankErrorForLocalizedFallback() = runTest {
+    fun thrownExceptionWithoutMessageStillMapsToGenericError() = runTest {
         coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage())
         every { generateChatReply(42L) } returns flow<ChatGenerationEvent> {
             throw MessagelessException()
@@ -398,6 +406,154 @@ class ChatViewModelTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        assertEquals("", viewModel.error.value)
+        assertEquals(ChatUiError(R.string.chat_error_generic), viewModel.error.value)
+    }
+
+    @Test
+    fun networkFailureEventMapsToLocalizedNetworkError() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage())
+        every { generateChatReply(42L) } returns flowOf(
+            ChatGenerationEvent.Error(LlmFailure.Network),
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(ChatUiError(R.string.chat_error_network), viewModel.error.value)
+        verify { logger.e("ChatViewModel", any(), null) }
+    }
+
+    @Test
+    fun httpFailureEventMapsToLocalizedHttpErrorWithStatus() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage())
+        every { generateChatReply(42L) } returns flowOf(
+            ChatGenerationEvent.Error(LlmFailure.Http(502)),
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(
+            ChatUiError(R.string.chat_error_http, httpStatus = 502),
+            viewModel.error.value,
+        )
+    }
+
+    @Test
+    fun thrownIoExceptionMapsToLocalizedNetworkError() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage())
+        every { generateChatReply(42L) } returns flow<ChatGenerationEvent> {
+            throw IOException("socket reset")
+        }
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(ChatUiError(R.string.chat_error_network), viewModel.error.value)
+        verify { logger.e("ChatViewModel", any(), any<IOException>()) }
+    }
+
+    @Test
+    fun truncatedDoneSetsTruncatedFlagAndNextGenerationResetsIt() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage())
+        every { generateChatReply(42L) } returns flowOf(
+            ChatGenerationEvent.Delta("cut"),
+            ChatGenerationEvent.Done(truncated = true),
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertTrue(viewModel.truncated.value)
+
+        every { generateChatReply(42L) } returns flowOf(
+            ChatGenerationEvent.Delta("full"),
+            ChatGenerationEvent.Done(truncated = false),
+        )
+        viewModel.sendMessage("again")
+        advanceUntilIdle()
+
+        assertFalse(viewModel.truncated.value)
+    }
+
+    @Test
+    fun scopeCancellationDuringGenerationDoesNotLogOrSetError() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage())
+        every { generateChatReply(42L) } returns flow { awaitCancellation() }
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.viewModelScope.cancel()
+        advanceUntilIdle()
+
+        assertNull(viewModel.error.value)
+        assertEquals(false, viewModel.isGenerating.value)
+        verify(exactly = 0) { logger.e(any(), any(), any()) }
+    }
+
+    @Test
+    fun deleteConversationCancelsInFlightGeneration() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage())
+        var generationCancelled = false
+        every { generateChatReply(42L) } returns flow {
+            try {
+                awaitCancellation()
+            } finally {
+                generationCancelled = true
+            }
+        }
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.deleted.test {
+            viewModel.deleteConversation()
+            awaitItem()
+        }
+
+        assertTrue(generationCancelled)
+        assertEquals(false, viewModel.isGenerating.value)
+        assertNull(viewModel.error.value)
+        verify(exactly = 0) { logger.e(any(), any(), any()) }
+        coVerify(exactly = 1) { chatRepository.deleteConversation(42L) }
+    }
+
+    @Test
+    fun deleteConversationDeletesAndEmitsDeletedEvent() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns emptyList()
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.deleted.test {
+            viewModel.deleteConversation()
+            awaitItem()
+        }
+        coVerify(exactly = 1) { chatRepository.deleteConversation(42L) }
+    }
+
+    @Test
+    fun orphanCleanupDeletesConversationWithoutAssistantReply() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage())
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.deleteIfOrphaned()
+
+        coVerify(exactly = 1) { chatRepository.deleteConversation(42L) }
+    }
+
+    @Test
+    fun orphanCleanupKeepsConversationWithAssistantReply() = runTest {
+        coEvery { chatRepository.getMessages(42L) } returns listOf(userMessage(), assistantMessage())
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.deleteIfOrphaned()
+
+        coVerify(exactly = 0) { chatRepository.deleteConversation(any()) }
     }
 }

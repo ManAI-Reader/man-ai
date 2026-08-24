@@ -68,7 +68,7 @@ class ChatLauncherViewModel @Inject constructor(
                 buildPromptContext(template.template, region, mangaId, options),
             )
             val conversationId = chatRepository.createConversation(
-                title = buildTitle(text),
+                title = buildTitle(text, options.selection),
                 mangaId = mangaId,
                 pageIndex = region.pageIndex,
                 regionIndex = region.regionIndex,
@@ -135,8 +135,15 @@ class ChatLauncherViewModel @Inject constructor(
         return found
     }
 
-    internal fun buildTitle(text: String): String =
-        text.lineSequence().first().take(TITLE_MAX).ifBlank { "…" }
+    /**
+     * Conversation title: the user's selection when present (the most specific
+     * signal of what the chat is about), otherwise the truncated sentence.
+     */
+    internal fun buildTitle(text: String, selection: String? = null): String {
+        val trimmedSelection = selection?.trim().orEmpty()
+        val source = trimmedSelection.ifEmpty { text }
+        return source.lineSequence().first().take(TITLE_MAX).ifBlank { "…" }
+    }
 
     private companion object {
         const val TITLE_MAX = 40

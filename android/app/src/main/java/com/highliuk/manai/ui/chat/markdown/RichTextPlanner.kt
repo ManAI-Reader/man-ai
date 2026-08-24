@@ -79,8 +79,17 @@ object RichTextPlanner {
     }
 
     private fun canHoldOpenTail(block: MarkdownBlock?): Boolean = when (block) {
-        is MarkdownBlock.Paragraph, is MarkdownBlock.Heading, is MarkdownBlock.ListItem -> true
-        is MarkdownBlock.Table, is MarkdownBlock.CodeBlock, null -> false
+        is MarkdownBlock.Paragraph,
+        is MarkdownBlock.Heading,
+        is MarkdownBlock.ListItem,
+        is MarkdownBlock.Blockquote,
+        -> true
+
+        is MarkdownBlock.Table,
+        is MarkdownBlock.CodeBlock,
+        is MarkdownBlock.HorizontalRule,
+        null,
+        -> false
     }
 
     /**
@@ -93,10 +102,11 @@ object RichTextPlanner {
             is MarkdownBlock.Paragraph -> listOf(block.inlines.toStyledRuns())
             is MarkdownBlock.Heading -> listOf(block.inlines.toStyledRuns())
             is MarkdownBlock.ListItem -> listOf(block.inlines.toStyledRuns())
+            is MarkdownBlock.Blockquote -> listOf(block.inlines.toStyledRuns())
             is MarkdownBlock.Table ->
                 (block.header + block.rows.flatten()).map { cell -> cell.toStyledRuns() }
 
-            is MarkdownBlock.CodeBlock -> emptyList()
+            is MarkdownBlock.CodeBlock, is MarkdownBlock.HorizontalRule -> emptyList()
         }
     }
 }

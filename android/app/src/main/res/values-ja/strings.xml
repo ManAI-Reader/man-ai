@@ -104,6 +104,7 @@
 
     <!-- Prompt management -->
     <string name="prompts_title">プロンプト</string>
+    <string name="save">保存</string>
     <string name="add_prompt">プロンプトを追加</string>
     <string name="edit_prompt">プロンプトを編集</string>
     <string name="prompt_name">名前</string>
@@ -129,7 +130,11 @@
     <string name="chat_input_hint">この文について質問…</string>
     <string name="send_message">送信</string>
     <string name="jump_to_source">元のページを開く</string>
+    <string name="more_options">その他のオプション</string>
     <string name="chat_error_generic">問題が発生しました</string>
+    <string name="chat_error_network">ネットワークエラー — 接続を確認してください</string>
+    <string name="chat_error_http">リクエストに失敗しました（HTTP %1$d）</string>
+    <string name="chat_truncated">応答は長さ制限により途中で切れました</string>
     <string name="assistant_thinking">アシスタントの応答を待っています…</string>
     <string name="conversations">会話</string>
     <string name="no_conversations">会話はまだありません</string>

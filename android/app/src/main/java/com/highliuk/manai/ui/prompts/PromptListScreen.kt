@@ -1,6 +1,5 @@
 package com.highliuk.manai.ui.prompts
 
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,20 +29,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.PromptTemplate
-import com.highliuk.manai.domain.model.ReasoningLevel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PromptListScreen(
     templates: List<PromptTemplate>,
-    editing: PromptTemplate?,
-    @StringRes editError: Int?,
     pendingDelete: PromptTemplate?,
     onAddClick: () -> Unit,
     onEditClick: (PromptTemplate) -> Unit,
     onDeleteClick: (PromptTemplate) -> Unit,
-    onSave: (name: String, template: String, reasoningLevel: ReasoningLevel) -> Unit,
-    onDismissEdit: () -> Unit,
     onConfirmDelete: () -> Unit,
     onDismissDelete: () -> Unit,
     onBack: () -> Unit,
@@ -99,15 +93,6 @@ fun PromptListScreen(
                 }
             }
         }
-    }
-
-    editing?.let { template ->
-        PromptEditDialog(
-            template = template,
-            errorRes = editError,
-            onConfirm = onSave,
-            onDismiss = onDismissEdit,
-        )
     }
 
     if (pendingDelete != null) {

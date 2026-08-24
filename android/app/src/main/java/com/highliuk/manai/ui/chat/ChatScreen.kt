@@ -23,9 +23,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -60,6 +63,26 @@ import com.highliuk.manai.domain.model.Conversation
 
 private const val MAX_INPUT_LINES = 5
 
+/**
+ * Messages to render in the chat: the first user message of a
+ * template-launched conversation is the huge rendered prompt, which stays in
+ * the history for the LLM but is hidden from the UI. A conversation is
+ * template-launched exactly when it carries a source region; free follow-up
+ * user messages always render.
+ */
+internal fun visibleMessages(
+    conversation: Conversation?,
+    messages: List<ChatMessage>,
+): List<ChatMessage> {
+    val first = messages.firstOrNull() ?: return messages
+    val launchedFromTemplate = conversation?.regionIndex != null
+    return if (launchedFromTemplate && first.role == ChatRole.USER) {
+        messages.subList(1, messages.size)
+    } else {
+        messages
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ChatScreen(
@@ -67,18 +90,21 @@ fun ChatScreen(
     messages: List<ChatMessage>,
     streamingText: String?,
     isGenerating: Boolean,
-    error: String?,
+    error: ChatUiError?,
+    truncated: Boolean,
     onSend: (String) -> Unit,
     onRetry: () -> Unit,
-    onJumpToSource: () -> Unit,
+    onOpenSourcePage: () -> Unit,
+    onDeleteConversation: () -> Unit,
     onBack: () -> Unit,
     resolveFurigana: FuriganaResolver? = null,
 ) {
     val listState = rememberLazyListState()
+    val shownMessages = visibleMessages(conversation, messages)
     val isStreaming = streamingText != null || isGenerating
-    val itemCount = messages.size + if (isStreaming) 1 else 0
+    val itemCount = shownMessages.size + if (isStreaming) 1 else 0
 
-    LaunchedEffect(messages.size, isStreaming) {
+    LaunchedEffect(shownMessages.size, isStreaming) {
         if (itemCount > 0 && !listState.canScrollForward) {
             listState.animateScrollToItem(itemCount - 1)
         }
@@ -112,17 +138,11 @@ fun ChatScreen(
                     }
                 },
                 actions = {
-                    if (conversation?.mangaId != null && conversation.pageIndex != null) {
-                        IconButton(
-                            onClick = onJumpToSource,
-                            modifier = Modifier.testTag("jump_to_source"),
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                                contentDescription = stringResource(R.string.jump_to_source),
-                            )
-                        }
-                    }
+                    ChatMenu(
+                        hasSource = conversation?.mangaId != null && conversation.pageIndex != null,
+                        onOpenSourcePage = onOpenSourcePage,
+                        onDeleteConversation = onDeleteConversation,
+                    )
                 },
             )
         },
@@ -142,7 +162,7 @@ fun ChatScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                items(messages, key = { it.id }) { message ->
+                items(shownMessages, key = { it.id }) { message ->
                     MessageBubble(message = message, resolveFurigana = resolveFurigana)
                 }
                 if (isStreaming) {
@@ -150,6 +170,16 @@ fun ChatScreen(
                         StreamingBubble(
                             partialText = streamingText,
                             resolveFurigana = resolveFurigana,
+                        )
+                    }
+                }
+                if (truncated && !isStreaming) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.chat_truncated),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.testTag("chat_truncated_notice"),
                         )
                     }
                 }
@@ -163,8 +193,9 @@ fun ChatScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = error.takeIf { it.isNotBlank() }
-                            ?: stringResource(R.string.chat_error_generic),
+                        text = error.httpStatus
+                            ?.let { status -> stringResource(error.messageRes, status) }
+                            ?: stringResource(error.messageRes),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.weight(1f),
@@ -180,6 +211,74 @@ fun ChatScreen(
                 onSend = onSend,
             )
         }
+    }
+}
+
+@Composable
+private fun ChatMenu(
+    hasSource: Boolean,
+    onOpenSourcePage: () -> Unit,
+    onDeleteConversation: () -> Unit,
+) {
+    var menuExpanded by rememberSaveable { mutableStateOf(false) }
+    var confirmingDelete by rememberSaveable { mutableStateOf(false) }
+    IconButton(
+        onClick = { menuExpanded = true },
+        modifier = Modifier.testTag("chat_menu"),
+    ) {
+        Icon(
+            imageVector = Icons.Default.MoreVert,
+            contentDescription = stringResource(R.string.more_options),
+        )
+    }
+    DropdownMenu(
+        expanded = menuExpanded,
+        onDismissRequest = { menuExpanded = false },
+    ) {
+        if (hasSource) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.jump_to_source)) },
+                onClick = {
+                    menuExpanded = false
+                    onOpenSourcePage()
+                },
+                modifier = Modifier.testTag("menu_open_source"),
+            )
+        }
+        DropdownMenuItem(
+            text = {
+                Text(
+                    text = stringResource(R.string.delete),
+                    color = MaterialTheme.colorScheme.error,
+                )
+            },
+            onClick = {
+                menuExpanded = false
+                confirmingDelete = true
+            },
+            modifier = Modifier.testTag("menu_delete"),
+        )
+    }
+    if (confirmingDelete) {
+        AlertDialog(
+            onDismissRequest = { confirmingDelete = false },
+            text = { Text(stringResource(R.string.delete_conversation_confirm)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmingDelete = false
+                        onDeleteConversation()
+                    },
+                ) {
+                    Text(stringResource(R.string.delete))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmingDelete = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
     }
 }
 

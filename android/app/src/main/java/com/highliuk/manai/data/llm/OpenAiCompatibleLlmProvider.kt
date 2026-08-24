@@ -1,6 +1,7 @@
 package com.highliuk.manai.data.llm
 
 import com.highliuk.manai.domain.llm.LlmEvent
+import com.highliuk.manai.domain.llm.LlmFailure
 import com.highliuk.manai.domain.llm.LlmMessage
 import com.highliuk.manai.domain.llm.LlmProvider
 import com.highliuk.manai.domain.llm.LlmToolSpec
@@ -29,6 +30,8 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
+import java.io.IOException
+import java.nio.channels.UnresolvedAddressException
 
 class OpenAiCompatibleLlmProvider(
     private val httpClient: HttpClient,
@@ -45,7 +48,7 @@ class OpenAiCompatibleLlmProvider(
     ): Flow<LlmEvent> = flow {
         val apiKey = apiKeyProvider()
         if (apiKey.isBlank()) {
-            emit(LlmEvent.Failure("LLM API key is not configured"))
+            emit(LlmEvent.Failure(LlmFailure.Generic("LLM API key is not configured")))
             return@flow
         }
         try {
@@ -53,8 +56,15 @@ class OpenAiCompatibleLlmProvider(
         } catch (e: CancellationException) {
             throw e
         } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
-            emit(LlmEvent.Failure(e.message ?: "LLM request failed"))
+            logger?.e(LOG_TAG, "LLM request failed", e)
+            emit(LlmEvent.Failure(e.toLlmFailure()))
         }
+    }
+
+    /** DNS resolution failures with the CIO engine do not extend [IOException]. */
+    private fun Exception.toLlmFailure(): LlmFailure = when (this) {
+        is IOException, is UnresolvedAddressException -> LlmFailure.Network
+        else -> LlmFailure.Generic(message)
     }
 
     private data class StreamRequest(
@@ -73,7 +83,8 @@ class OpenAiCompatibleLlmProvider(
         }.execute { response ->
             if (!response.status.isSuccess()) {
                 val errorBody = response.bodyAsText().take(MAX_ERROR_BODY)
-                emit(LlmEvent.Failure("LLM error ${response.status.value}: $errorBody"))
+                logger?.e(LOG_TAG, "LLM error ${response.status.value}: $errorBody")
+                emit(LlmEvent.Failure(LlmFailure.Http(response.status.value)))
                 return@execute
             }
             emitEventsFrom(response.bodyAsChannel())
@@ -95,7 +106,7 @@ class OpenAiCompatibleLlmProvider(
         if (finishReason == FINISH_TOOL_CALLS && accumulator.hasCalls()) {
             emit(LlmEvent.ToolCalls(accumulator.build()))
         }
-        emit(LlmEvent.Completed)
+        emit(LlmEvent.Completed(finishReason))
     }
 
     private suspend fun buildRequestBody(request: StreamRequest): JsonObject {
@@ -103,6 +114,7 @@ class OpenAiCompatibleLlmProvider(
         return buildJsonObject {
             put("model", model)
             put("stream", true)
+            put("max_tokens", MAX_COMPLETION_TOKENS)
             request.reasoning.toApiValue()?.let { put("reasoning_effort", it) }
             putJsonArray("messages") {
                 request.messages.forEach { message -> add(message.toJson()) }
@@ -158,5 +170,15 @@ class OpenAiCompatibleLlmProvider(
     private companion object {
         const val FINISH_TOOL_CALLS = "tool_calls"
         const val MAX_ERROR_BODY = 200
+        const val LOG_TAG = "OpenAiCompatibleLlmProvider"
+
+        /**
+         * Explicit completion cap sent as the OpenAI-compatible `max_tokens`
+         * field (the standard name Groq accepts). Without it some providers
+         * apply a small default and end the stream with `finish_reason=length`,
+         * silently truncating long tutor replies. 8192 is far above any answer
+         * the app expects while still bounding runaway generations.
+         */
+        const val MAX_COMPLETION_TOKENS = 8192
     }
 }

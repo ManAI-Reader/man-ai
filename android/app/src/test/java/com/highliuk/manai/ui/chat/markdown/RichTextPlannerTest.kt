@@ -209,6 +209,40 @@ class RichTextPlannerTest {
     }
 
     @Test
+    fun blockquoteRunsAreClosedWhenDocumentIsComplete() {
+        val blocks = MarkdownParser.parse("> 漢字です")
+
+        assertEquals(
+            listOf("漢字です"),
+            RichTextPlanner.closedDocumentRuns(blocks, isComplete = true),
+        )
+    }
+
+    @Test
+    fun trailingBlockquoteKeepsStreamingTailOpen() {
+        val blocks = MarkdownParser.parse("本文\n\n> 引用中")
+
+        assertEquals(
+            listOf("本文"),
+            RichTextPlanner.closedDocumentRuns(blocks, isComplete = false),
+        )
+        assertEquals(
+            listOf("本文", "引用中"),
+            RichTextPlanner.closedDocumentRuns(blocks, isComplete = true),
+        )
+    }
+
+    @Test
+    fun trailingHorizontalRuleContributesNothingAndClosesPreviousRuns() {
+        val blocks = MarkdownParser.parse("漢字\n\n---")
+
+        assertEquals(
+            listOf("漢字"),
+            RichTextPlanner.closedDocumentRuns(blocks, isComplete = false),
+        )
+    }
+
+    @Test
     fun fencedCodeBlocksAreIgnored() {
         val blocks = MarkdownParser.parse("```\n漢字\n```")
 
