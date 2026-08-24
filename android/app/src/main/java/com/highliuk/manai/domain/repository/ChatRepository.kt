@@ -8,6 +8,13 @@ import kotlinx.coroutines.flow.Flow
 
 interface ChatRepository {
     fun observeConversations(): Flow<List<Conversation>>
+
+    /**
+     * Searches conversations whose title or message content contains [query]
+     * (case-insensitive for ASCII). Title matches rank first, then
+     * conversations with more matching messages, then most recently updated.
+     */
+    fun searchConversations(query: String): Flow<List<Conversation>>
     fun observeConversation(id: Long): Flow<Conversation?>
     fun observeMessages(conversationId: Long): Flow<List<ChatMessage>>
     suspend fun getMessages(conversationId: Long): List<ChatMessage>

@@ -15,6 +15,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.verify
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -196,6 +197,55 @@ class ChatRepositoryImplTest {
         assertEquals("hello", entitySlot.captured.content)
         assertEquals(FIXED_NOW, entitySlot.captured.timestamp)
         coVerify { conversationDao.touch(5L, FIXED_NOW) }
+    }
+
+    @Test
+    fun `escapeLikePattern escapes backslash percent and underscore`() {
+        assertEquals("100\\%", ChatRepositoryImpl.escapeLikePattern("100%"))
+        assertEquals("snake\\_case", ChatRepositoryImpl.escapeLikePattern("snake_case"))
+        assertEquals("back\\\\slash", ChatRepositoryImpl.escapeLikePattern("back\\slash"))
+        assertEquals("\\\\\\%\\_", ChatRepositoryImpl.escapeLikePattern("\\%_"))
+        assertEquals("plain", ChatRepositoryImpl.escapeLikePattern("plain"))
+    }
+
+    @Test
+    fun `searchConversations passes escaped query to dao`() = runTest {
+        every { conversationDao.search(any()) } returns flowOf(emptyList())
+
+        repository.searchConversations("50%_off\\").first()
+
+        verify { conversationDao.search("50\\%\\_off\\\\") }
+    }
+
+    @Test
+    fun `searchConversations maps entities to domain models`() = runTest {
+        val entity = ConversationEntity(
+            id = 7L,
+            title = "Grammar chat",
+            mangaId = 3L,
+            pageIndex = 12,
+            regionIndex = 2,
+            createdAt = 100L,
+            updatedAt = 200L,
+        )
+        every { conversationDao.search("grammar") } returns flowOf(listOf(entity))
+
+        val result = repository.searchConversations("grammar").first()
+
+        assertEquals(
+            listOf(
+                Conversation(
+                    id = 7L,
+                    title = "Grammar chat",
+                    mangaId = 3L,
+                    pageIndex = 12,
+                    regionIndex = 2,
+                    createdAt = 100L,
+                    updatedAt = 200L,
+                )
+            ),
+            result
+        )
     }
 
     @Test

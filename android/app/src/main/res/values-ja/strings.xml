@@ -139,6 +139,8 @@
     <string name="assistant_thinking">アシスタントの応答を待っています…</string>
     <string name="conversations">会話</string>
     <string name="no_conversations">会話はまだありません</string>
+    <string name="search_conversations">会話を検索</string>
+    <string name="no_search_results">結果が見つかりません</string>
     <string name="delete_conversation_confirm">この会話を削除しますか？</string>
     <string name="no_page_balloons">このページに他の吹き出しはありません</string>
     <string name="no_previous_balloons">前のページに吹き出しはありません</string>

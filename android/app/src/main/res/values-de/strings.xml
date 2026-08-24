@@ -142,6 +142,8 @@
     <string name="assistant_thinking">Warten auf den Assistenten…</string>
     <string name="conversations">Konversationen</string>
     <string name="no_conversations">Noch keine Konversationen</string>
+    <string name="search_conversations">Konversationen durchsuchen</string>
+    <string name="no_search_results">Keine Ergebnisse gefunden</string>
     <string name="delete_conversation_confirm">Diese Konversation löschen?</string>
     <string name="no_page_balloons">Keine weiteren Sprechblasen auf dieser Seite</string>
     <string name="no_previous_balloons">Keine Sprechblasen auf den vorherigen Seiten</string>

@@ -139,6 +139,8 @@
     <string name="assistant_thinking">Menunggu asisten…</string>
     <string name="conversations">Percakapan</string>
     <string name="no_conversations">Belum ada percakapan</string>
+    <string name="search_conversations">Cari percakapan</string>
+    <string name="no_search_results">Tidak ada hasil yang ditemukan</string>
     <string name="delete_conversation_confirm">Hapus percakapan ini?</string>
     <string name="no_page_balloons">Tidak ada balon lain di halaman ini</string>
     <string name="no_previous_balloons">Tidak ada balon di halaman-halaman sebelumnya</string>

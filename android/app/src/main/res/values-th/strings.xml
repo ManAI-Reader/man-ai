@@ -139,6 +139,8 @@
     <string name="assistant_thinking">กำลังรอผู้ช่วย…</string>
     <string name="conversations">การสนทนา</string>
     <string name="no_conversations">ยังไม่มีการสนทนา</string>
+    <string name="search_conversations">ค้นหาการสนทนา</string>
+    <string name="no_search_results">ไม่พบผลลัพธ์</string>
     <string name="delete_conversation_confirm">ลบการสนทนานี้หรือไม่</string>
     <string name="no_page_balloons">ไม่มีบอลลูนอื่นในหน้านี้</string>
     <string name="no_previous_balloons">ไม่มีบอลลูนในหน้าก่อนหน้า</string>

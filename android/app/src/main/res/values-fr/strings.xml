@@ -142,6 +142,8 @@
     <string name="assistant_thinking">En attente de l\'assistant…</string>
     <string name="conversations">Conversations</string>
     <string name="no_conversations">Aucune conversation pour l\'instant</string>
+    <string name="search_conversations">Rechercher des conversations</string>
+    <string name="no_search_results">Aucun résultat trouvé</string>
     <string name="delete_conversation_confirm">Supprimer cette conversation ?</string>
     <string name="no_page_balloons">Aucune autre bulle sur cette page</string>
     <string name="no_previous_balloons">Aucune bulle sur les pages précédentes</string>

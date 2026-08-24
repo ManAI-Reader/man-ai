@@ -139,6 +139,8 @@
     <string name="assistant_thinking">正在等待助手…</string>
     <string name="conversations">对话</string>
     <string name="no_conversations">暂无对话</string>
+    <string name="search_conversations">搜索对话</string>
+    <string name="no_search_results">未找到结果</string>
     <string name="delete_conversation_confirm">删除此对话？</string>
     <string name="no_page_balloons">本页没有其他气泡</string>
     <string name="no_previous_balloons">之前的页面没有气泡</string>

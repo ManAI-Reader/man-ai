@@ -148,6 +148,8 @@
     <string name="assistant_thinking">Oczekiwanie na asystenta…</string>
     <string name="conversations">Rozmowy</string>
     <string name="no_conversations">Brak rozmów</string>
+    <string name="search_conversations">Szukaj rozmów</string>
+    <string name="no_search_results">Nie znaleziono wyników</string>
     <string name="delete_conversation_confirm">Usunąć tę rozmowę?</string>
     <string name="no_page_balloons">Brak innych dymków na tej stronie</string>
     <string name="no_previous_balloons">Brak dymków na poprzednich stronach</string>

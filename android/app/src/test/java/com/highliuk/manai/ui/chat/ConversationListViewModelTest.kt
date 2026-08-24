@@ -6,6 +6,7 @@ import com.highliuk.manai.domain.repository.ChatRepository
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -16,7 +17,9 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -66,6 +69,112 @@ class ConversationListViewModelTest {
             assertEquals(emptyList<Conversation>(), awaitItem())
             assertEquals(listOf(grammarConversation, vocabularyConversation), awaitItem())
         }
+    }
+
+    @Test
+    fun openSearchActivatesSearchMode() = runTest {
+        val viewModel = createViewModel()
+
+        viewModel.openSearch()
+
+        assertTrue(viewModel.isSearchActive.value)
+    }
+
+    @Test
+    fun closeSearchDeactivatesSearchModeAndClearsQuery() = runTest {
+        val viewModel = createViewModel()
+        viewModel.openSearch()
+        viewModel.onSearchQueryChange("grammar")
+
+        viewModel.closeSearch()
+
+        assertFalse(viewModel.isSearchActive.value)
+        assertEquals("", viewModel.searchQuery.value)
+    }
+
+    @Test
+    fun onSearchQueryChangeUpdatesQuery() = runTest {
+        val viewModel = createViewModel()
+
+        viewModel.onSearchQueryChange("grammar")
+
+        assertEquals("grammar", viewModel.searchQuery.value)
+    }
+
+    @Test
+    fun blankSearchQueryShowsFullConversationList() = runTest {
+        every { chatRepository.observeConversations() } returns flowOf(
+            listOf(grammarConversation, vocabularyConversation)
+        )
+
+        val viewModel = createViewModel()
+        viewModel.openSearch()
+        viewModel.onSearchQueryChange("   ")
+
+        viewModel.conversations.test {
+            skipItems(1)
+            assertEquals(listOf(grammarConversation, vocabularyConversation), awaitItem())
+        }
+        verify(exactly = 0) { chatRepository.searchConversations(any()) }
+    }
+
+    @Test
+    fun activeSearchWithQueryEmitsSearchResults() = runTest {
+        every { chatRepository.observeConversations() } returns flowOf(
+            listOf(grammarConversation, vocabularyConversation)
+        )
+        every { chatRepository.searchConversations("grammar") } returns flowOf(
+            listOf(grammarConversation)
+        )
+
+        val viewModel = createViewModel()
+        viewModel.openSearch()
+        viewModel.onSearchQueryChange("grammar")
+
+        viewModel.conversations.test {
+            skipItems(1)
+            assertEquals(listOf(grammarConversation), awaitItem())
+        }
+    }
+
+    @Test
+    fun queryWithoutActiveSearchShowsFullConversationList() = runTest {
+        every { chatRepository.observeConversations() } returns flowOf(
+            listOf(grammarConversation, vocabularyConversation)
+        )
+
+        val viewModel = createViewModel()
+        viewModel.onSearchQueryChange("grammar")
+
+        viewModel.conversations.test {
+            skipItems(1)
+            assertEquals(listOf(grammarConversation, vocabularyConversation), awaitItem())
+        }
+        verify(exactly = 0) { chatRepository.searchConversations(any()) }
+    }
+
+    @Test
+    fun closeSearchRestoresFullConversationList() = runTest {
+        every { chatRepository.observeConversations() } returns flowOf(
+            listOf(grammarConversation, vocabularyConversation)
+        )
+        every { chatRepository.searchConversations("grammar") } returns flowOf(
+            listOf(grammarConversation)
+        )
+
+        val viewModel = createViewModel()
+        viewModel.openSearch()
+        viewModel.onSearchQueryChange("grammar")
+
+        viewModel.conversations.test {
+            skipItems(1)
+            assertEquals(listOf(grammarConversation), awaitItem())
+
+            viewModel.closeSearch()
+
+            assertEquals(listOf(grammarConversation, vocabularyConversation), awaitItem())
+        }
+        assertEquals("", viewModel.searchQuery.value)
     }
 
     @Test

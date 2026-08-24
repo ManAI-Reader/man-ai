@@ -142,6 +142,8 @@
     <string name="assistant_thinking">Waiting for the assistant…</string>
     <string name="conversations">Conversations</string>
     <string name="no_conversations">No conversations yet</string>
+    <string name="search_conversations">Search conversations</string>
+    <string name="no_search_results">No results found</string>
     <string name="delete_conversation_confirm">Delete this conversation?</string>
     <string name="no_page_balloons">No other balloons on this page</string>
     <string name="no_previous_balloons">No balloons on the previous pages</string>

@@ -579,14 +579,21 @@ private fun NavGraphBuilder.conversationListDestination(navController: NavHostCo
         val viewModel: ConversationListViewModel = hiltViewModel()
         val conversations by viewModel.conversations.collectAsState()
         val pendingDelete by viewModel.pendingDelete.collectAsState()
+        val isSearchActive by viewModel.isSearchActive.collectAsState()
+        val searchQuery by viewModel.searchQuery.collectAsState()
 
         ConversationListScreen(
             conversations = conversations,
             pendingDelete = pendingDelete,
+            isSearchActive = isSearchActive,
+            searchQuery = searchQuery,
             onConversationClick = { id -> navController.navigate("chat/$id") },
             onDeleteClick = viewModel::requestDelete,
             onConfirmDelete = viewModel::confirmDelete,
             onDismissDelete = viewModel::dismissDelete,
+            onOpenSearch = viewModel::openSearch,
+            onCloseSearch = viewModel::closeSearch,
+            onSearchQueryChange = viewModel::onSearchQueryChange,
             onBack = { navController.popBackStack() },
         )
     }

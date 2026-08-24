@@ -139,6 +139,8 @@
     <string name="assistant_thinking">어시스턴트를 기다리는 중…</string>
     <string name="conversations">대화</string>
     <string name="no_conversations">아직 대화가 없습니다</string>
+    <string name="search_conversations">대화 검색</string>
+    <string name="no_search_results">검색 결과가 없습니다</string>
     <string name="delete_conversation_confirm">이 대화를 삭제할까요?</string>
     <string name="no_page_balloons">이 페이지에 다른 말풍선이 없습니다</string>
     <string name="no_previous_balloons">이전 페이지에 말풍선이 없습니다</string>

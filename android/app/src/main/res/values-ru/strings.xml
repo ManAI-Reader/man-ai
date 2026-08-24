@@ -148,6 +148,8 @@
     <string name="assistant_thinking">Ожидание ассистента…</string>
     <string name="conversations">Беседы</string>
     <string name="no_conversations">Бесед пока нет</string>
+    <string name="search_conversations">Поиск по беседам</string>
+    <string name="no_search_results">Ничего не найдено</string>
     <string name="delete_conversation_confirm">Удалить эту беседу?</string>
     <string name="no_page_balloons">На этой странице нет других облачков</string>
     <string name="no_previous_balloons">На предыдущих страницах нет облачков</string>

@@ -23,6 +23,10 @@ class ChatRepositoryImpl(
     override fun observeConversations(): Flow<List<Conversation>> =
         conversationDao.observeAll().map { entities -> entities.map { it.toDomain() } }
 
+    override fun searchConversations(query: String): Flow<List<Conversation>> =
+        conversationDao.search(escapeLikePattern(query))
+            .map { entities -> entities.map { it.toDomain() } }
+
     override fun observeConversation(id: Long): Flow<Conversation?> =
         conversationDao.observeById(id).map { it?.toDomain() }
 
@@ -104,8 +108,15 @@ class ChatRepositoryImpl(
         else -> ChatRole.ASSISTANT
     }
 
-    private companion object {
-        const val ROLE_USER = "user"
-        const val ROLE_ASSISTANT = "assistant"
+    companion object {
+        private const val ROLE_USER = "user"
+        private const val ROLE_ASSISTANT = "assistant"
+
+        /** Escapes LIKE metacharacters (`\`, `%`, `_`) with a backslash. */
+        internal fun escapeLikePattern(query: String): String =
+            query
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_")
     }
 }
