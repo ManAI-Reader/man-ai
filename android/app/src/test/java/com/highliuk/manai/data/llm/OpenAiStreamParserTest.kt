@@ -5,6 +5,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -30,6 +31,25 @@ class OpenAiStreamParserTest {
     fun `parses finish reason`() {
         val line = """data: {"choices":[{"delta":{},"finish_reason":"stop"}]}"""
         assertEquals("stop", OpenAiStreamParser.parseDataLine(line)?.finishReason)
+    }
+
+    @Test
+    fun `parses deepseek reasoning chunk without leaking reasoning_content into visible text`() {
+        // Real fixture captured from api.deepseek.com: content is null while the
+        // model streams its hidden reasoning through the reasoning_content field.
+        val line = "data: " +
+            """{"id":"425128f1-49fe-4d6f-b5ba-ff9b19acfe72","object":"chat.completion.chunk",""" +
+            """"created":1787551589,"model":"deepseek-v4-flash",""" +
+            """"system_fingerprint":"a26a7955944dc5c60445bff77fac9c8e",""" +
+            """"choices":[{"index":0,"delta":{"content":null,"reasoning_content":"We"},""" +
+            """"logprobs":null,"finish_reason":null}]}"""
+
+        val chunk = OpenAiStreamParser.parseDataLine(line)
+
+        assertNotNull(chunk)
+        assertNull(chunk?.contentDelta)
+        assertTrue(chunk?.toolCallDeltas.orEmpty().isEmpty())
+        assertNull(chunk?.finishReason)
     }
 
     @Test

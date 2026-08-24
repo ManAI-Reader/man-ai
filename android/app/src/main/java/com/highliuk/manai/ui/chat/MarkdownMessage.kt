@@ -36,6 +36,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.text
@@ -306,7 +307,20 @@ internal fun FuriganaRichText(
             view.setTextSize(TypedValue.COMPLEX_UNIT_SP, fontSizeSp)
             view.setTypeface(if (baseBold) Typeface.DEFAULT_BOLD else Typeface.DEFAULT)
         },
-        modifier = modifier.semantics { text = AnnotatedString(plainText) },
+        modifier = modifier
+            .semantics { text = AnnotatedString(plainText) }
+            .layout { measurable, constraints ->
+                // Reading the current content keeps this lambda capture-bound to it, so
+                // the element is recreated whenever the spannable content changes:
+                // AndroidView does not remeasure on the TextView's own requestLayout
+                // once streaming has settled, so a content-keyed layout element forces
+                // Compose to re-read the view size (otherwise the last chat lines stay
+                // clipped when furigana rubies raise the line height after measure).
+                @Suppress("UNUSED_EXPRESSION")
+                pieces
+                val placeable = measurable.measure(constraints)
+                layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+            },
     )
 }
 

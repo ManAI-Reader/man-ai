@@ -535,9 +535,10 @@ private fun NavGraphBuilder.chatDestination(navController: NavHostController) {
             onOpenSourcePage = {
                 conversation?.let { c ->
                     if (c.mangaId != null && c.pageIndex != null) {
-                        navController.navigate("reader/${c.mangaId}?page=${c.pageIndex}") {
-                            popUpTo("reader/{mangaId}?page={page}") { inclusive = true }
-                        }
+                        // Plain push: popping up to the reader route here would drop the
+                        // chat (and any previous reader) from the back stack, sending the
+                        // user Home instead of back to the conversation.
+                        navController.navigate("reader/${c.mangaId}?page=${c.pageIndex}")
                     }
                 }
             },

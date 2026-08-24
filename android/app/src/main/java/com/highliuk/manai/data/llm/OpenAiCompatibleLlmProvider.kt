@@ -114,7 +114,6 @@ class OpenAiCompatibleLlmProvider(
         return buildJsonObject {
             put("model", model)
             put("stream", true)
-            put("max_tokens", MAX_COMPLETION_TOKENS)
             request.reasoning.toApiValue()?.let { put("reasoning_effort", it) }
             putJsonArray("messages") {
                 request.messages.forEach { message -> add(message.toJson()) }
@@ -127,10 +126,14 @@ class OpenAiCompatibleLlmProvider(
         }
     }
 
-    /** Maps the level to the `reasoning_effort` value, or null when the parameter must be omitted. */
+    /**
+     * Maps the level to the `reasoning_effort` value, or null when the parameter must be
+     * omitted. OFF is also sent as an omission: providers such as Groq only accept
+     * low/medium/high and reject `"none"` with a 400.
+     */
     private fun ReasoningLevel.toApiValue(): String? = when (this) {
         ReasoningLevel.DEFAULT -> null
-        ReasoningLevel.OFF -> "none"
+        ReasoningLevel.OFF -> null
         ReasoningLevel.LOW -> "low"
         ReasoningLevel.MEDIUM -> "medium"
         ReasoningLevel.HIGH -> "high"
@@ -171,14 +174,5 @@ class OpenAiCompatibleLlmProvider(
         const val FINISH_TOOL_CALLS = "tool_calls"
         const val MAX_ERROR_BODY = 200
         const val LOG_TAG = "OpenAiCompatibleLlmProvider"
-
-        /**
-         * Explicit completion cap sent as the OpenAI-compatible `max_tokens`
-         * field (the standard name Groq accepts). Without it some providers
-         * apply a small default and end the stream with `finish_reason=length`,
-         * silently truncating long tutor replies. 8192 is far above any answer
-         * the app expects while still bounding runaway generations.
-         */
-        const val MAX_COMPLETION_TOKENS = 8192
     }
 }

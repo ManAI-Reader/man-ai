@@ -218,7 +218,7 @@ class OpenAiCompatibleLlmProviderTest {
     }
 
     @Test
-    fun `request body caps the completion size with an explicit max_tokens`() = runTest {
+    fun `request body omits max_tokens to stay within provider rate limits`() = runTest {
         val engine = MockEngine {
             respond(
                 content = sse("data: [DONE]"),
@@ -231,7 +231,7 @@ class OpenAiCompatibleLlmProviderTest {
             awaitComplete()
         }
         val body = engine.requestHistory.single().body.toByteArray().decodeToString()
-        assertTrue(body.contains(""""max_tokens":8192"""))
+        assertFalse(body.contains("\"max_tokens\""))
     }
 
     @Test
@@ -269,8 +269,7 @@ class OpenAiCompatibleLlmProviderTest {
     }
 
     @Test
-    fun `request body contains reasoning_effort for every non-default level`() = runTest {
-        assertTrue(requestBodyFor(ReasoningLevel.OFF).contains(""""reasoning_effort":"none""""))
+    fun `request body contains reasoning_effort for every explicit effort level`() = runTest {
         assertTrue(requestBodyFor(ReasoningLevel.LOW).contains(""""reasoning_effort":"low""""))
         assertTrue(requestBodyFor(ReasoningLevel.MEDIUM).contains(""""reasoning_effort":"medium""""))
         assertTrue(requestBodyFor(ReasoningLevel.HIGH).contains(""""reasoning_effort":"high""""))
@@ -279,5 +278,10 @@ class OpenAiCompatibleLlmProviderTest {
     @Test
     fun `request body omits reasoning_effort for default level`() = runTest {
         assertFalse(requestBodyFor(ReasoningLevel.DEFAULT).contains("reasoning_effort"))
+    }
+
+    @Test
+    fun `request body omits reasoning_effort when reasoning is off`() = runTest {
+        assertFalse(requestBodyFor(ReasoningLevel.OFF).contains("reasoning_effort"))
     }
 }

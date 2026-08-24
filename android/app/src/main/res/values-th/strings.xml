@@ -129,7 +129,7 @@
     <!-- Chat -->
     <string name="chat_input_hint">ถามเกี่ยวกับประโยคนี้…</string>
     <string name="send_message">ส่ง</string>
-    <string name="jump_to_source">เปิดหน้าที่มา</string>
+    <string name="jump_to_source">ไปที่หน้า</string>
     <string name="more_options">ตัวเลือกเพิ่มเติม</string>
     <string name="chat_error_generic">เกิดข้อผิดพลาดบางอย่าง</string>
     <string name="chat_error_network">ข้อผิดพลาดเครือข่าย — โปรดตรวจสอบการเชื่อมต่อ</string>

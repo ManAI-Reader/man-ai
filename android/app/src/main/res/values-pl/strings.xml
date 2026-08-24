@@ -138,7 +138,7 @@
     <!-- Chat -->
     <string name="chat_input_hint">Zapytaj o to zdanie…</string>
     <string name="send_message">Wyślij</string>
-    <string name="jump_to_source">Otwórz stronę źródłową</string>
+    <string name="jump_to_source">Przejdź do strony</string>
     <string name="more_options">Więcej opcji</string>
     <string name="chat_error_generic">Coś poszło nie tak</string>
     <string name="chat_error_network">Błąd sieci — sprawdź połączenie</string>

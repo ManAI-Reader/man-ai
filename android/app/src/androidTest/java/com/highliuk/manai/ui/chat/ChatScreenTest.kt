@@ -1,14 +1,21 @@
 package com.highliuk.manai.ui.chat
 
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Text
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -20,6 +27,7 @@ import com.highliuk.manai.domain.model.ChatRole
 import com.highliuk.manai.domain.model.Conversation
 import com.highliuk.manai.domain.model.FuriganaPart
 import com.highliuk.manai.domain.model.FuriganaToken
+import kotlinx.coroutines.CompletableDeferred
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -517,6 +525,71 @@ class ChatScreenTest {
         // Bottom-aligned: the send button bottom must sit at the input bar
         // bottom (small tolerance for rounding), not centered ~46dp above it.
         assertTrue(inputBounds.bottom - sendBounds.bottom <= 8.dp)
+    }
+
+    @Test
+    fun lateFuriganaResolutionRemeasuresMessageSoBottomStaysReachable() {
+        val unlock = CompletableDeferred<Unit>()
+        var resolved = false
+        val tokens = listOf(
+            FuriganaToken(
+                surface = "漢字",
+                reading = "カンジ",
+                parts = listOf(FuriganaPart.kanji("漢字", "かんじ")),
+            ),
+        )
+        composeTestRule.setContent {
+            LazyColumn(
+                modifier = Modifier
+                    .height(200.dp)
+                    .testTag("chat_clip_list"),
+            ) {
+                item {
+                    MarkdownMessageContent(
+                        text = "漢字\n\n漢字\n\n漢字\n\n漢字",
+                        isComplete = true,
+                        resolveFurigana = { _ ->
+                            unlock.await()
+                            resolved = true
+                            tokens
+                        },
+                        modifier = Modifier.testTag("late_furigana_message"),
+                    )
+                }
+                item {
+                    Text(
+                        text = "conversation end",
+                        modifier = Modifier.testTag("bottom_marker"),
+                    )
+                }
+            }
+        }
+        composeTestRule.waitForIdle()
+        val heightBeforeRuby = composeTestRule
+            .onNodeWithTag("late_furigana_message")
+            .getUnclippedBoundsInRoot().height
+
+        unlock.complete(Unit)
+        composeTestRule.waitUntil(timeoutMillis = 5_000) { resolved }
+        composeTestRule.waitForIdle()
+
+        // Ruby annotations raise every line, so the TextViews grow after the
+        // Compose measure pass. Without a content-keyed remeasure the node keeps
+        // its stale (pre-ruby) height and the bottom of the message is clipped.
+        val heightAfterRuby = composeTestRule
+            .onNodeWithTag("late_furigana_message")
+            .getUnclippedBoundsInRoot().height
+        assertTrue(
+            "message must remeasure taller once furigana rubies arrive " +
+                "(before=$heightBeforeRuby, after=$heightAfterRuby)",
+            heightAfterRuby > heightBeforeRuby,
+        )
+
+        // Scrolling to the end must bring the content below the grown message
+        // fully into view instead of leaving it cut off past the viewport.
+        composeTestRule.onNodeWithTag("chat_clip_list")
+            .performScrollToNode(hasTestTag("bottom_marker"))
+        composeTestRule.onNodeWithTag("bottom_marker").assertIsDisplayed()
     }
 
     @Test

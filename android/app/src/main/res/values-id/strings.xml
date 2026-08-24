@@ -129,7 +129,7 @@
     <!-- Chat -->
     <string name="chat_input_hint">Tanyakan tentang kalimat ini…</string>
     <string name="send_message">Kirim</string>
-    <string name="jump_to_source">Buka halaman sumber</string>
+    <string name="jump_to_source">Buka halaman</string>
     <string name="more_options">Opsi lainnya</string>
     <string name="chat_error_generic">Terjadi kesalahan</string>
     <string name="chat_error_network">Kesalahan jaringan — periksa koneksi Anda</string>

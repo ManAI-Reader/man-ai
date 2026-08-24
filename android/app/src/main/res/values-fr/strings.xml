@@ -132,7 +132,7 @@
     <!-- Chat -->
     <string name="chat_input_hint">Posez une question sur cette phrase…</string>
     <string name="send_message">Envoyer</string>
-    <string name="jump_to_source">Ouvrir la page d\'origine</string>
+    <string name="jump_to_source">Aller à la page</string>
     <string name="more_options">Plus d\'options</string>
     <string name="chat_error_generic">Une erreur s\'est produite</string>
     <string name="chat_error_network">Erreur réseau — vérifiez votre connexion</string>
