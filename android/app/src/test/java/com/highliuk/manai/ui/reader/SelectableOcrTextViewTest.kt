@@ -1,7 +1,12 @@
 package com.highliuk.manai.ui.reader
 
+import android.view.Menu
+import android.view.MenuItem
 import com.highliuk.manai.domain.model.FuriganaPart
 import com.highliuk.manai.domain.model.FuriganaToken
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -206,6 +211,165 @@ class SelectableOcrTextViewTest {
         assertEquals(null, result)
     }
 
+    // --- isSingleTapGesture tests ---
+
+    @Test
+    fun quickTouchWithinSlopIsASingleTap() {
+        val result = SelectableOcrTextView.isSingleTapGesture(
+            durationMillis = 120L,
+            dxPx = 4f,
+            dyPx = -3f,
+            touchSlopPx = 16f,
+            longPressTimeoutMillis = 400L,
+        )
+        assertEquals(true, result)
+    }
+
+    @Test
+    fun touchHeldUpToLongPressTimeoutIsNotASingleTap() {
+        val result = SelectableOcrTextView.isSingleTapGesture(
+            durationMillis = 400L,
+            dxPx = 0f,
+            dyPx = 0f,
+            touchSlopPx = 16f,
+            longPressTimeoutMillis = 400L,
+        )
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun touchMovedBeyondSlopIsNotASingleTap() {
+        val result = SelectableOcrTextView.isSingleTapGesture(
+            durationMillis = 120L,
+            dxPx = 17f,
+            dyPx = 0f,
+            touchSlopPx = 16f,
+            longPressTimeoutMillis = 400L,
+        )
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun diagonalMoveBeyondSlopIsNotASingleTapEvenIfEachAxisIsWithinSlop() {
+        // dx and dy are each below the slop but the euclidean distance
+        // (sqrt(13^2 + 13^2) ≈ 18.4) exceeds it — this is a drag, not a tap.
+        val result = SelectableOcrTextView.isSingleTapGesture(
+            durationMillis = 120L,
+            dxPx = 13f,
+            dyPx = 13f,
+            touchSlopPx = 16f,
+            longPressTimeoutMillis = 400L,
+        )
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun touchExactlyAtSlopStillCountsAsASingleTap() {
+        val result = SelectableOcrTextView.isSingleTapGesture(
+            durationMillis = 120L,
+            dxPx = 16f,
+            dyPx = 0f,
+            touchSlopPx = 16f,
+            longPressTimeoutMillis = 400L,
+        )
+        assertEquals(true, result)
+    }
+
+    // --- promptOnlyWordForTap tests ---
+
+    @Test
+    fun singleTapInsideTokenStartsPromptOnlySelectionWithWordBounds() {
+        // Tap on べ (offset 3) → inside 食べる → prompt-only selection of (2, 5).
+        val result = SelectableOcrTextView.promptOnlyWordForTap(
+            offset = 3,
+            tokens = sampleTokens,
+            hasPrompts = true,
+        )
+        assertEquals(2 to 5, result)
+    }
+
+    @Test
+    fun singleTapPastLastTokenDoesNotStartPromptOnlySelection() {
+        // Offset == total length (5) is past the last char → no selection, no menu.
+        val result = SelectableOcrTextView.promptOnlyWordForTap(
+            offset = 5,
+            tokens = sampleTokens,
+            hasPrompts = true,
+        )
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun singleTapWithoutTokensDoesNotStartPromptOnlySelection() {
+        val result = SelectableOcrTextView.promptOnlyWordForTap(
+            offset = 0,
+            tokens = emptyList(),
+            hasPrompts = true,
+        )
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun singleTapWithNoConfiguredPromptsDoesNotStartPromptOnlySelection() {
+        // No prompts configured → a prompt-only toolbar would be empty,
+        // so the tap must not select anything at all.
+        val result = SelectableOcrTextView.promptOnlyWordForTap(
+            offset = 3,
+            tokens = sampleTokens,
+            hasPrompts = false,
+        )
+        assertEquals(null, result)
+    }
+
+    // --- shouldExitPromptOnlyMode tests ---
+
+    @Test
+    fun exitsPromptOnlyModeWhenSelectionDiffersFromTappedWord() {
+        // Word tapped is 食べる (2, 5); user dragged a handle to (0, 5).
+        val result = SelectableOcrTextView.shouldExitPromptOnlyMode(
+            selStart = 0,
+            selEnd = 5,
+            wordStart = 2,
+            wordEnd = 5,
+        )
+        assertEquals(true, result)
+    }
+
+    @Test
+    fun staysInPromptOnlyModeWhenSelectionEqualsTappedWord() {
+        val result = SelectableOcrTextView.shouldExitPromptOnlyMode(
+            selStart = 2,
+            selEnd = 5,
+            wordStart = 2,
+            wordEnd = 5,
+        )
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun staysInPromptOnlyModeWhenInvertedSelectionEqualsTappedWord() {
+        // Native selection can report inverted bounds; (5, 2) is still the word (2, 5).
+        val result = SelectableOcrTextView.shouldExitPromptOnlyMode(
+            selStart = 5,
+            selEnd = 2,
+            wordStart = 2,
+            wordEnd = 5,
+        )
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun staysInPromptOnlyModeForCollapsedSelection() {
+        // A collapsed (cursor) selection must not kick us out of prompt-only mode.
+        val result = SelectableOcrTextView.shouldExitPromptOnlyMode(
+            selStart = 3,
+            selEnd = 3,
+            wordStart = 2,
+            wordEnd = 5,
+        )
+        assertEquals(false, result)
+    }
+
     // --- promptMenuItemId / promptIdForMenuItem tests ---
 
     private val samplePrompts = listOf(10L to "Explain", 20L to "Grammar", 30L to "Nuance")
@@ -249,6 +413,76 @@ class SelectableOcrTextViewTest {
         assertEquals(null, SelectableOcrTextView.promptIdForMenuItem(menuItemId, emptyList()))
     }
 
+    // --- prepareSelectionMenu tests ---
+
+    private fun menuItemWithGroup(group: Int): MenuItem =
+        mockk(relaxed = true) { every { groupId } returns group }
+
+    private fun menuWithItems(vararg items: MenuItem): Menu {
+        val menu = mockk<Menu>(relaxed = true)
+        every { menu.size() } returns items.size
+        items.forEachIndexed { index, item -> every { menu.getItem(index) } returns item }
+        return menu
+    }
+
+    @Test
+    fun promptOnlyModeHidesNonPromptItemsWithoutClearingTheMenu() {
+        val copyItem = menuItemWithGroup(0)
+        val processTextItem = menuItemWithGroup(0)
+        val menu = menuWithItems(copyItem, processTextItem)
+
+        SelectableOcrTextView.prepareSelectionMenu(menu, promptOnly = true, prompts = samplePrompts)
+
+        verify { copyItem.setVisible(false) }
+        verify { processTextItem.setVisible(false) }
+        // AOSP adds Cut/Copy/Share and PROCESS_TEXT items only in
+        // onCreateActionMode; onPrepareActionMode re-adds only Select All/
+        // Replace/assist. clear() would therefore drop Copy/Share/PROCESS_TEXT
+        // for the whole lifetime of the action mode — it must never be called.
+        verify(exactly = 0) { menu.clear() }
+    }
+
+    @Test
+    fun fullMenuModeRestoresVisibilityOfNonPromptItems() {
+        val copyItem = menuItemWithGroup(0)
+        val menu = menuWithItems(copyItem)
+
+        SelectableOcrTextView.prepareSelectionMenu(menu, promptOnly = false, prompts = samplePrompts)
+
+        verify { copyItem.setVisible(true) }
+        verify(exactly = 0) { menu.clear() }
+    }
+
+    @Test
+    fun prepareAddsOnePromptMenuItemPerPromptInBothModes() {
+        listOf(true, false).forEach { promptOnly ->
+            val menu = menuWithItems()
+
+            SelectableOcrTextView.prepareSelectionMenu(menu, promptOnly = promptOnly, prompts = samplePrompts)
+
+            samplePrompts.forEachIndexed { index, (_, name) ->
+                verify {
+                    menu.add(
+                        SelectableOcrTextView.PROMPT_GROUP,
+                        SelectableOcrTextView.promptMenuItemId(index),
+                        any(),
+                        name,
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
+    fun prepareNeverTouchesVisibilityOfPromptGroupItems() {
+        val promptItem = menuItemWithGroup(SelectableOcrTextView.PROMPT_GROUP)
+        val menu = menuWithItems(promptItem)
+
+        SelectableOcrTextView.prepareSelectionMenu(menu, promptOnly = true, prompts = samplePrompts)
+
+        verify(exactly = 0) { promptItem.setVisible(any()) }
+    }
+
     // --- safeSelection tests ---
 
     @Test
@@ -284,5 +518,37 @@ class SelectableOcrTextViewTest {
     @Test
     fun safeSelectionReturnsNullForEmptyText() {
         assertEquals(null, SelectableOcrTextView.safeSelection(0, 4, 0))
+    }
+
+    private val lineBounds = SelectableOcrTextView.Companion.TextLineBounds(
+        leftPx = 10f,
+        rightPx = 200f,
+        textBottomPx = 300f,
+    )
+
+    @Test
+    fun tapInsideLineBoundsIsOnText() {
+        assertEquals(true, SelectableOcrTextView.isTapOnText(100f, 150f, lineBounds, 8f))
+    }
+
+    @Test
+    fun tapBelowTextBottomBeyondSlopIsNotOnText() {
+        assertEquals(false, SelectableOcrTextView.isTapOnText(100f, 309f, lineBounds, 8f))
+    }
+
+    @Test
+    fun tapRightOfLineEndBeyondSlopIsNotOnText() {
+        assertEquals(false, SelectableOcrTextView.isTapOnText(209f, 150f, lineBounds, 8f))
+    }
+
+    @Test
+    fun tapLeftOfLineStartBeyondSlopIsNotOnText() {
+        assertEquals(false, SelectableOcrTextView.isTapOnText(1f, 150f, lineBounds, 8f))
+    }
+
+    @Test
+    fun tapWithinSlopOfLineEdgesIsOnText() {
+        assertEquals(true, SelectableOcrTextView.isTapOnText(207f, 307f, lineBounds, 8f))
+        assertEquals(true, SelectableOcrTextView.isTapOnText(3f, -7f, lineBounds, 8f))
     }
 }
