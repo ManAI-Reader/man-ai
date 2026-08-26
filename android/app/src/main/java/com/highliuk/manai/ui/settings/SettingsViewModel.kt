@@ -2,8 +2,10 @@ package com.highliuk.manai.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.highliuk.manai.data.llm.LlmCredentialsManager
 import com.highliuk.manai.data.translation.DeepLCredentialsManager
 import com.highliuk.manai.domain.model.AppLanguage
+import com.highliuk.manai.domain.model.LlmVendor
 import com.highliuk.manai.domain.model.ReadingMode
 import com.highliuk.manai.domain.model.TargetLanguage
 import com.highliuk.manai.domain.model.ThemeMode
@@ -12,6 +14,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -20,6 +23,7 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val credentialsManager: DeepLCredentialsManager,
+    private val llmCredentialsManager: LlmCredentialsManager,
 ) : ViewModel() {
 
     val gridColumns: StateFlow<Int> = userPreferencesRepository.gridColumns
@@ -123,6 +127,32 @@ class SettingsViewModel @Inject constructor(
         } else {
             credentialsManager.saveApiKey(key)
             _deeplApiKey.value = key
+        }
+    }
+
+    private val _groqApiKey =
+        MutableStateFlow(llmCredentialsManager.getApiKey(LlmVendor.GROQ).orEmpty())
+    val groqApiKey: StateFlow<String> = _groqApiKey.asStateFlow()
+
+    fun setGroqApiKey(key: String) {
+        setVendorApiKey(LlmVendor.GROQ, key, _groqApiKey)
+    }
+
+    private val _deepseekApiKey =
+        MutableStateFlow(llmCredentialsManager.getApiKey(LlmVendor.DEEPSEEK).orEmpty())
+    val deepseekApiKey: StateFlow<String> = _deepseekApiKey.asStateFlow()
+
+    fun setDeepseekApiKey(key: String) {
+        setVendorApiKey(LlmVendor.DEEPSEEK, key, _deepseekApiKey)
+    }
+
+    private fun setVendorApiKey(vendor: LlmVendor, key: String, state: MutableStateFlow<String>) {
+        if (key.isBlank()) {
+            llmCredentialsManager.clearApiKey(vendor)
+            state.value = ""
+        } else {
+            llmCredentialsManager.saveApiKey(vendor, key)
+            state.value = key
         }
     }
 }

@@ -44,7 +44,10 @@ class StringResourceCompletenessTest {
 
         val strings = doc.getElementsByTagName("string")
         for (i in 0 until strings.length) {
-            strings.item(i).attributes.getNamedItem("name")?.nodeValue?.let { keys.add(it) }
+            val attributes = strings.item(i).attributes
+            val translatable = attributes.getNamedItem("translatable")?.nodeValue
+            if (translatable == "false") continue
+            attributes.getNamedItem("name")?.nodeValue?.let { keys.add(it) }
         }
 
         val plurals = doc.getElementsByTagName("plurals")

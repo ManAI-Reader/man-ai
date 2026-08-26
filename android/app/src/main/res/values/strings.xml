@@ -96,4 +96,55 @@
     <string name="deepl_api_key_hint">Enter your DeepL API key</string>
     <string name="translation_target_language">Target Language</string>
     <string name="app_version_info">Version %1$s (%2$d)</string>
+
+    <!-- AI Assistant settings -->
+    <string name="ai_section">AI Assistant</string>
+    <string name="settings_groq_api_key">Groq API key</string>
+    <string name="settings_deepseek_api_key">DeepSeek API key</string>
+    <string name="prompt_vendor_label">Provider</string>
+    <string name="prompt_model_label">Model</string>
+    <string name="manage_prompts">Manage prompts</string>
+
+    <!-- Prompt management -->
+    <string name="prompts_title">Prompts</string>
+    <string name="save">Save</string>
+    <string name="add_prompt">Add prompt</string>
+    <string name="edit_prompt">Edit prompt</string>
+    <string name="prompt_name">Name</string>
+    <string name="prompt_template">Prompt text</string>
+    <string name="prompt_placeholders_hint">Placeholders: {text} = balloon text, {selection} = selected text, {translation} = translation, {title} = manga title, {balloons} = other balloons on this page, {prev_balloons} = balloons on the previous page</string>
+    <string name="reasoning_level">Reasoning</string>
+    <string name="reasoning_default">Model default</string>
+    <string name="reasoning_off">Off</string>
+    <string name="reasoning_low">Low</string>
+    <string name="reasoning_medium">Medium</string>
+    <string name="reasoning_high">High</string>
+    <string name="reasoning_max">Max</string>
+    <string name="prompt_name_required">Name and prompt text are required</string>
+    <string name="delete_prompt_confirm">Delete this prompt?</string>
+    <string name="no_prompts">No prompts yet</string>
+
+    <!-- AI prompt templates -->
+    <string name="prompt_default_grammar">Explain grammar</string>
+    <string name="prompt_default_word">Explain this word</string>
+    <string name="prompt_template_word">You are my Japanese tutor. I\'m reading the manga 「{title}」 and I\'ve just come across the word 「{selection}」 in this sentence:\n「{text}」\n\nTo help you understand the scene, here are the other balloons from the same page, in no particular order (it is not the reading order):\n{balloons}\n\nAnd these are the balloons from the previous page, again in no particular order:\n{prev_balloons}\n\nUse this context only to interpret the sentence correctly: the explanation must stay focused on the word I asked about.\n\nGuide me along this outline, with a professional yet collaborative tone, like an expert colleague: direct, natural, no theatrics, no vocatives (\"dear student\" and the like) and no poetic metaphors. The value comes from the concrete observations a dictionary would never give.\n\nThe outline is a menu, not a form to fill in: develop a point only if it really has something relevant to say about this word; otherwise skip it entirely, without justifying yourself. Better one section fewer than one padded out for the sake of it.\n\n1. **Core meaning** — the essence of the word, setting it apart from the \"convenient\" dictionary translations (especially the catch-all glosses).\n2. **Register and frequency** — common or rare; spoken or written; colloquial, formal or literary; where I will actually encounter it.\n3. **The word in this sentence** — the exact grammatical form it takes here, what it expresses in this context and the nuance it lends the sentence.\n4. **Typical combinations and examples** — 2-3 example sentences written exclusively in Kanji/Kana with an English translation, chosen to show me which words it usually goes with.\n5. **Related terms** — only if there are words this one genuinely gets confused with (overlapping translations, different domains of use), with the tip that keeps me from mixing them up.\n\nA few guidelines, so the explanation suits me:\n- No Romaji: I can read Kanji and Kana, so write Japanese only that way. If you mention Japanese grammatical terms, write them in Kanji or Kana too (e.g. 連用形, 五段動詞, conjugation with む) or in English — never in the Latin alphabet.\n- No readings or pronunciations in brackets next to words — not in the examples, not in tables, not next to related terms: the app I use already shows furigana on its own, so any reading you add is just noise.\n- If you are unsure about something (a form, an etymology, a usage), tell me openly: I prefer an honest doubt to an invention.\n- No pleasantries: do not open with preambles and do not close with courtesy phrases (\"hope this helps\", \"feel free to ask\" and the like). The answer ends with the last useful content.\n- Write in polished English.</string>
+    <string name="prompt_template_grammar">You are my Japanese tutor. I\'m reading the manga 「{title}」 and in this sentence:\n「{text}」\nI got stuck on the construction 「{selection}」: I want to understand how it works grammatically.\n\nTo help you understand the scene, here are the other balloons from the same page, in no particular order (it is not the reading order):\n{balloons}\n\nAnd these are the balloons from the previous page, again in no particular order:\n{prev_balloons}\n\nUse this context only to interpret the sentence correctly: the explanation must stay focused on the construction I asked about.\n\nGuide me along this outline, with a professional yet collaborative tone, like an expert colleague: direct, natural, no theatrics, no vocatives (\"dear student\" and the like) and no poetic metaphors. The value comes from the concrete observations a reference grammar would never give.\n\nThe outline is a menu, not a form to fill in: develop a point only if it really has something relevant to say about this construction; otherwise skip it entirely, without justifying yourself. Better one section fewer than one padded out for the sake of it.\n\n1. **What it expresses** — the idea this construction conveys and when a Japanese speaker chooses it over simpler alternatives.\n2. **How it is built** — the pieces it is made of, how they fit together and what it attaches to (verbs, nouns, adjectives); any register or form variants.\n3. **The construction in this sentence** — how it works here, piece by piece, and the overall meaning of the sentence with a natural English translation.\n4. **Other examples** — 2-3 example sentences written exclusively in Kanji/Kana with an English translation, containing exactly the construction 「{selection}」 (not variants or similar constructions), chosen to show it to me in contexts different from this one.\n5. **Related constructions** — only if there are constructions this one genuinely gets confused with (close meaning, overlapping translations), with the tip that keeps me from mixing them up.\n\nA few guidelines, so the explanation suits me:\n- No Romaji: I can read Kanji and Kana, so write Japanese only that way. If you mention Japanese grammatical terms, write them in Kanji or Kana too (e.g. 連用形, 五段動詞, conjugation with む) or in English — never in the Latin alphabet.\n- No readings or pronunciations in brackets next to words — not in the examples, not in tables, not anywhere else: the app I use already shows furigana on its own, so any reading you add is just noise.\n- If you are unsure about something (a form, an etymology, a usage), tell me openly: I prefer an honest doubt to an invention.\n- No pleasantries: do not open with preambles and do not close with courtesy phrases (\"hope this helps\", \"feel free to ask\" and the like). The answer ends with the last useful content.\n- Write in polished English.</string>
+
+    <!-- Chat -->
+    <string name="chat_input_hint">Ask about this sentence…</string>
+    <string name="send_message">Send</string>
+    <string name="jump_to_source">Go to page</string>
+    <string name="more_options">More options</string>
+    <string name="chat_error_generic">Something went wrong</string>
+    <string name="chat_error_network">Network error — check your connection</string>
+    <string name="chat_error_http">Request failed (HTTP %1$d)</string>
+    <string name="chat_truncated">Response was cut short by the length limit</string>
+    <string name="assistant_thinking">Waiting for the assistant…</string>
+    <string name="conversations">Conversations</string>
+    <string name="no_conversations">No conversations yet</string>
+    <string name="search_conversations">Search conversations</string>
+    <string name="no_search_results">No results found</string>
+    <string name="delete_conversation_confirm">Delete this conversation?</string>
+    <string name="no_page_balloons">No other balloons on this page</string>
+    <string name="no_previous_balloons">No balloons on the previous pages</string>
 </resources>

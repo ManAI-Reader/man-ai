@@ -1,8 +1,10 @@
 package com.highliuk.manai.ui.settings
 
 import app.cash.turbine.test
+import com.highliuk.manai.data.llm.LlmCredentialsManager
 import com.highliuk.manai.data.translation.DeepLCredentialsManager
 import com.highliuk.manai.domain.model.AppLanguage
+import com.highliuk.manai.domain.model.LlmVendor
 import com.highliuk.manai.domain.model.ReadingMode
 import com.highliuk.manai.domain.model.TargetLanguage
 import com.highliuk.manai.domain.model.ThemeMode
@@ -30,6 +32,7 @@ class SettingsViewModelTest {
     private val userPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
     private val translationTargetLangFlow = MutableStateFlow(TargetLanguage.EN)
     private val credentialsManager = mockk<DeepLCredentialsManager>(relaxed = true)
+    private val llmCredentialsManager = mockk<LlmCredentialsManager>(relaxed = true)
     private val gridColumnsFlow = MutableStateFlow(2)
     private val readingModeFlow = MutableStateFlow(ReadingMode.LTR)
     private val themeModeFlow = MutableStateFlow(ThemeMode.SYSTEM)
@@ -60,7 +63,8 @@ class SettingsViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel() = SettingsViewModel(userPreferencesRepository, credentialsManager)
+    private fun createViewModel() =
+        SettingsViewModel(userPreferencesRepository, credentialsManager, llmCredentialsManager)
 
     @Test
     fun `gridColumns emits current preference value`() = runTest(testDispatcher) {
@@ -276,6 +280,66 @@ class SettingsViewModelTest {
         viewModel.setDeeplApiKey("")
 
         verify { credentialsManager.clearApiKey() }
+    }
+
+    @Test
+    fun `groqApiKey emits value from credentials manager`() = runTest(testDispatcher) {
+        every { llmCredentialsManager.getApiKey(LlmVendor.GROQ) } returns "groq-key"
+
+        val viewModel = createViewModel()
+
+        assertEquals("groq-key", viewModel.groqApiKey.value)
+    }
+
+    @Test
+    fun `setGroqApiKey saves key via credentials manager`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.setGroqApiKey("new-groq-key")
+
+        verify { llmCredentialsManager.saveApiKey(LlmVendor.GROQ, "new-groq-key") }
+        assertEquals("new-groq-key", viewModel.groqApiKey.value)
+    }
+
+    @Test
+    fun `setGroqApiKey clears when blank`() = runTest(testDispatcher) {
+        every { llmCredentialsManager.getApiKey(LlmVendor.GROQ) } returns "old-key"
+        val viewModel = createViewModel()
+
+        viewModel.setGroqApiKey("")
+
+        verify { llmCredentialsManager.clearApiKey(LlmVendor.GROQ) }
+        assertEquals("", viewModel.groqApiKey.value)
+    }
+
+    @Test
+    fun `deepseekApiKey emits value from credentials manager`() = runTest(testDispatcher) {
+        every { llmCredentialsManager.getApiKey(LlmVendor.DEEPSEEK) } returns "deepseek-key"
+
+        val viewModel = createViewModel()
+
+        assertEquals("deepseek-key", viewModel.deepseekApiKey.value)
+    }
+
+    @Test
+    fun `setDeepseekApiKey saves key via credentials manager`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.setDeepseekApiKey("new-deepseek-key")
+
+        verify { llmCredentialsManager.saveApiKey(LlmVendor.DEEPSEEK, "new-deepseek-key") }
+        assertEquals("new-deepseek-key", viewModel.deepseekApiKey.value)
+    }
+
+    @Test
+    fun `setDeepseekApiKey clears when blank`() = runTest(testDispatcher) {
+        every { llmCredentialsManager.getApiKey(LlmVendor.DEEPSEEK) } returns "old-key"
+        val viewModel = createViewModel()
+
+        viewModel.setDeepseekApiKey("")
+
+        verify { llmCredentialsManager.clearApiKey(LlmVendor.DEEPSEEK) }
+        assertEquals("", viewModel.deepseekApiKey.value)
     }
 
     @Test

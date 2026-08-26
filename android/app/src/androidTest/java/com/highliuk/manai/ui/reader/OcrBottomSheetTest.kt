@@ -17,6 +17,7 @@ import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import com.highliuk.manai.domain.model.PageRegion
 import com.highliuk.manai.ui.reader.ReaderViewModel
+import com.highliuk.manai.ui.testutil.clickOn
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -281,13 +282,8 @@ class OcrBottomSheetTest {
         val testText = "\u30af\u30ea\u30c3\u30d7\u30dc\u30fc\u30c9"
         setUpSheetAndLongPress(testText)
 
-        val selectAll = device.wait(Until.findObject(By.text("Select all")), 5000)
-        assertNotNull("Select all should appear", selectAll)
-        selectAll.click()
-
-        val copyButton = device.wait(Until.findObject(By.text("Copy")), 5000)
-        assertNotNull("Copy should appear", copyButton)
-        copyButton.click()
+        device.clickOn(By.text("Select all"))
+        device.clickOn(By.text("Copy"))
         device.waitForIdle()
 
         val clipboard = InstrumentationRegistry.getInstrumentation().targetContext

@@ -393,4 +393,20 @@ class UserPreferencesRepositoryImplTest {
 
         assertEquals(TargetLanguage.EN, repository.translationTargetLang.first())
     }
+
+    @Test
+    fun `promptDefaultsSeeded emits default false`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        assertEquals(false, repository.promptDefaultsSeeded.first())
+    }
+
+    @Test
+    fun `setPromptDefaultsSeeded persists true`() = runTest(testDispatcher) {
+        val repository = createRepository()
+
+        repository.setPromptDefaultsSeeded()
+
+        assertEquals(true, repository.promptDefaultsSeeded.first())
+    }
 }

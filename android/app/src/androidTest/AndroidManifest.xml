@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!--
+            The compose test host activity must use the same soft-input mode
+            as the app (see the main manifest): without adjustResize the
+            window pans when the IME opens, which is the exact insets bug
+            ChatScreen tests guard against.
+        -->
+        <activity
+            android:name="androidx.activity.ComponentActivity"
+            android:windowSoftInputMode="adjustResize" />
+    </application>
+
+</manifest>

@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -61,6 +62,7 @@ fun HomeScreen(
     isSelectionMode: Boolean = false,
     onImportClick: () -> Unit,
     onSettingsClick: () -> Unit,
+    onConversationsClick: () -> Unit = {},
     onMangaClick: (Manga) -> Unit = {},
     onToggleSelection: (Long) -> Unit = {},
     onRenameClick: () -> Unit = {},
@@ -109,6 +111,12 @@ fun HomeScreen(
                 TopAppBar(
                     title = { Text(stringResource(R.string.app_name)) },
                     actions = {
+                        IconButton(onClick = onConversationsClick) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Chat,
+                                contentDescription = stringResource(R.string.conversations)
+                            )
+                        }
                         IconButton(onClick = onSettingsClick) {
                             Icon(
                                 imageVector = Icons.Default.Settings,

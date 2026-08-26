@@ -102,4 +102,55 @@
     <string name="deepl_api_key_hint">Wprowadź klucz API DeepL</string>
     <string name="translation_target_language">Język docelowy</string>
     <string name="app_version_info">Wersja %1$s (%2$d)</string>
+
+    <!-- AI Assistant settings -->
+    <string name="ai_section">Asystent AI</string>
+    <string name="settings_groq_api_key">Klucz API Groq</string>
+    <string name="settings_deepseek_api_key">Klucz API DeepSeek</string>
+    <string name="prompt_vendor_label">Dostawca</string>
+    <string name="prompt_model_label">Model</string>
+    <string name="manage_prompts">Zarządzaj promptami</string>
+
+    <!-- Prompt management -->
+    <string name="prompts_title">Prompty</string>
+    <string name="save">Zapisz</string>
+    <string name="add_prompt">Dodaj prompt</string>
+    <string name="edit_prompt">Edytuj prompt</string>
+    <string name="prompt_name">Nazwa</string>
+    <string name="prompt_template">Treść promptu</string>
+    <string name="prompt_placeholders_hint">Symbole zastępcze: {text} = tekst dymku, {selection} = zaznaczony tekst, {translation} = tłumaczenie, {title} = tytuł mangi, {balloons} = inne dymki na tej stronie, {prev_balloons} = dymki z poprzedniej strony</string>
+    <string name="reasoning_level">Rozumowanie</string>
+    <string name="reasoning_default">Domyślne ustawienie modelu</string>
+    <string name="reasoning_off">Wyłączone</string>
+    <string name="reasoning_low">Niski</string>
+    <string name="reasoning_medium">Średni</string>
+    <string name="reasoning_high">Wysoki</string>
+    <string name="reasoning_max">Maksymalny</string>
+    <string name="prompt_name_required">Nazwa i treść promptu są wymagane</string>
+    <string name="delete_prompt_confirm">Usunąć ten prompt?</string>
+    <string name="no_prompts">Brak promptów</string>
+
+    <!-- AI prompt templates -->
+    <string name="prompt_default_grammar">Wyjaśnij gramatykę</string>
+    <string name="prompt_default_word">Wyjaśnij to słowo</string>
+    <string name="prompt_template_word">Jesteś moim tutorem japońskiego. Czytam mangę 「{title}」 i właśnie natrafiłem na słowo 「{selection}」 w tym zdaniu:\n「{text}」\n\nAby pomóc ci zrozumieć scenę, przytaczam pozostałe dymki z tej samej strony, w losowej kolejności (to nie jest kolejność czytania):\n{balloons}\n\nA to dymki z poprzedniej strony, również w losowej kolejności:\n{prev_balloons}\n\nUżyj tego kontekstu wyłącznie do poprawnej interpretacji zdania: wyjaśnienie ma pozostać skupione na słowie, o które zapytałem.\n\nPoprowadź mnie według tego konspektu, tonem profesjonalnym, ale koleżeńskim, jak doświadczony kolega po fachu: bezpośrednio, naturalnie, bez teatralności, bez zwrotów do adresata (\"drogi uczniu\" i tym podobnych) i bez poetyckich metafor. Wartość dają konkretne spostrzeżenia, których słownik nigdy by nie podał.\n\nKonspekt to menu, a nie formularz do wypełnienia: rozwiń dany punkt tylko wtedy, gdy dla tego słowa naprawdę ma coś istotnego do powiedzenia; w przeciwnym razie pomiń go całkowicie, bez tłumaczenia się. Lepsza jedna sekcja mniej niż sekcja wypełniona na siłę.\n\n1. **Podstawowe znaczenie** — istota słowa, odróżniona od \"wygodnych\" tłumaczeń słownikowych (zwłaszcza tych wywiedzionych z angielskiego).\n2. **Rejestr i częstość** — częste czy rzadkie; mówione czy pisane; potoczne, formalne czy literackie; gdzie naprawdę je spotkam.\n3. **Słowo w tym zdaniu** — dokładna forma gramatyczna, w jakiej tu występuje, co wyraża w tym kontekście i niuans, jaki nadaje zdaniu.\n4. **Typowe połączenia i przykłady** — 2-3 zdania przykładowe zapisane wyłącznie w Kanji/Kana z polskim tłumaczeniem, dobrane tak, by pokazać mi, z jakimi słowami zwykle się łączy.\n5. **Terminy pokrewne** — tylko jeśli istnieją słowa, z którymi to naprawdę się myli (nakładające się tłumaczenia, różne obszary użycia), wraz ze wskazówką, która uchroni mnie przed ich pomyleniem.\n\nKilka uwag, aby wyjaśnienie było dla mnie odpowiednie:\n- Żadnego Romaji: umiem czytać Kanji i Kana, japoński zapisuj tylko w ten sposób. Także japońskie terminy gramatyczne, jeśli je przywołujesz, zapisuj w Kanji lub Kana (np. 連用形, 五段動詞, koniugacja na む) albo po polsku — nigdy alfabetem łacińskim.\n- Żadnych odczytów ani wymowy w nawiasach obok słów — ani w przykładach, ani w tabelach, ani obok terminów pokrewnych: aplikacja, której używam, sama wyświetla furiganę, więc każdy dodany przez ciebie odczyt to tylko szum.\n- Jeśli nie jesteś czegoś pewien (formy, etymologii, użycia), powiedz mi to otwarcie: wolę uczciwą wątpliwość od zmyślenia.\n- Żadnych uprzejmości: nie zaczynaj od wstępów i nie kończ zwrotami grzecznościowymi (\"mam nadzieję, że to pomoże\", \"śmiało pytaj\" i tym podobnymi). Odpowiedź kończy się na ostatniej użytecznej treści.\n- Pisz staranną polszczyzną.</string>
+    <string name="prompt_template_grammar">Jesteś moim tutorem japońskiego. Czytam mangę 「{title}」 i w tym zdaniu:\n「{text}」\nutknąłem na konstrukcji 「{selection}」: chcę zrozumieć, jak działa od strony gramatycznej.\n\nAby pomóc ci zrozumieć scenę, przytaczam pozostałe dymki z tej samej strony, w losowej kolejności (to nie jest kolejność czytania):\n{balloons}\n\nA to dymki z poprzedniej strony, również w losowej kolejności:\n{prev_balloons}\n\nUżyj tego kontekstu wyłącznie do poprawnej interpretacji zdania: wyjaśnienie ma pozostać skupione na konstrukcji, o którą zapytałem.\n\nPoprowadź mnie według tego konspektu, tonem profesjonalnym, ale koleżeńskim, jak doświadczony kolega po fachu: bezpośrednio, naturalnie, bez teatralności, bez zwrotów do adresata (\"drogi uczniu\" i tym podobnych) i bez poetyckich metafor. Wartość dają konkretne spostrzeżenia, których gramatyka opisowa nigdy by nie podała.\n\nKonspekt to menu, a nie formularz do wypełnienia: rozwiń dany punkt tylko wtedy, gdy dla tej konstrukcji naprawdę ma coś istotnego do powiedzenia; w przeciwnym razie pomiń go całkowicie, bez tłumaczenia się. Lepsza jedna sekcja mniej niż sekcja wypełniona na siłę.\n\n1. **Co wyraża** — myśl, którą ta konstrukcja komunikuje, i kiedy Japończyk wybiera ją zamiast prostszych alternatyw.\n2. **Jak się ją buduje** — elementy, z których się składa, jak się ze sobą zazębiają i do czego się dołącza (czasowniki, rzeczowniki, przymiotniki); ewentualne warianty rejestru lub formy.\n3. **Konstrukcja w tym zdaniu** — jak działa tutaj, element po elemencie, oraz całościowe znaczenie zdania z naturalnym polskim tłumaczeniem.\n4. **Inne przykłady** — 2-3 zdania przykładowe zapisane wyłącznie w Kanji/Kana z polskim tłumaczeniem, zawierające dokładnie konstrukcję 「{selection}」 (nie warianty ani podobne konstrukcje), dobrane tak, by pokazać mi ją w kontekstach innych niż ten.\n5. **Konstrukcje pokrewne** — tylko jeśli istnieją konstrukcje, z którymi ta naprawdę się myli (bliskie znaczenie, nakładające się tłumaczenia), wraz ze wskazówką, która uchroni mnie przed ich pomyleniem.\n\nKilka uwag, aby wyjaśnienie było dla mnie odpowiednie:\n- Żadnego Romaji: umiem czytać Kanji i Kana, japoński zapisuj tylko w ten sposób. Także japońskie terminy gramatyczne, jeśli je przywołujesz, zapisuj w Kanji lub Kana (np. 連用形, 五段動詞, koniugacja na む) albo po polsku — nigdy alfabetem łacińskim.\n- Żadnych odczytów ani wymowy w nawiasach obok słów — ani w przykładach, ani w tabelach, ani nigdzie indziej: aplikacja, której używam, sama wyświetla furiganę, więc każdy dodany przez ciebie odczyt to tylko szum.\n- Jeśli nie jesteś czegoś pewien (formy, etymologii, użycia), powiedz mi to otwarcie: wolę uczciwą wątpliwość od zmyślenia.\n- Żadnych uprzejmości: nie zaczynaj od wstępów i nie kończ zwrotami grzecznościowymi (\"mam nadzieję, że to pomoże\", \"śmiało pytaj\" i tym podobnymi). Odpowiedź kończy się na ostatniej użytecznej treści.\n- Pisz staranną polszczyzną.</string>
+
+    <!-- Chat -->
+    <string name="chat_input_hint">Zapytaj o to zdanie…</string>
+    <string name="send_message">Wyślij</string>
+    <string name="jump_to_source">Przejdź do strony</string>
+    <string name="more_options">Więcej opcji</string>
+    <string name="chat_error_generic">Coś poszło nie tak</string>
+    <string name="chat_error_network">Błąd sieci — sprawdź połączenie</string>
+    <string name="chat_error_http">Żądanie nie powiodło się (HTTP %1$d)</string>
+    <string name="chat_truncated">Odpowiedź została ucięta przez limit długości</string>
+    <string name="assistant_thinking">Oczekiwanie na asystenta…</string>
+    <string name="conversations">Rozmowy</string>
+    <string name="no_conversations">Brak rozmów</string>
+    <string name="search_conversations">Szukaj rozmów</string>
+    <string name="no_search_results">Nie znaleziono wyników</string>
+    <string name="delete_conversation_confirm">Usunąć tę rozmowę?</string>
+    <string name="no_page_balloons">Brak innych dymków na tej stronie</string>
+    <string name="no_previous_balloons">Brak dymków na poprzednich stronach</string>
 </resources>

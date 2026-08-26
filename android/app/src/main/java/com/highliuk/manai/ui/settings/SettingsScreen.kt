@@ -3,8 +3,10 @@ package com.highliuk.manai.ui.settings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -22,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
@@ -96,11 +99,18 @@ fun SettingsScreen(
     onDeeplApiKeyChange: (String) -> Unit = {},
     translationTargetLang: TargetLanguage = TargetLanguage.EN,
     onTranslationTargetLangChange: (TargetLanguage) -> Unit = {},
+    groqApiKey: String = "",
+    onGroqApiKeyChange: (String) -> Unit = {},
+    deepseekApiKey: String = "",
+    onDeepseekApiKeyChange: (String) -> Unit = {},
+    onManagePromptsClick: () -> Unit = {},
     versionName: String = BuildConfig.VERSION_NAME,
     versionCode: Int = BuildConfig.VERSION_CODE,
     onBack: () -> Unit
 ) {
     var apiKeyVisible by remember { mutableStateOf(false) }
+    var groqApiKeyVisible by remember { mutableStateOf(false) }
+    var deepseekApiKeyVisible by remember { mutableStateOf(false) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -120,6 +130,12 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                // Consume the scaffold insets so imePadding only adds the
+                // part of the IME not already covered by the system bars,
+                // then shrink the scroll viewport by the keyboard height so
+                // the focused field can always be scrolled into view.
+                .consumeWindowInsets(innerPadding)
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
@@ -363,6 +379,18 @@ fun SettingsScreen(
                 onApiKeyVisibleChange = { apiKeyVisible = it },
             )
 
+            AiSection(
+                groqApiKey = groqApiKey,
+                onGroqApiKeyChange = onGroqApiKeyChange,
+                deepseekApiKey = deepseekApiKey,
+                onDeepseekApiKeyChange = onDeepseekApiKeyChange,
+                onManagePromptsClick = onManagePromptsClick,
+                groqApiKeyVisible = groqApiKeyVisible,
+                onGroqApiKeyVisibleChange = { groqApiKeyVisible = it },
+                deepseekApiKeyVisible = deepseekApiKeyVisible,
+                onDeepseekApiKeyVisibleChange = { deepseekApiKeyVisible = it },
+            )
+
             Text(
                 text = stringResource(R.string.app_version_info, versionName, versionCode),
                 style = MaterialTheme.typography.bodySmall,
@@ -437,4 +465,81 @@ private fun TranslationSection(
             )
         }
     }
+}
+
+@Composable
+private fun AiSection(
+    groqApiKey: String,
+    onGroqApiKeyChange: (String) -> Unit,
+    deepseekApiKey: String,
+    onDeepseekApiKeyChange: (String) -> Unit,
+    onManagePromptsClick: () -> Unit,
+    groqApiKeyVisible: Boolean,
+    onGroqApiKeyVisibleChange: (Boolean) -> Unit,
+    deepseekApiKeyVisible: Boolean,
+    onDeepseekApiKeyVisibleChange: (Boolean) -> Unit,
+) {
+    Text(
+        text = stringResource(R.string.ai_section),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
+    )
+
+    VendorApiKeyField(
+        value = groqApiKey,
+        onValueChange = onGroqApiKeyChange,
+        labelRes = R.string.settings_groq_api_key,
+        visible = groqApiKeyVisible,
+        onVisibleChange = onGroqApiKeyVisibleChange,
+        testTag = "groq_api_key_field",
+    )
+
+    VendorApiKeyField(
+        value = deepseekApiKey,
+        onValueChange = onDeepseekApiKeyChange,
+        labelRes = R.string.settings_deepseek_api_key,
+        visible = deepseekApiKeyVisible,
+        onVisibleChange = onDeepseekApiKeyVisibleChange,
+        testTag = "deepseek_api_key_field",
+        modifier = Modifier.padding(top = 8.dp),
+    )
+
+    TextButton(
+        onClick = onManagePromptsClick,
+        modifier = Modifier.padding(top = 8.dp),
+    ) {
+        Text(stringResource(R.string.manage_prompts))
+    }
+}
+
+@Composable
+private fun VendorApiKeyField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    @StringRes labelRes: Int,
+    visible: Boolean,
+    onVisibleChange: (Boolean) -> Unit,
+    testTag: String,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(stringResource(labelRes)) },
+        visualTransformation = if (visible) VisualTransformation.None
+            else PasswordVisualTransformation(),
+        trailingIcon = {
+            IconButton(onClick = { onVisibleChange(!visible) }) {
+                Icon(
+                    imageVector = if (visible) Icons.Default.VisibilityOff
+                        else Icons.Default.Visibility,
+                    contentDescription = null,
+                )
+            }
+        },
+        singleLine = true,
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag(testTag),
+    )
 }

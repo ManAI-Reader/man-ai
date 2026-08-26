@@ -11,6 +11,8 @@ import com.highliuk.manai.data.local.dao.MangaDao
 import com.highliuk.manai.data.local.entity.MangaEntity
 import com.highliuk.manai.domain.model.ReadingMode
 import com.highliuk.manai.domain.repository.UserPreferencesRepository
+import com.highliuk.manai.ui.testutil.clickOn
+import com.highliuk.manai.ui.testutil.onFreshObject
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.runBlocking
@@ -70,27 +72,20 @@ class WebtoonLastPageE2ETest {
     private fun showBarsAndFindIndicator(): String {
         waitForReader()
         device.click(device.displayWidth / 2, device.displayHeight / 2)
-        val indicator = device.wait(Until.findObject(By.textContains("/ 10")), TIMEOUT)
-        assertNotNull("Page indicator not visible after tap", indicator)
-        return indicator.text
+        return device.onFreshObject(By.textContains("/ 10"), TIMEOUT) { it.text }
     }
 
     private fun goToPageViaDialog(pageNumber: Int) {
-        device.findObject(By.textContains("/ 10")).click()
-        val input = device.wait(
-            Until.findObject(By.clazz("android.widget.EditText")),
-            TIMEOUT,
-        )
-        assertNotNull("EditText should appear in dialog", input)
-        input.click()
-        input.clear()
+        device.clickOn(By.textContains("/ 10"), TIMEOUT)
+        device.onFreshObject(By.clazz("android.widget.EditText"), TIMEOUT) {
+            it.click()
+            it.clear()
+        }
         for (digit in pageNumber.toString()) {
             device.pressKeyCode(android.view.KeyEvent.KEYCODE_0 + (digit - '0'))
         }
         device.pressBack()
-        val okButton = device.wait(Until.findObject(By.text("OK")), TIMEOUT)
-        assertNotNull("OK button should appear in dialog", okButton)
-        okButton.click()
+        device.clickOn(By.text("OK"), TIMEOUT)
     }
 
     @Test
@@ -98,28 +93,11 @@ class WebtoonLastPageE2ETest {
         ActivityScenario.launch(MainActivity::class.java)
 
         // 1. Tap manga
-        val mangaItem = device.wait(Until.findObject(By.text("Webtoon Save Test")), TIMEOUT)
-        assertNotNull("Manga should appear on home screen", mangaItem)
-        mangaItem.click()
+        device.clickOn(By.text("Webtoon Save Test"), TIMEOUT)
 
-        // 2. Show bars, tap page indicator → GoToPageDialog
+        // 2. Show bars, tap page indicator → GoToPageDialog, type "10" and confirm
         showBarsAndFindIndicator()
-        device.findObject(By.textContains("/ 10")).click()
-
-        // 3. Type "10" and confirm
-        val input = device.wait(
-            Until.findObject(By.clazz("android.widget.EditText")),
-            TIMEOUT,
-        )
-        assertNotNull("EditText should appear in dialog", input)
-        input.click()
-        input.clear()
-        device.pressKeyCode(android.view.KeyEvent.KEYCODE_1)
-        device.pressKeyCode(android.view.KeyEvent.KEYCODE_0)
-        device.pressBack()
-        val okButton = device.wait(Until.findObject(By.text("OK")), TIMEOUT)
-        assertNotNull("OK button should appear in dialog", okButton)
-        okButton.click()
+        goToPageViaDialog(10)
 
         // 4. Bars still visible — verify page 10
         val indicatorBefore = device.wait(
@@ -134,7 +112,7 @@ class WebtoonLastPageE2ETest {
         device.waitForIdle()
 
         // 6. Reopen
-        device.findObject(By.text("Webtoon Save Test")).click()
+        device.clickOn(By.text("Webtoon Save Test"), TIMEOUT)
 
         // 7. Show bars, verify page restored correctly
         val indicatorText = showBarsAndFindIndicator()
@@ -183,9 +161,7 @@ class WebtoonLastPageE2ETest {
     @Test
     fun webtoonLastPage_isSavedCorrectly_landscape() {
         ActivityScenario.launch(MainActivity::class.java)
-        val mangaItem = device.wait(Until.findObject(By.text("Webtoon Save Test")), TIMEOUT)
-        assertNotNull("Manga should appear on home screen", mangaItem)
-        mangaItem.click()
+        device.clickOn(By.text("Webtoon Save Test"), TIMEOUT)
         waitForReader()
         setLandscape()
 
@@ -200,7 +176,7 @@ class WebtoonLastPageE2ETest {
         device.pressBack()
         device.wait(Until.hasObject(By.text("Webtoon Save Test")), TIMEOUT)
         device.waitForIdle()
-        device.findObject(By.text("Webtoon Save Test")).click()
+        device.clickOn(By.text("Webtoon Save Test"), TIMEOUT)
 
         val indicatorText = showBarsAndFindIndicator()
         assertEquals("10 / 10", indicatorText)

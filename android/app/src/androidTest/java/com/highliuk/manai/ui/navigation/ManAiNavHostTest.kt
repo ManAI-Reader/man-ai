@@ -14,11 +14,14 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.test.espresso.Espresso
 import androidx.test.filters.SdkSuppress
 import com.highliuk.manai.BuildConfig
 import com.highliuk.manai.MainActivity
 import com.highliuk.manai.data.local.ManAiDatabase
+import com.highliuk.manai.data.local.dao.ConversationDao
 import com.highliuk.manai.data.local.dao.MangaDao
+import com.highliuk.manai.data.local.entity.ConversationEntity
 import com.highliuk.manai.data.local.entity.MangaEntity
 import com.highliuk.manai.ui.home.HomeViewModel
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -44,6 +47,9 @@ class ManAiNavHostTest {
 
     @Inject
     lateinit var mangaDao: MangaDao
+
+    @Inject
+    lateinit var conversationDao: ConversationDao
 
     @Inject
     lateinit var database: ManAiDatabase
@@ -321,6 +327,63 @@ class ManAiNavHostTest {
         composeTestRule.mainClock.advanceTimeBy(500)
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithContentDescription("Reader settings").assertIsDisplayed()
+    }
+
+    @SdkSuppress(minSdkVersion = 30) // Immersive mode tap-to-show unreliable on API < 30
+    @Test
+    fun openSourcePageFromChat_backReturnsToChat() = runTest {
+        val mangaId = mangaDao.insert(
+            MangaEntity(uri = "content://source-back-test", title = "Source Back Manga", pageCount = 5)
+        )
+        conversationDao.insert(
+            ConversationEntity(
+                title = "Source Back Chat",
+                mangaId = mangaId,
+                pageIndex = 2,
+                regionIndex = 0,
+                createdAt = 1L,
+                updatedAt = 1L,
+            )
+        )
+
+        // Home → reader, so a reader entry sits below the chat in the back stack.
+        composeTestRule.waitUntil(timeoutMillis = 10000) {
+            composeTestRule.onAllNodesWithText("Source Back Manga").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithText("Source Back Manga").performClick()
+        composeTestRule.waitUntil(timeoutMillis = 10000) {
+            composeTestRule.onAllNodesWithTag("reader_pager").fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Show the reader top bar, then reader → conversations → chat.
+        composeTestRule.onNodeWithTag("reader_pager").performClick()
+        composeTestRule.mainClock.advanceTimeBy(500)
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithContentDescription("Conversations").performClick()
+        composeTestRule.waitUntil(timeoutMillis = 10000) {
+            composeTestRule.onAllNodesWithText("Source Back Chat").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithText("Source Back Chat").performClick()
+        composeTestRule.waitUntil(timeoutMillis = 10000) {
+            composeTestRule.onAllNodesWithTag("chat_menu").fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Chat menu → open source page must push a new reader on top of the
+        // chat instead of clearing the stack down to (and including) the old reader.
+        composeTestRule.onNodeWithTag("chat_menu").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("menu_open_source").performClick()
+        composeTestRule.waitUntil(timeoutMillis = 10000) {
+            composeTestRule.onAllNodesWithTag("reader_pager").fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Back from the source page must return to the conversation, not Home.
+        Espresso.pressBack()
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(500)
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("chat_menu").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Source Back Chat").assertIsDisplayed()
     }
 
     @SdkSuppress(minSdkVersion = 30)

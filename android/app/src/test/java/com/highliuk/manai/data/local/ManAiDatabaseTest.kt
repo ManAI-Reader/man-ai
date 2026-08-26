@@ -75,6 +75,134 @@ class ManAiDatabaseTest {
     }
 
     @Test
+    fun `migration 5 to 6 creates agent tables`() {
+        ManAiDatabase.MIGRATION_5_6.migrate(db)
+
+        verifyOrder {
+            db.execSQL(match { it.contains("CREATE TABLE IF NOT EXISTS conversation") })
+            db.execSQL(match { it.contains("CREATE INDEX index_conversation_mangaId") })
+            db.execSQL(match { it.contains("CREATE TABLE IF NOT EXISTS chat_message") })
+            db.execSQL(match { it.contains("CREATE INDEX index_chat_message_conversationId") })
+            db.execSQL(match { it.contains("CREATE TABLE IF NOT EXISTS prompt_template") })
+            db.execSQL(match { it.contains("CREATE TABLE IF NOT EXISTS memory_entry") })
+        }
+    }
+
+    @Test
+    fun `migration 6 to 5 drops agent tables`() {
+        ManAiDatabase.MIGRATION_6_5.migrate(db)
+
+        verifyOrder {
+            db.execSQL("DROP TABLE IF EXISTS chat_message")
+            db.execSQL("DROP INDEX IF EXISTS index_conversation_mangaId")
+            db.execSQL("DROP TABLE IF EXISTS conversation")
+            db.execSQL("DROP TABLE IF EXISTS prompt_template")
+            db.execSQL("DROP TABLE IF EXISTS memory_entry")
+        }
+    }
+
+    @Test
+    fun `migration 6 to 7 adds reasoningLevel columns`() {
+        ManAiDatabase.MIGRATION_6_7.migrate(db)
+
+        verifyOrder {
+            db.execSQL(
+                "ALTER TABLE prompt_template ADD COLUMN reasoningLevel TEXT NOT NULL DEFAULT 'DEFAULT'"
+            )
+            db.execSQL(
+                "ALTER TABLE conversation ADD COLUMN reasoningLevel TEXT NOT NULL DEFAULT 'DEFAULT'"
+            )
+        }
+    }
+
+    @Test
+    fun `migration 7 to 6 removes reasoningLevel via backup tables`() {
+        ManAiDatabase.MIGRATION_7_6.migrate(db)
+
+        verifyOrder {
+            db.execSQL(match {
+                it.contains("CREATE TABLE prompt_template_backup") && !it.contains("reasoningLevel")
+            })
+            db.execSQL(match {
+                it.contains("INSERT INTO prompt_template_backup") &&
+                    it.contains("id, name, template, sortOrder") &&
+                    !it.contains("reasoningLevel")
+            })
+            db.execSQL("DROP TABLE prompt_template")
+            db.execSQL("ALTER TABLE prompt_template_backup RENAME TO prompt_template")
+            db.execSQL("DROP INDEX IF EXISTS index_conversation_mangaId")
+            db.execSQL(match {
+                it.contains("CREATE TABLE conversation_backup") && !it.contains("reasoningLevel")
+            })
+            db.execSQL(match {
+                it.contains("INSERT INTO conversation_backup") &&
+                    it.contains("id, title, mangaId, pageIndex, regionIndex, createdAt, updatedAt") &&
+                    !it.contains("reasoningLevel")
+            })
+            db.execSQL("DROP TABLE conversation")
+            db.execSQL("ALTER TABLE conversation_backup RENAME TO conversation")
+            db.execSQL("CREATE INDEX index_conversation_mangaId ON conversation(mangaId)")
+        }
+    }
+
+    @Test
+    fun `migration 7 to 8 adds vendor and model columns`() {
+        ManAiDatabase.MIGRATION_7_8.migrate(db)
+
+        verifyOrder {
+            db.execSQL(
+                "ALTER TABLE prompt_template ADD COLUMN vendor TEXT NOT NULL DEFAULT 'GROQ'"
+            )
+            db.execSQL(
+                "ALTER TABLE prompt_template ADD COLUMN model TEXT NOT NULL " +
+                    "DEFAULT 'openai/gpt-oss-120b'"
+            )
+            db.execSQL(
+                "ALTER TABLE conversation ADD COLUMN vendor TEXT NOT NULL DEFAULT 'GROQ'"
+            )
+            db.execSQL(
+                "ALTER TABLE conversation ADD COLUMN model TEXT NOT NULL " +
+                    "DEFAULT 'openai/gpt-oss-120b'"
+            )
+        }
+    }
+
+    @Test
+    fun `migration 8 to 7 removes vendor and model via backup tables`() {
+        ManAiDatabase.MIGRATION_8_7.migrate(db)
+
+        verifyOrder {
+            db.execSQL(match {
+                it.contains("CREATE TABLE prompt_template_backup") &&
+                    !it.contains("vendor") && !it.contains("model")
+            })
+            db.execSQL(match {
+                it.contains("INSERT INTO prompt_template_backup") &&
+                    it.contains("id, name, template, sortOrder, reasoningLevel") &&
+                    !it.contains("vendor") && !it.contains("model")
+            })
+            db.execSQL("DROP TABLE prompt_template")
+            db.execSQL("ALTER TABLE prompt_template_backup RENAME TO prompt_template")
+            db.execSQL("DROP INDEX IF EXISTS index_conversation_mangaId")
+            db.execSQL(match {
+                it.contains("CREATE TABLE conversation_backup") &&
+                    !it.contains("vendor") && !it.contains("model")
+            })
+            db.execSQL(match {
+                it.contains("INSERT INTO conversation_backup") &&
+                    it.contains(
+                        "id, title, mangaId, pageIndex, regionIndex, createdAt, updatedAt, " +
+                            "reasoningLevel"
+                    ) &&
+                    !it.contains("vendor") && !it.contains("model")
+            })
+            db.execSQL("DROP TABLE conversation")
+            db.execSQL("ALTER TABLE conversation_backup RENAME TO conversation")
+            db.execSQL("CREATE INDEX index_conversation_mangaId ON conversation(mangaId)")
+        }
+    }
+
+    @Test
     fun `migration 2 to 1 removes lastReadPage via backup table`() {
         ManAiDatabase.MIGRATION_2_1.migrate(db)
 
