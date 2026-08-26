@@ -3,15 +3,14 @@ package com.highliuk.manai.ui.chat
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -42,11 +41,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -83,7 +85,7 @@ internal fun visibleMessages(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
     conversation: Conversation?,
@@ -106,17 +108,42 @@ fun ChatScreen(
 
     LaunchedEffect(shownMessages.size, isStreaming) {
         if (itemCount > 0 && !listState.canScrollForward) {
-            listState.animateScrollToItem(itemCount - 1)
+            // scrollOffset = Int.MAX_VALUE is clamped by the layout to the
+            // real maximum scroll, so a last item taller than the viewport
+            // is anchored by its bottom instead of its top.
+            listState.animateScrollToItem(itemCount - 1, scrollOffset = Int.MAX_VALUE)
         }
     }
 
-    // Keep the latest message visible when the keyboard opens and the
-    // message list shrinks to make room for it.
-    val imeVisible = WindowInsets.isImeVisible
-    LaunchedEffect(imeVisible) {
-        if (imeVisible && itemCount > 0) {
-            listState.scrollToItem(itemCount - 1)
-        }
+    // Keep the list anchored to the bottom while the keyboard opens and the
+    // message list shrinks to make room for it; never touch the scroll when
+    // the user is reading older messages.
+    val density = LocalDensity.current
+    val imeInsets = WindowInsets.ime
+    val currentItemCount by rememberUpdatedState(itemCount)
+    LaunchedEffect(listState, imeInsets, density) {
+        // "Was at bottom" is sampled only while the IME is fully closed and
+        // frozen for the whole open animation: the first IME frame already
+        // shrinks the viewport, flipping canScrollForward to true even when
+        // the user never left the bottom, so reading it mid-animation would
+        // give the wrong answer.
+        var wasAtBottom = false
+        var imeOpening = false
+        var lastImeHeight = imeInsets.getBottom(density)
+        snapshotFlow { imeInsets.getBottom(density) to !listState.canScrollForward }
+            .collect { (imeHeight, atBottomNow) ->
+                wasAtBottom = updateWasAtBottom(imeHeight, atBottomNow, wasAtBottom)
+                imeOpening = updateImeOpening(imeHeight, lastImeHeight, imeOpening)
+                lastImeHeight = imeHeight
+                if (shouldPinChatToBottom(imeOpening, wasAtBottom, currentItemCount)) {
+                    // Each IME height change recomposes with a smaller
+                    // viewport; re-anchoring to the clamped absolute bottom
+                    // on every frame makes the content slide up together
+                    // with the keyboard, with no visible jump. Closing the
+                    // IME intentionally does nothing.
+                    listState.scrollToItem(currentItemCount - 1, scrollOffset = Int.MAX_VALUE)
+                }
+            }
     }
 
     Scaffold(
