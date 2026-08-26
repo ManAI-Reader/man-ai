@@ -483,6 +483,78 @@ class SelectableOcrTextViewTest {
         verify(exactly = 0) { promptItem.setVisible(any()) }
     }
 
+    /**
+     * Stateful stand-in replicating the AOSP MenuBuilder semantics our code
+     * depends on: removeGroup only removes the CONTIGUOUS run of items
+     * starting at the first match, and removeItem removes the first item
+     * with the given id. PROCESS_TEXT items share the prompt items' order
+     * range, so prompt items can end up interleaved with them.
+     */
+    private class FakeMenu {
+        data class Entry(val groupId: Int, val itemId: Int, val order: Int, val item: MenuItem)
+
+        val entries = mutableListOf<Entry>()
+
+        fun asMenu(): Menu {
+            val menu = mockk<Menu>(relaxed = true)
+            every { menu.size() } answers { entries.size }
+            every { menu.getItem(any()) } answers {
+                val entry = entries[firstArg<Int>()]
+                mockk(relaxed = true) {
+                    every { groupId } returns entry.groupId
+                    every { itemId } returns entry.itemId
+                }
+            }
+            every { menu.add(any<Int>(), any<Int>(), any<Int>(), any<CharSequence>()) } answers {
+                val added = Entry(firstArg(), secondArg(), thirdArg(), mockk(relaxed = true))
+                // MenuBuilder inserts sorted by order: after the last entry
+                // whose order is <= the new one. This is what interleaves
+                // prompt items (order 100/101) with PROCESS_TEXT items
+                // occupying the same order range.
+                val insertAt = entries.indexOfLast { it.order <= added.order } + 1
+                entries.add(insertAt, added)
+                added.item
+            }
+            every { menu.removeItem(any()) } answers {
+                val id = firstArg<Int>()
+                val index = entries.indexOfFirst { it.itemId == id }
+                if (index >= 0) entries.removeAt(index)
+            }
+            every { menu.removeGroup(any()) } answers {
+                val group = firstArg<Int>()
+                val first = entries.indexOfFirst { it.groupId == group }
+                if (first >= 0) {
+                    while (first < entries.size && entries[first].groupId == group) {
+                        entries.removeAt(first)
+                    }
+                }
+            }
+            return menu
+        }
+    }
+
+    @Test
+    fun repeatedPreparesDoNotDuplicatePromptsInterleavedWithProcessTextItems() {
+        val fake = FakeMenu()
+        val menu = fake.asMenu()
+        // AOSP adds the PROCESS_TEXT items at create time, before the first
+        // prepare, starting at menu order 100 — the same order range the
+        // prompt items used, which interleaves the two groups.
+        menu.add(0, 0, 100, "Other app action A")
+        menu.add(0, 0, 101, "Other app action B")
+
+        repeat(4) {
+            SelectableOcrTextView.prepareSelectionMenu(
+                menu,
+                promptOnly = false,
+                prompts = samplePrompts,
+            )
+        }
+
+        val promptCount = fake.entries.count { it.groupId == SelectableOcrTextView.PROMPT_GROUP }
+        assertEquals(samplePrompts.size, promptCount)
+    }
+
     // --- safeSelection tests ---
 
     @Test

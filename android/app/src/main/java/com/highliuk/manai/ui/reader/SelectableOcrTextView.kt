@@ -264,7 +264,11 @@ class SelectableOcrTextView(context: Context) : TextView(context) {
     companion object {
         internal const val PROMPT_GROUP = 1001
         private const val MENU_ID_BASE = 2000
-        private const val MENU_ORDER_BASE = 100
+
+        // Well above the Editor's own order ranges (assist ~50+, PROCESS_TEXT
+        // 100+) so prompt items sort after the system items and stay
+        // contiguous instead of interleaving with them.
+        private const val MENU_ORDER_BASE = 10_000
 
         fun promptMenuItemId(index: Int): Int = MENU_ID_BASE + index
 
@@ -283,7 +287,7 @@ class SelectableOcrTextView(context: Context) : TextView(context) {
             promptOnly: Boolean,
             prompts: List<Pair<Long, String>>,
         ) {
-            menu.removeGroup(PROMPT_GROUP)
+            removePromptItems(menu)
             for (index in 0 until menu.size()) {
                 val item = menu.getItem(index)
                 if (item.groupId != PROMPT_GROUP) item.setVisible(!promptOnly)
@@ -291,6 +295,24 @@ class SelectableOcrTextView(context: Context) : TextView(context) {
             prompts.forEachIndexed { index, (_, name) ->
                 menu.add(PROMPT_GROUP, promptMenuItemId(index), index + MENU_ORDER_BASE, name)
             }
+        }
+
+        /**
+         * Removes every prompt item one by one. Menu.removeGroup cannot be
+         * used here: MenuBuilder assumes a group's items are contiguous and
+         * stops at the first foreign item, but PROCESS_TEXT items sort into
+         * the same order range and interleave with the prompts — each
+         * prepare pass would then leak a duplicate of the prompts left
+         * behind the first foreign item.
+         */
+        private fun removePromptItems(menu: Menu) {
+            val staleIds = (0 until menu.size())
+                .map(menu::getItem)
+                .filter { it.groupId == PROMPT_GROUP }
+                .map { it.itemId }
+            // Leaked duplicates share ids; removeItem drops the first match,
+            // so one call per collected occurrence removes them all.
+            staleIds.forEach(menu::removeItem)
         }
 
         fun promptIdForMenuItem(itemId: Int, prompts: List<Pair<Long, String>>): Long? =

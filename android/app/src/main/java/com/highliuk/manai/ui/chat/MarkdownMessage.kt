@@ -7,6 +7,7 @@ import android.text.Spanned
 import android.text.style.StyleSpan
 import android.text.style.TypefaceSpan
 import android.util.TypedValue
+import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.compose.foundation.background
@@ -45,6 +46,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.highliuk.manai.domain.model.FuriganaToken
 import com.highliuk.manai.ui.chat.markdown.FuriganaRunResolver
@@ -62,10 +64,19 @@ import java.util.Locale
 typealias FuriganaResolver = suspend (String) -> List<FuriganaToken>
 
 private val TABLE_CELL_WIDTH = 140.dp
-private val BLOCK_SPACING = 8.dp
+private val BLOCK_SPACING = 12.dp
+private val HEADING_EXTRA_TOP_SPACING = 4.dp
 private val LIST_INDENT_PER_LEVEL = 16.dp
 private val BLOCKQUOTE_BAR_WIDTH = 3.dp
 private const val BOLD_WEIGHT_THRESHOLD = 600
+
+// Chat body typography: roomier than M3 bodyLarge (16sp/24sp/0.5sp) for
+// long-form reading; the TextView multiplier approximates the same ~26sp
+// line height for the furigana-capable native text path.
+private val CHAT_BODY_FONT_SIZE = 17.sp
+private val CHAT_BODY_LINE_HEIGHT = 26.sp
+private val CHAT_BODY_LETTER_SPACING = 0.2.sp
+private const val CHAT_LINE_SPACING_MULTIPLIER = 1.3f
 
 /**
  * Renders assistant markdown with ruby furigana over Japanese runs.
@@ -120,7 +131,7 @@ private fun MarkdownBlockView(
             runs = block.inlines.toStyledRuns(),
             isTail = isTail,
             lookup = lookup,
-            style = MaterialTheme.typography.bodyLarge,
+            style = chatBodyStyle(),
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -129,7 +140,9 @@ private fun MarkdownBlockView(
             isTail = isTail,
             lookup = lookup,
             style = headingStyle(block.level).copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = HEADING_EXTRA_TOP_SPACING),
         )
 
         is MarkdownBlock.ListItem -> MarkdownListItemView(block, isTail, lookup)
@@ -169,7 +182,7 @@ private fun MarkdownBlockquoteView(
                 runs = block.inlines.toStyledRuns(),
                 isTail = isTail,
                 lookup = lookup,
-                style = MaterialTheme.typography.bodyLarge,
+                style = chatBodyStyle(),
                 modifier = Modifier
                     .weight(1f)
                     .padding(start = BLOCK_SPACING),
@@ -177,6 +190,14 @@ private fun MarkdownBlockquoteView(
         }
     }
 }
+
+@Composable
+private fun chatBodyStyle(): TextStyle =
+    MaterialTheme.typography.bodyLarge.copy(
+        fontSize = CHAT_BODY_FONT_SIZE,
+        lineHeight = CHAT_BODY_LINE_HEIGHT,
+        letterSpacing = CHAT_BODY_LETTER_SPACING,
+    )
 
 @Composable
 private fun headingStyle(level: Int): TextStyle = when (level) {
@@ -199,14 +220,14 @@ private fun MarkdownListItemView(
     ) {
         Text(
             text = if (item.ordered) "${item.index}." else "•",
-            style = MaterialTheme.typography.bodyLarge,
+            style = chatBodyStyle(),
         )
         Spacer(modifier = Modifier.width(BLOCK_SPACING))
         FuriganaRichText(
             runs = item.inlines.toStyledRuns(),
             isTail = isTail,
             lookup = lookup,
-            style = MaterialTheme.typography.bodyLarge,
+            style = chatBodyStyle(),
             modifier = Modifier.weight(1f),
         )
     }
@@ -289,11 +310,22 @@ internal fun FuriganaRichText(
     val plainText = pieces.joinToString("") { it.text }
     val textColor = LocalContentColor.current
     val fontSizeSp = style.fontSize.value
+    // TextView.setLetterSpacing wants em units, Compose styles carry sp.
+    val letterSpacingEm = when {
+        style.letterSpacing.isSp && fontSizeSp > 0f -> style.letterSpacing.value / fontSizeSp
+        style.letterSpacing.isEm -> style.letterSpacing.value
+        else -> 0f
+    }
     val baseBold = (style.fontWeight?.weight ?: 0) >= BOLD_WEIGHT_THRESHOLD
     AndroidView(
         factory = { ctx ->
             TextView(ctx).apply {
+                // An ID is required by TextView.canProcessText(): without it
+                // the selection toolbar drops the PROCESS_TEXT actions other
+                // apps contribute (dictionaries, translators, ...).
+                id = View.generateViewId()
                 setTextIsSelectable(true)
+                setLineSpacing(0f, CHAT_LINE_SPACING_MULTIPLIER)
                 textLocales = LocaleList(Locale("ja"))
                 layoutParams = ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
@@ -305,6 +337,7 @@ internal fun FuriganaRichText(
             view.text = buildPieceSpannable(pieces)
             view.setTextColor(textColor.toArgb())
             view.setTextSize(TypedValue.COMPLEX_UNIT_SP, fontSizeSp)
+            view.letterSpacing = letterSpacingEm
             view.setTypeface(if (baseBold) Typeface.DEFAULT_BOLD else Typeface.DEFAULT)
         },
         modifier = modifier
