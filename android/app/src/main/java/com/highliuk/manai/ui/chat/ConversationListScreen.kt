@@ -4,8 +4,10 @@ import android.text.format.DateUtils
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -86,6 +88,10 @@ fun ConversationListScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
+                    // With the search keyboard open the last results would
+                    // otherwise sit unreachable behind the IME.
+                    .consumeWindowInsets(innerPadding)
+                    .imePadding()
                     .testTag("conversation_list"),
             ) {
                 items(conversations, key = { it.id }) { conversation ->

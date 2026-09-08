@@ -3,8 +3,10 @@ package com.highliuk.manai.ui.prompts
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
@@ -134,6 +136,10 @@ fun PromptEditScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                // Consume the scaffold insets so imePadding only adds the
+                // part of the keyboard the nav bar padding doesn't cover.
+                .consumeWindowInsets(innerPadding)
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
         ) {
