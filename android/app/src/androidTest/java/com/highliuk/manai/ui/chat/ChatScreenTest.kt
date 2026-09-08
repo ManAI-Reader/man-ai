@@ -3,6 +3,9 @@ package com.highliuk.manai.ui.chat
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
@@ -590,6 +593,68 @@ class ChatScreenTest {
         composeTestRule.onNodeWithTag("chat_clip_list")
             .performScrollToNode(hasTestTag("bottom_marker"))
         composeTestRule.onNodeWithTag("bottom_marker").assertIsDisplayed()
+    }
+
+    @Test
+    fun completedMessageReusesFuriganaResolvedDuringStreaming() {
+        val japaneseRun = "漢字を読む"
+        val runCalls = mutableMapOf<String, Int>()
+        val resolver: FuriganaResolver = { run ->
+            runCalls[run] = (runCalls[run] ?: 0) + 1
+            listOf(
+                FuriganaToken(
+                    surface = run,
+                    reading = "かんじをよむ",
+                    parts = listOf(FuriganaPart.kanji(run, "かんじをよむ")),
+                ),
+            )
+        }
+        // The trailing ASCII "!" closes the Japanese run even while the text
+        // is still the streaming tail, so it resolves during streaming.
+        val fullText = "$japaneseRun!"
+        var streamingText by mutableStateOf<String?>(fullText)
+        var isGenerating by mutableStateOf(true)
+        var messages by mutableStateOf(emptyList<ChatMessage>())
+        composeTestRule.setContent {
+            ChatScreen(
+                conversation = conversation,
+                messages = messages,
+                streamingText = streamingText,
+                isGenerating = isGenerating,
+                error = null,
+                truncated = false,
+                onSend = {},
+                onRetry = {},
+                onOpenSourcePage = {},
+                onDeleteConversation = {},
+                onBack = {},
+                resolveFurigana = resolver,
+            )
+        }
+        composeTestRule.waitUntil(timeoutMillis = 5_000) { runCalls[japaneseRun] == 1 }
+
+        // Streaming completes: the streaming item disappears and the same
+        // text arrives as a persisted assistant message.
+        composeTestRule.runOnIdle {
+            messages = listOf(
+                ChatMessage(
+                    id = 1L,
+                    conversationId = 1L,
+                    role = ChatRole.ASSISTANT,
+                    content = fullText,
+                    timestamp = 0L,
+                ),
+            )
+            streamingText = null
+            isGenerating = false
+        }
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag("chat_streaming").assertDoesNotExist()
+        // The run was already resolved during streaming: the final bubble must
+        // reuse it instead of re-resolving (which re-measures the text a frame
+        // later and makes the finished message visibly jump).
+        assertEquals(1, runCalls[japaneseRun] ?: 0)
     }
 
     @Test

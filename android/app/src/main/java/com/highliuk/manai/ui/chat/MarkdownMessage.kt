@@ -34,6 +34,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.layout
@@ -84,6 +85,10 @@ private const val CHAT_LINE_SPACING_MULTIPLIER = 1.3f
  * The raw [text] is re-parsed on every streaming emission; closed Japanese
  * runs are resolved once through [resolveFurigana] and cached, while the
  * still-open tail run renders as plain text until it closes.
+ *
+ * [furiganaCache] optionally hoists the run cache to the caller so multiple
+ * composables (e.g. the streaming bubble and the final message bubble it is
+ * replaced by) share resolved runs; when null a local cache is used.
  */
 @Composable
 fun MarkdownMessageContent(
@@ -91,21 +96,23 @@ fun MarkdownMessageContent(
     isComplete: Boolean,
     resolveFurigana: FuriganaResolver?,
     modifier: Modifier = Modifier,
+    furiganaCache: SnapshotStateMap<String, List<FuriganaToken>>? = null,
 ) {
     val blocks = remember(text) { MarkdownParser.parse(text) }
-    val furiganaCache = remember { mutableStateMapOf<String, List<FuriganaToken>>() }
+    val localCache = remember { mutableStateMapOf<String, List<FuriganaToken>>() }
+    val cache = furiganaCache ?: localCache
     if (resolveFurigana != null) {
         LaunchedEffect(text, isComplete) {
             FuriganaRunResolver.resolveMissing(
                 runs = RichTextPlanner.closedDocumentRuns(blocks, isComplete),
-                cache = furiganaCache,
+                cache = cache,
                 resolve = resolveFurigana,
             )
         }
     }
     val lookup: (String) -> List<FuriganaToken>? =
         if (resolveFurigana != null) {
-            { run -> furiganaCache[run] }
+            { run -> cache[run] }
         } else {
             { null }
         }

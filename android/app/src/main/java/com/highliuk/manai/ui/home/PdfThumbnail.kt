@@ -1,6 +1,7 @@
 package com.highliuk.manai.ui.home
 
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
 import androidx.compose.foundation.Image
@@ -19,30 +20,41 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.highliuk.manai.R
+import com.highliuk.manai.data.pdf.retryRender
 
 internal val thumbnailCache = ThumbnailCache()
+
+private const val RENDER_ATTEMPTS = 3
+private const val RENDER_RETRY_DELAY_MS = 250L
 
 @Composable
 fun PdfThumbnail(uri: String, mangaId: Long = 0L, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val bitmap = produceState<Bitmap?>(initialValue = thumbnailCache.get(mangaId), uri) {
         if (value != null) return@produceState
-        value = try {
-            val pfd = context.contentResolver.openFileDescriptor(Uri.parse(uri), "r")
-            pfd?.use { fd ->
-                PdfRenderer(fd).use { renderer ->
-                    if (renderer.pageCount > 0) {
-                        renderer.openPage(0).use { page ->
-                            val bmp = Bitmap.createBitmap(page.width, page.height, Bitmap.Config.ARGB_8888)
-                            page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-                            if (mangaId != 0L) thumbnailCache.put(mangaId, bmp)
-                            bmp
-                        }
-                    } else null
+        // Transient render failures would otherwise leave a permanent
+        // placeholder, since produceState never re-runs while composed.
+        value = retryRender(attempts = RENDER_ATTEMPTS, delayMs = RENDER_RETRY_DELAY_MS) {
+            try {
+                val pfd = context.contentResolver.openFileDescriptor(Uri.parse(uri), "r")
+                pfd?.use { fd ->
+                    PdfRenderer(fd).use { renderer ->
+                        if (renderer.pageCount > 0) {
+                            renderer.openPage(0).use { page ->
+                                val bmp = Bitmap.createBitmap(page.width, page.height, Bitmap.Config.ARGB_8888)
+                                // Unpainted PDF backgrounds render transparent
+                                // unless the bitmap is pre-filled white.
+                                bmp.eraseColor(Color.WHITE)
+                                page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                                if (mangaId != 0L) thumbnailCache.put(mangaId, bmp)
+                                bmp
+                            }
+                        } else null
+                    }
                 }
+            } catch (_: Exception) {
+                null
             }
-        } catch (_: Exception) {
-            null
         }
     }
 

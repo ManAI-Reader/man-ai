@@ -2,6 +2,7 @@ package com.highliuk.manai.data.pdf
 
 import android.content.ContentResolver
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
 import javax.inject.Inject
@@ -22,6 +23,9 @@ class PdfPageRenderer @Inject constructor(
                         val bmp = Bitmap.createBitmap(
                             page.width, page.height, Bitmap.Config.ARGB_8888,
                         )
+                        // Unpainted PDF backgrounds render transparent unless
+                        // the bitmap is pre-filled white.
+                        bmp.eraseColor(Color.WHITE)
                         page.render(
                             bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY,
                         )

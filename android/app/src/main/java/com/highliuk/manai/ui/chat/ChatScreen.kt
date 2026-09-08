@@ -38,9 +38,12 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
@@ -57,6 +60,7 @@ import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.ChatMessage
 import com.highliuk.manai.domain.model.ChatRole
 import com.highliuk.manai.domain.model.Conversation
+import com.highliuk.manai.domain.model.FuriganaToken
 
 private const val MAX_INPUT_LINES = 5
 
@@ -106,6 +110,13 @@ fun ChatScreen(
     resolveFurigana: FuriganaResolver? = null,
 ) {
     val listState = rememberLazyListState()
+    // One furigana cache per conversation, shared by the streaming bubble and
+    // the persisted message bubbles: when streaming completes, the final
+    // message finds every run already resolved and lays out with rubies on
+    // its first frame instead of flashing plain text and re-measuring.
+    val furiganaCache = remember(conversation?.id) {
+        mutableStateMapOf<String, List<FuriganaToken>>()
+    }
     val shownMessages = visibleMessages(conversation, messages)
     val isStreaming = streamingText != null || isGenerating
     val itemCount = shownMessages.size + if (isStreaming) 1 else 0
@@ -185,11 +196,16 @@ fun ChatScreen(
                         StreamingBubble(
                             partialText = streamingText,
                             resolveFurigana = resolveFurigana,
+                            furiganaCache = furiganaCache,
                         )
                     }
                 }
                 items(shownMessages.asReversed(), key = { it.id }) { message ->
-                    MessageBubble(message = message, resolveFurigana = resolveFurigana)
+                    MessageBubble(
+                        message = message,
+                        resolveFurigana = resolveFurigana,
+                        furiganaCache = furiganaCache,
+                    )
                 }
             }
 
@@ -291,7 +307,11 @@ private fun ChatMenu(
 }
 
 @Composable
-private fun MessageBubble(message: ChatMessage, resolveFurigana: FuriganaResolver?) {
+private fun MessageBubble(
+    message: ChatMessage,
+    resolveFurigana: FuriganaResolver?,
+    furiganaCache: SnapshotStateMap<String, List<FuriganaToken>>,
+) {
     when (message.role) {
         ChatRole.USER -> Box(
             modifier = Modifier.fillMaxWidth(),
@@ -314,13 +334,18 @@ private fun MessageBubble(message: ChatMessage, resolveFurigana: FuriganaResolve
                 isComplete = true,
                 resolveFurigana = resolveFurigana,
                 modifier = Modifier.fillMaxWidth(),
+                furiganaCache = furiganaCache,
             )
         }
     }
 }
 
 @Composable
-private fun StreamingBubble(partialText: String?, resolveFurigana: FuriganaResolver?) {
+private fun StreamingBubble(
+    partialText: String?,
+    resolveFurigana: FuriganaResolver?,
+    furiganaCache: SnapshotStateMap<String, List<FuriganaToken>>,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -346,6 +371,7 @@ private fun StreamingBubble(partialText: String?, resolveFurigana: FuriganaResol
                 isComplete = false,
                 resolveFurigana = resolveFurigana,
                 modifier = Modifier.fillMaxWidth(),
+                furiganaCache = furiganaCache,
             )
         }
     }
