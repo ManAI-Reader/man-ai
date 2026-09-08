@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -38,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.text
@@ -213,24 +213,19 @@ private fun MarkdownListItemView(
     isTail: Boolean,
     lookup: (String) -> List<FuriganaToken>?,
 ) {
-    Row(
+    // The marker is drawn by ListMarkerSpan inside the same text layout —
+    // a sibling composable cannot stay baseline-aligned with a first line
+    // that furigana rubies raise.
+    FuriganaRichText(
+        runs = item.inlines.toStyledRuns(),
+        isTail = isTail,
+        lookup = lookup,
+        style = chatBodyStyle(),
+        marker = listItemMarker(item.ordered, item.index),
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = LIST_INDENT_PER_LEVEL * item.level),
-    ) {
-        Text(
-            text = if (item.ordered) "${item.index}." else "•",
-            style = chatBodyStyle(),
-        )
-        Spacer(modifier = Modifier.width(BLOCK_SPACING))
-        FuriganaRichText(
-            runs = item.inlines.toStyledRuns(),
-            isTail = isTail,
-            lookup = lookup,
-            style = chatBodyStyle(),
-            modifier = Modifier.weight(1f),
-        )
-    }
+    )
 }
 
 @Composable
@@ -305,10 +300,12 @@ internal fun FuriganaRichText(
     lookup: (String) -> List<FuriganaToken>?,
     style: TextStyle,
     modifier: Modifier = Modifier,
+    marker: String? = null,
 ) {
     val pieces = RichTextPlanner.plan(runs, isTail, lookup)
     val plainText = pieces.joinToString("") { it.text }
     val textColor = LocalContentColor.current
+    val markerGapPx = with(LocalDensity.current) { BLOCK_SPACING.toPx() }
     val fontSizeSp = style.fontSize.value
     // TextView.setLetterSpacing wants em units, Compose styles carry sp.
     val letterSpacingEm = when {
@@ -334,11 +331,23 @@ internal fun FuriganaRichText(
             }
         },
         update = { view ->
-            view.text = buildPieceSpannable(pieces)
+            // Paint-affecting properties first: the marker margin below is
+            // measured with the view's paint.
             view.setTextColor(textColor.toArgb())
             view.setTextSize(TypedValue.COMPLEX_UNIT_SP, fontSizeSp)
             view.letterSpacing = letterSpacingEm
             view.setTypeface(if (baseBold) Typeface.DEFAULT_BOLD else Typeface.DEFAULT)
+            val content = buildPieceSpannable(pieces)
+            if (marker != null && content.isNotEmpty()) {
+                val margin = listMarkerMarginPx(view.paint.measureText(marker), markerGapPx)
+                content.setSpan(
+                    ListMarkerSpan(marker, margin),
+                    0,
+                    content.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
+                )
+            }
+            view.text = content
         },
         modifier = modifier
             .semantics { text = AnnotatedString(plainText) }
