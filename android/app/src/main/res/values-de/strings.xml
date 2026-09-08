@@ -96,4 +96,55 @@
     <string name="deepl_api_key_hint">Gib deinen DeepL API-Schlüssel ein</string>
     <string name="translation_target_language">Zielsprache</string>
     <string name="app_version_info">Version %1$s (%2$d)</string>
+
+    <!-- AI Assistant settings -->
+    <string name="ai_section">KI-Assistent</string>
+    <string name="settings_groq_api_key">Groq API-Schlüssel</string>
+    <string name="settings_deepseek_api_key">DeepSeek API-Schlüssel</string>
+    <string name="prompt_vendor_label">Anbieter</string>
+    <string name="prompt_model_label">Modell</string>
+    <string name="manage_prompts">Prompts verwalten</string>
+
+    <!-- Prompt management -->
+    <string name="prompts_title">Prompts</string>
+    <string name="save">Speichern</string>
+    <string name="add_prompt">Prompt hinzufügen</string>
+    <string name="edit_prompt">Prompt bearbeiten</string>
+    <string name="prompt_name">Name</string>
+    <string name="prompt_template">Prompt-Text</string>
+    <string name="prompt_placeholders_hint">Platzhalter: {text} = Sprechblasentext, {selection} = ausgewählter Text, {translation} = Übersetzung, {title} = Manga-Titel, {balloons} = weitere Sprechblasen dieser Seite, {prev_balloons} = Sprechblasen der vorherigen Seite</string>
+    <string name="reasoning_level">Denkaufwand</string>
+    <string name="reasoning_default">Modellstandard</string>
+    <string name="reasoning_off">Aus</string>
+    <string name="reasoning_low">Niedrig</string>
+    <string name="reasoning_medium">Mittel</string>
+    <string name="reasoning_high">Hoch</string>
+    <string name="reasoning_max">Maximal</string>
+    <string name="prompt_name_required">Name und Prompt-Text sind erforderlich</string>
+    <string name="delete_prompt_confirm">Diesen Prompt löschen?</string>
+    <string name="no_prompts">Noch keine Prompts</string>
+
+    <!-- AI prompt templates -->
+    <string name="prompt_default_grammar">Grammatik erklären</string>
+    <string name="prompt_default_word">Dieses Wort erklären</string>
+    <string name="prompt_template_word">Du bist mein Japanisch-Tutor. Ich lese gerade den Manga 「{title}」 und bin in diesem Satz auf das Wort 「{selection}」 gestoßen:\n「{text}」\n\nDamit du die Szene verstehst, gebe ich dir die übrigen Sprechblasen derselben Seite in zufälliger Reihenfolge (es ist nicht die Lesereihenfolge):\n{balloons}\n\nUnd das sind die Sprechblasen der vorherigen Seite, ebenfalls in zufälliger Reihenfolge:\n{prev_balloons}\n\nNutze diesen Kontext nur, um den Satz richtig zu deuten: Die Erklärung muss auf das Wort fokussiert bleiben, nach dem ich gefragt habe.\n\nFühre mich anhand dieses Leitfadens, in einem professionellen, aber kollegialen Ton, wie ein erfahrener Kollege: direkt, natürlich, ohne Theatralik, ohne Anreden (\"lieber Schüler\" und dergleichen) und ohne poetische Metaphern. Den Wert liefern die konkreten Beobachtungen, die ein Wörterbuch nie geben würde.\n\nDer Leitfaden ist ein Menü, kein auszufüllendes Formular: Führe einen Punkt nur aus, wenn er für dieses Wort wirklich etwas Relevantes hergibt; andernfalls lass ihn komplett weg, ohne dich zu rechtfertigen. Lieber ein Abschnitt weniger als einer, der zwanghaft gefüllt wird.\n\n1. **Grundbedeutung** — das Wesen des Wortes, abgegrenzt von den \"bequemen\" Wörterbuchübersetzungen (besonders den aus dem Englischen abgeleiteten).\n2. **Register und Häufigkeit** — häufig oder selten; gesprochen oder geschrieben; umgangssprachlich, formell oder literarisch; wo ich ihm wirklich begegnen werde.\n3. **Das Wort in diesem Satz** — die exakte grammatische Form, in der es hier erscheint, was es in diesem Kontext ausdrückt und die Nuance, die es dem Satz verleiht.\n4. **Typische Kombinationen und Beispiele** — 2-3 Beispielsätze, ausschließlich in Kanji/Kana geschrieben, mit deutscher Übersetzung, ausgewählt, um mir zu zeigen, mit welchen Wörtern es üblicherweise auftritt.\n5. **Verwandte Begriffe** — nur wenn es Wörter gibt, mit denen dieses wirklich verwechselt wird (überlappende Übersetzungen, unterschiedliche Anwendungsbereiche), mit dem Hinweis, der mich vor der Verwechslung bewahrt.\n\nEin paar Hinweise, damit die Erklärung zu mir passt:\n- Kein Romaji: Ich kann Kanji und Kana lesen, schreibe Japanisch nur so. Auch japanische Grammatikbegriffe, wenn du sie nennst, schreibe in Kanji oder Kana (z. B. 連用形, 五段動詞, Konjugation auf む) oder auf Deutsch — nie im lateinischen Alphabet.\n- Keine Lesungen oder Aussprachen in Klammern neben den Wörtern — weder in den Beispielen noch in Tabellen noch neben den verwandten Begriffen: Die App, die ich nutze, zeigt die Furigana bereits von selbst an, jede Lesung von dir ist also nur Rauschen.\n- Wenn du dir bei einer Angabe nicht sicher bist (eine Form, eine Etymologie, ein Gebrauch), sag es mir offen: Mir ist ein ehrlicher Zweifel lieber als eine Erfindung.\n- Keine Höflichkeitsfloskeln: Beginne nicht mit Vorreden und schließe nicht mit Höflichkeitsphrasen (\"ich hoffe, das hilft dir\", \"frag gerne nach\" und dergleichen). Die Antwort endet mit dem letzten nützlichen Inhalt.\n- Schreib in gepflegtem Deutsch.</string>
+    <string name="prompt_template_grammar">Du bist mein Japanisch-Tutor. Ich lese gerade den Manga 「{title}」 und in diesem Satz:\n「{text}」\nbin ich an der Konstruktion 「{selection}」 hängen geblieben: Ich will verstehen, wie sie grammatikalisch funktioniert.\n\nDamit du die Szene verstehst, gebe ich dir die übrigen Sprechblasen derselben Seite in zufälliger Reihenfolge (es ist nicht die Lesereihenfolge):\n{balloons}\n\nUnd das sind die Sprechblasen der vorherigen Seite, ebenfalls in zufälliger Reihenfolge:\n{prev_balloons}\n\nNutze diesen Kontext nur, um den Satz richtig zu deuten: Die Erklärung muss auf die Konstruktion fokussiert bleiben, nach der ich gefragt habe.\n\nFühre mich anhand dieses Leitfadens, in einem professionellen, aber kollegialen Ton, wie ein erfahrener Kollege: direkt, natürlich, ohne Theatralik, ohne Anreden (\"lieber Schüler\" und dergleichen) und ohne poetische Metaphern. Den Wert liefern die konkreten Beobachtungen, die eine Referenzgrammatik nie geben würde.\n\nDer Leitfaden ist ein Menü, kein auszufüllendes Formular: Führe einen Punkt nur aus, wenn er für diese Konstruktion wirklich etwas Relevantes hergibt; andernfalls lass ihn komplett weg, ohne dich zu rechtfertigen. Lieber ein Abschnitt weniger als einer, der zwanghaft gefüllt wird.\n\n1. **Was sie ausdrückt** — die Idee, die diese Konstruktion vermittelt, und wann ein Japaner sie einfacheren Alternativen vorzieht.\n2. **Wie sie gebildet wird** — die Bausteine, aus denen sie besteht, wie sie ineinandergreifen und woran sie sich anschließt (Verben, Nomen, Adjektive); etwaige Varianten in Register oder Form.\n3. **Die Konstruktion in diesem Satz** — wie sie hier funktioniert, Stück für Stück, und die Gesamtbedeutung des Satzes mit einer natürlichen deutschen Übersetzung.\n4. **Weitere Beispiele** — 2-3 Beispielsätze, ausschließlich in Kanji/Kana geschrieben, mit deutscher Übersetzung, die exakt die Konstruktion 「{selection}」 enthalten (keine Varianten oder ähnliche Konstruktionen), ausgewählt, um sie mir in anderen Kontexten als diesem zu zeigen.\n5. **Verwandte Konstruktionen** — nur wenn es Konstruktionen gibt, mit denen diese wirklich verwechselt wird (nahe Bedeutung, überlappende Übersetzungen), mit dem Hinweis, der mich vor der Verwechslung bewahrt.\n\nEin paar Hinweise, damit die Erklärung zu mir passt:\n- Kein Romaji: Ich kann Kanji und Kana lesen, schreibe Japanisch nur so. Auch japanische Grammatikbegriffe, wenn du sie nennst, schreibe in Kanji oder Kana (z. B. 連用形, 五段動詞, Konjugation auf む) oder auf Deutsch — nie im lateinischen Alphabet.\n- Keine Lesungen oder Aussprachen in Klammern neben den Wörtern — weder in den Beispielen noch in Tabellen noch anderswo: Die App, die ich nutze, zeigt die Furigana bereits von selbst an, jede Lesung von dir ist also nur Rauschen.\n- Wenn du dir bei einer Angabe nicht sicher bist (eine Form, eine Etymologie, ein Gebrauch), sag es mir offen: Mir ist ein ehrlicher Zweifel lieber als eine Erfindung.\n- Keine Höflichkeitsfloskeln: Beginne nicht mit Vorreden und schließe nicht mit Höflichkeitsphrasen (\"ich hoffe, das hilft dir\", \"frag gerne nach\" und dergleichen). Die Antwort endet mit dem letzten nützlichen Inhalt.\n- Schreib in gepflegtem Deutsch.</string>
+
+    <!-- Chat -->
+    <string name="chat_input_hint">Frag etwas zu diesem Satz…</string>
+    <string name="send_message">Senden</string>
+    <string name="jump_to_source">Zur Seite</string>
+    <string name="more_options">Weitere Optionen</string>
+    <string name="chat_error_generic">Etwas ist schiefgelaufen</string>
+    <string name="chat_error_network">Netzwerkfehler — Verbindung prüfen</string>
+    <string name="chat_error_http">Anfrage fehlgeschlagen (HTTP %1$d)</string>
+    <string name="chat_truncated">Die Antwort wurde durch das Längenlimit abgeschnitten</string>
+    <string name="assistant_thinking">Warten auf den Assistenten…</string>
+    <string name="conversations">Konversationen</string>
+    <string name="no_conversations">Noch keine Konversationen</string>
+    <string name="search_conversations">Konversationen durchsuchen</string>
+    <string name="no_search_results">Keine Ergebnisse gefunden</string>
+    <string name="delete_conversation_confirm">Diese Konversation löschen?</string>
+    <string name="no_page_balloons">Keine weiteren Sprechblasen auf dieser Seite</string>
+    <string name="no_previous_balloons">Keine Sprechblasen auf den vorherigen Seiten</string>
 </resources>

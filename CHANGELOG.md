@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- Native AI learning agent: launch prompt templates from balloon text selection into a streaming chat with markdown and furigana rendering
+- Wiki memory the agent reads and updates via LLM tools from follow-up turns onward
+- Conversation list with jump-to-source navigation back to the originating page
+- AI settings with OpenAI-compatible provider configuration and Groq preset
+- Per-template reasoning level and localized default tutor prompts across all 13 locales
+
 ## [0.8.0] - 2026-04-15
 
 ### Added

@@ -7,6 +7,7 @@ import com.highliuk.manai.domain.model.ThemeMode
 import kotlinx.coroutines.flow.Flow
 
 interface UserPreferencesRepository {
+
     val gridColumns: Flow<Int>
     suspend fun setGridColumns(columns: Int)
 
@@ -39,4 +40,7 @@ interface UserPreferencesRepository {
 
     val showFurigana: Flow<Boolean>
     suspend fun setShowFurigana(enabled: Boolean)
+
+    val promptDefaultsSeeded: Flow<Boolean>
+    suspend fun setPromptDefaultsSeeded()
 }

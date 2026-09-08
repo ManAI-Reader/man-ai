@@ -1,6 +1,7 @@
 package com.highliuk.manai.ui.reader
 
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
 import androidx.compose.foundation.Image
@@ -22,10 +23,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.highliuk.manai.R
 import com.highliuk.manai.data.pdf.PdfPageRenderer
+import com.highliuk.manai.data.pdf.retryRender
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 private const val PLACEHOLDER_ASPECT_RATIO = 0.7f
+private const val RENDER_ATTEMPTS = 3
+private const val RENDER_RETRY_DELAY_MS = 250L
 
 internal suspend fun renderPdfFallback(
     contentResolver: android.content.ContentResolver,
@@ -41,6 +45,9 @@ internal suspend fun renderPdfFallback(
                         val bmp = Bitmap.createBitmap(
                             page.width, page.height, Bitmap.Config.ARGB_8888
                         )
+                        // Unpainted PDF backgrounds render transparent unless
+                        // the bitmap is pre-filled white.
+                        bmp.eraseColor(Color.WHITE)
                         page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
                         bmp
                     }
@@ -63,10 +70,15 @@ fun PdfPage(
 ) {
     val context = LocalContext.current
     val bitmap = produceState<Bitmap?>(initialValue = null, uri, pageIndex) {
-        value = if (pdfPageRenderer != null) {
-            pdfPageRenderer.render(uri, pageIndex)
-        } else {
-            renderPdfFallback(context.contentResolver, uri, pageIndex)
+        // Transient render failures (fd pressure, races between neighbor
+        // pages) would otherwise leave a permanent broken-page placeholder,
+        // since produceState never re-runs while the page stays composed.
+        value = retryRender(attempts = RENDER_ATTEMPTS, delayMs = RENDER_RETRY_DELAY_MS) {
+            if (pdfPageRenderer != null) {
+                pdfPageRenderer.render(uri, pageIndex)
+            } else {
+                renderPdfFallback(context.contentResolver, uri, pageIndex)
+            }
         }
     }
 

@@ -69,8 +69,10 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.highliuk.manai.R
+import com.highliuk.manai.domain.chat.PromptTemplateRenderer
 import com.highliuk.manai.domain.model.FuriganaToken
 import com.highliuk.manai.domain.model.PageRegion
+import com.highliuk.manai.domain.model.PromptTemplate
 import java.util.Locale
 import kotlin.math.roundToInt
 import androidx.compose.ui.unit.max
@@ -89,6 +91,8 @@ fun OcrBottomSheet(
     furiganaTokens: List<FuriganaToken>? = null,
     translationState: ReaderViewModel.TranslationState = ReaderViewModel.TranslationState.Idle,
     onTranslateClick: () -> Unit = {},
+    promptTemplates: List<PromptTemplate> = emptyList(),
+    onPromptWithSelection: (PromptTemplate, String) -> Unit = { _, _ -> },
 ) {
     val context = LocalContext.current
     var visible by remember { mutableStateOf(false) }
@@ -181,6 +185,10 @@ fun OcrBottomSheet(
                         val textColor = MaterialTheme.colorScheme.onSurface
                         val textSizeSp =
                             (MaterialTheme.typography.bodyLarge.fontSize * fontScale).value
+                        val hasTranslation =
+                            translationState is ReaderViewModel.TranslationState.Translated
+                        val selectionTemplates =
+                            selectionPromptTemplates(promptTemplates, hasTranslation)
 
                         AndroidView(
                             factory = { ctx ->
@@ -207,6 +215,11 @@ fun OcrBottomSheet(
                                     TypedValue.COMPLEX_UNIT_SP,
                                     textSizeSp,
                                 )
+                                view.selectionPrompts = selectionTemplates.map { it.id to it.name }
+                                view.onPromptSelected = { promptId, selected ->
+                                    selectionTemplates.firstOrNull { it.id == promptId }
+                                        ?.let { onPromptWithSelection(it, selected) }
+                                }
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -300,6 +313,13 @@ fun OcrBottomSheet(
             }
         }
     }
+}
+
+internal fun selectionPromptTemplates(
+    templates: List<PromptTemplate>,
+    hasTranslation: Boolean,
+): List<PromptTemplate> = templates.filter {
+    PromptTemplateRenderer.isAvailable(it.template, hasTranslation)
 }
 
 private fun Context.findActivity(): Activity? {

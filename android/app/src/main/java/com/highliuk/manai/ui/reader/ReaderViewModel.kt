@@ -69,6 +69,7 @@ class ReaderViewModel @Inject constructor(
     val debugEvents: Flow<DebugMlEvent> = debugEventHolder.events
 
     private val mangaId: Long = savedStateHandle["mangaId"] ?: 0L
+    private val initialPageOverride: Int = savedStateHandle["page"] ?: -1
 
     val readingMode: StateFlow<ReadingMode> = userPreferencesRepository.readingMode
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ReadingMode.LTR)
@@ -148,8 +149,12 @@ class ReaderViewModel @Inject constructor(
 
         viewModelScope.launch {
             val loadedManga = manga.filterNotNull().first()
-            _currentPage.value = loadedManga.lastReadPage
-            launchPipeline(loadedManga.lastReadPage)
+            _currentPage.value = if (initialPageOverride >= 0) {
+                initialPageOverride.coerceIn(0, (loadedManga.pageCount - 1).coerceAtLeast(0))
+            } else {
+                loadedManga.lastReadPage
+            }
+            launchPipeline(_currentPage.value)
         }
 
         viewModelScope.launch {

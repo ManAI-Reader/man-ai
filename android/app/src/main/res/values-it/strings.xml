@@ -96,4 +96,55 @@
     <string name="deepl_api_key_hint">Inserisci la tua chiave API DeepL</string>
     <string name="translation_target_language">Lingua di destinazione</string>
     <string name="app_version_info">Versione %1$s (%2$d)</string>
+
+    <!-- AI Assistant settings -->
+    <string name="ai_section">Assistente AI</string>
+    <string name="settings_groq_api_key">Chiave API Groq</string>
+    <string name="settings_deepseek_api_key">Chiave API DeepSeek</string>
+    <string name="prompt_vendor_label">Provider</string>
+    <string name="prompt_model_label">Modello</string>
+    <string name="manage_prompts">Gestisci prompt</string>
+
+    <!-- Prompt management -->
+    <string name="prompts_title">Prompt</string>
+    <string name="save">Salva</string>
+    <string name="add_prompt">Aggiungi prompt</string>
+    <string name="edit_prompt">Modifica prompt</string>
+    <string name="prompt_name">Nome</string>
+    <string name="prompt_template">Testo del prompt</string>
+    <string name="prompt_placeholders_hint">Segnaposto: {text} = testo del balloon, {selection} = testo selezionato, {translation} = traduzione, {title} = titolo del manga, {balloons} = altri balloon di questa pagina, {prev_balloons} = balloon della pagina precedente</string>
+    <string name="reasoning_level">Ragionamento</string>
+    <string name="reasoning_default">Predefinito del modello</string>
+    <string name="reasoning_off">Disattivato</string>
+    <string name="reasoning_low">Basso</string>
+    <string name="reasoning_medium">Medio</string>
+    <string name="reasoning_high">Alto</string>
+    <string name="reasoning_max">Massimo</string>
+    <string name="prompt_name_required">Nome e testo del prompt sono obbligatori</string>
+    <string name="delete_prompt_confirm">Eliminare questo prompt?</string>
+    <string name="no_prompts">Nessun prompt</string>
+
+    <!-- AI prompt templates -->
+    <string name="prompt_default_grammar">Spiega la grammatica</string>
+    <string name="prompt_default_word">Spiega questa parola</string>
+    <string name="prompt_template_word">Sei il mio tutor di giapponese. Sto leggendo il manga 「{title}」 e ho appena incontrato la parola 「{selection}」 in questa frase:\n「{text}」\n\nPer aiutarti a capire la scena ti riporto gli altri balloon della stessa pagina, in ordine sparso (non è l\'ordine di lettura):\n{balloons}\n\nE questi sono i balloon della pagina precedente, sempre in ordine sparso:\n{prev_balloons}\n\nUsa questo contesto solo per interpretare correttamente la frase: la spiegazione deve restare focalizzata sulla parola che ti ho chiesto.\n\nGuidami seguendo questa traccia, con un tono professionale ma collaborativo, da collega esperto: diretto, naturale, senza teatralità, senza vocativi (\"caro allievo\" e simili) e senza metafore poetiche. Il valore lo danno le osservazioni concrete che un dizionario non darebbe mai.\n\nLa traccia è un menu, non un modulo da compilare: sviluppa un punto solo se per questa parola ha davvero qualcosa di pertinente da dire; altrimenti saltalo del tutto, senza giustificarti. Meglio una sezione in meno che una riempita per forza.\n\n1. **Significato di base** — l\'essenza della parola, distinguendola dalle traduzioni \"di comodo\" dei dizionari (specie quelle derivate dall\'inglese).\n2. **Registro e frequenza** — comune o rara; parlata o scritta; colloquiale, formale o letteraria; dove la incontrerò davvero.\n3. **La parola in questa frase** — la forma grammaticale esatta con cui appare qui, cosa esprime in questo contesto e la sfumatura che regala alla frase.\n4. **Combinazioni tipiche ed esempi** — 2-3 frasi d\'uso scritte esclusivamente in Kanji/Kana con traduzione italiana, scelte per mostrarmi con quali parole si accompagna di solito.\n5. **Termini correlati** — solo se esistono parole con cui questa si confonde davvero (traduzioni sovrapposte, ambiti d\'uso diversi), con la dritta che mi evita di confonderle.\n\nQualche accortezza, perché la spiegazione sia adatta a me:\n- Niente Romaji: so leggere Kanji e Kana, il giapponese scrivilo solo così. Anche i termini grammaticali giapponesi, se li citi, scrivili in Kanji o Kana (es. 連用形, 五段動詞, coniugazione in む) oppure in italiano — mai in alfabeto latino.\n- Niente letture o pronunce tra parentesi accanto alle parole — né negli esempi, né nelle tabelle, né accanto ai termini correlati: l\'app che uso mostra già i furigana da sola, quindi qualsiasi lettura tu aggiunga è solo rumore.\n- Se su un dato non sei sicuro (una forma, un\'etimologia, un uso), dimmelo apertamente: preferisco un dubbio onesto a un\'invenzione.\n- Niente convenevoli: non aprire con premesse e non chiudere con frasi di cortesia (\"spero ti sia utile\", \"chiedi pure\" e simili). La risposta finisce con l\'ultimo contenuto utile.\n- Scrivi in un italiano curato.</string>
+    <string name="prompt_template_grammar">Sei il mio tutor di giapponese. Sto leggendo il manga 「{title}」 e in questa frase:\n「{text}」\nmi sono bloccato sul costrutto 「{selection}」: voglio capire come funziona dal punto di vista grammaticale.\n\nPer aiutarti a capire la scena ti riporto gli altri balloon della stessa pagina, in ordine sparso (non è l\'ordine di lettura):\n{balloons}\n\nE questi sono i balloon della pagina precedente, sempre in ordine sparso:\n{prev_balloons}\n\nUsa questo contesto solo per interpretare correttamente la frase: la spiegazione deve restare focalizzata sul costrutto che ti ho chiesto.\n\nGuidami seguendo questa traccia, con un tono professionale ma collaborativo, da collega esperto: diretto, naturale, senza teatralità, senza vocativi (\"caro allievo\" e simili) e senza metafore poetiche. Il valore lo danno le osservazioni concrete che una grammatica di riferimento non darebbe mai.\n\nLa traccia è un menu, non un modulo da compilare: sviluppa un punto solo se per questo costrutto ha davvero qualcosa di pertinente da dire; altrimenti saltalo del tutto, senza giustificarti. Meglio una sezione in meno che una riempita per forza.\n\n1. **Cosa esprime** — l\'idea che questo costrutto comunica e quando un giapponese lo sceglie al posto di alternative più semplici.\n2. **Come si costruisce** — i pezzi che lo compongono, come si incastrano tra loro e a cosa si aggancia (verbi, nomi, aggettivi); eventuali varianti di registro o di forma.\n3. **Il costrutto in questa frase** — come funziona qui, pezzo per pezzo, e il significato complessivo della frase con una traduzione italiana naturale.\n4. **Altri esempi** — 2-3 frasi d\'uso scritte esclusivamente in Kanji/Kana con traduzione italiana, che contengano esattamente il costrutto 「{selection}」 (non varianti o costrutti simili), scelte per mostrarmelo in contesti diversi da questo.\n5. **Costrutti correlati** — solo se esistono costruzioni con cui questa si confonde davvero (significato vicino, traduzioni sovrapposte), con la dritta che mi evita di confonderle.\n\nQualche accortezza, perché la spiegazione sia adatta a me:\n- Niente Romaji: so leggere Kanji e Kana, il giapponese scrivilo solo così. Anche i termini grammaticali giapponesi, se li citi, scrivili in Kanji o Kana (es. 連用形, 五段動詞, coniugazione in む) oppure in italiano — mai in alfabeto latino.\n- Niente letture o pronunce tra parentesi accanto alle parole — né negli esempi, né nelle tabelle, né altrove: l\'app che uso mostra già i furigana da sola, quindi qualsiasi lettura tu aggiunga è solo rumore.\n- Se su un dato non sei sicuro (una forma, un\'etimologia, un uso), dimmelo apertamente: preferisco un dubbio onesto a un\'invenzione.\n- Niente convenevoli: non aprire con premesse e non chiudere con frasi di cortesia (\"spero ti sia utile\", \"chiedi pure\" e simili). La risposta finisce con l\'ultimo contenuto utile.\n- Scrivi in un italiano curato.</string>
+
+    <!-- Chat -->
+    <string name="chat_input_hint">Chiedi qualcosa su questa frase…</string>
+    <string name="send_message">Invia</string>
+    <string name="jump_to_source">Vai alla pagina</string>
+    <string name="more_options">Altre opzioni</string>
+    <string name="chat_error_generic">Qualcosa è andato storto</string>
+    <string name="chat_error_network">Errore di rete: controlla la connessione</string>
+    <string name="chat_error_http">Richiesta non riuscita (HTTP %1$d)</string>
+    <string name="chat_truncated">La risposta è stata troncata dal limite di lunghezza</string>
+    <string name="assistant_thinking">In attesa dell\'assistente…</string>
+    <string name="conversations">Conversazioni</string>
+    <string name="no_conversations">Nessuna conversazione</string>
+    <string name="search_conversations">Cerca nelle conversazioni</string>
+    <string name="no_search_results">Nessun risultato trovato</string>
+    <string name="delete_conversation_confirm">Eliminare questa conversazione?</string>
+    <string name="no_page_balloons">Nessun altro balloon in questa pagina</string>
+    <string name="no_previous_balloons">Nessun balloon nelle pagine precedenti</string>
 </resources>

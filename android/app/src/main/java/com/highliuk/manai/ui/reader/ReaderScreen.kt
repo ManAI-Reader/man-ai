@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -42,6 +43,7 @@ import com.highliuk.manai.R
 import com.highliuk.manai.domain.model.Manga
 import com.highliuk.manai.domain.model.PagePipelineState
 import com.highliuk.manai.domain.model.PageRegion
+import com.highliuk.manai.domain.model.PromptTemplate
 import com.highliuk.manai.domain.model.ReadingMode
 import com.highliuk.manai.ui.navigation.LocalAnimatedVisibilityScope
 import com.highliuk.manai.ui.navigation.LocalSharedTransitionScope
@@ -110,6 +112,7 @@ fun ReaderScreen(
     onDismissBottomSheet: () -> Unit = {},
     onBack: () -> Unit,
     onSettingsClick: () -> Unit,
+    onConversationsClick: () -> Unit = {},
     onImmersiveModeChange: (Boolean) -> Unit = {},
     debugPipelineStates: Map<Int, PagePipelineState> = emptyMap(),
     visiblePagesRegions: Map<Int, List<PageRegion>> = emptyMap(),
@@ -117,6 +120,8 @@ fun ReaderScreen(
     furiganaTokens: List<com.highliuk.manai.domain.model.FuriganaToken>? = null,
     translationState: ReaderViewModel.TranslationState = ReaderViewModel.TranslationState.Idle,
     onTranslateClick: () -> Unit = {},
+    promptTemplates: List<PromptTemplate> = emptyList(),
+    onPromptWithSelection: (PromptTemplate, String) -> Unit = { _, _ -> },
 ) {
     val isRtl = readingMode == ReadingMode.RTL
     val isWebtoon = readingMode == ReadingMode.WEBTOON
@@ -280,6 +285,12 @@ fun ReaderScreen(
                 },
                 title = { Text(manga.title) },
                 actions = {
+                    IconButton(onClick = onConversationsClick) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Chat,
+                            contentDescription = stringResource(R.string.conversations)
+                        )
+                    }
                     IconButton(onClick = onSettingsClick) {
                         Icon(
                             imageVector = Icons.Default.Settings,
@@ -334,6 +345,8 @@ fun ReaderScreen(
                 furiganaTokens = furiganaTokens,
                 translationState = translationState,
                 onTranslateClick = onTranslateClick,
+                promptTemplates = promptTemplates,
+                onPromptWithSelection = onPromptWithSelection,
             )
         }
 

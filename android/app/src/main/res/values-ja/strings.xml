@@ -93,4 +93,55 @@
     <string name="deepl_api_key_hint">DeepLのAPIキーを入力してください</string>
     <string name="translation_target_language">翻訳先の言語</string>
     <string name="app_version_info">バージョン %1$s (%2$d)</string>
+
+    <!-- AI Assistant settings -->
+    <string name="ai_section">AIアシスタント</string>
+    <string name="settings_groq_api_key">Groq APIキー</string>
+    <string name="settings_deepseek_api_key">DeepSeek APIキー</string>
+    <string name="prompt_vendor_label">プロバイダー</string>
+    <string name="prompt_model_label">モデル</string>
+    <string name="manage_prompts">プロンプトを管理</string>
+
+    <!-- Prompt management -->
+    <string name="prompts_title">プロンプト</string>
+    <string name="save">保存</string>
+    <string name="add_prompt">プロンプトを追加</string>
+    <string name="edit_prompt">プロンプトを編集</string>
+    <string name="prompt_name">名前</string>
+    <string name="prompt_template">プロンプト本文</string>
+    <string name="prompt_placeholders_hint">プレースホルダー: {text} = 吹き出しのテキスト、{selection} = 選択したテキスト、{translation} = 翻訳、{title} = 漫画のタイトル、{balloons} = このページの他の吹き出し、{prev_balloons} = 前のページの吹き出し</string>
+    <string name="reasoning_level">推論</string>
+    <string name="reasoning_default">モデルの既定</string>
+    <string name="reasoning_off">オフ</string>
+    <string name="reasoning_low">低</string>
+    <string name="reasoning_medium">中</string>
+    <string name="reasoning_high">高</string>
+    <string name="reasoning_max">最大</string>
+    <string name="prompt_name_required">名前とプロンプト本文は必須です</string>
+    <string name="delete_prompt_confirm">このプロンプトを削除しますか？</string>
+    <string name="no_prompts">プロンプトはまだありません</string>
+
+    <!-- AI prompt templates -->
+    <string name="prompt_default_grammar">文法を解説</string>
+    <string name="prompt_default_word">この単語を解説</string>
+    <string name="prompt_template_word">あなたは私の日本語の先生です。私は漫画「{title}」を読んでいて、次の文の中で「{selection}」という言葉に出会いました:\n「{text}」\n\n場面を理解してもらうために、同じページのほかの吹き出しを順不同で載せます(読む順番ではありません):\n{balloons}\n\nこちらは前のページの吹き出しで、やはり順不同です:\n{prev_balloons}\n\nこの文脈は文を正しく解釈するためだけに使ってください。説明は、私が尋ねた言葉に集中したままにしてください。\n\n次の項目立てに沿って導いてください。トーンはプロフェッショナルでありながら協力的に、経験豊富な同僚のように:率直で自然に、芝居がかった表現や呼びかけ(「親愛なる生徒さん」の類)や詩的な比喩は使わないでください。価値を生むのは、辞書が決して教えてくれない具体的な観察です。\n\nこの項目立てはメニューであって、埋めるべき書式ではありません。この言葉について本当に述べる価値がある項目だけを展開し、そうでない項目は言い訳をせずに丸ごと飛ばしてください。無理に埋めた節よりも、節が一つ少ない方がましです。\n\n1. **基本的な意味** — この言葉の本質。辞書の「間に合わせ」の訳語(特に英語経由のもの)と区別して。\n2. **語域と頻度** — よく使われるか稀か。話し言葉か書き言葉か。口語的か、改まった表現か、文語的か。実際にどこで出会うことになるか。\n3. **この文の中でのこの言葉** — ここで現れている正確な文法形、この文脈で何を表しているか、そして文に与えるニュアンス。\n4. **典型的な組み合わせと例文** — 漢字・仮名のみで書いた例文を2-3文、わかりやすい日本語の説明を添えて。普段どんな言葉と一緒に使われるかが分かるものを選んでください。\n5. **関連語** — 本当に混同しやすい言葉(訳語が重なる、使う場面が違う)がある場合のみ。混同を避けるためのコツも添えてください。\n\n説明が私に合うように、いくつかの注意点:\n- ローマ字は使わないでください。私は漢字と仮名が読めるので、日本語はその表記だけで書いてください。日本語の文法用語に言及する場合も、漢字か仮名で(例: 連用形、五段動詞、むの活用)書いてください — ラテン文字は決して使わないでください。\n- 言葉の横に括弧で読みや発音を付けないでください — 例文でも、表でも、関連語の横でも。私が使っているアプリはふりがなを自動で表示するので、あなたが付ける読みはただのノイズです。\n- ある事柄(語形、語源、用法)に自信がない場合は、率直にそう言ってください。作り話よりも正直な迷いの方がいいです。\n- 社交辞令は不要です。前置きで始めず、締めの挨拶(「お役に立てば幸いです」「いつでも聞いてください」の類)で終わらないでください。回答は最後の有益な内容で終わります。\n- 洗練された日本語で書いてください。</string>
+    <string name="prompt_template_grammar">あなたは私の日本語の先生です。私は漫画「{title}」を読んでいて、次の文で:\n「{text}」\n「{selection}」という構文につまずきました。文法的にどう機能しているのかを理解したいです。\n\n場面を理解してもらうために、同じページのほかの吹き出しを順不同で載せます(読む順番ではありません):\n{balloons}\n\nこちらは前のページの吹き出しで、やはり順不同です:\n{prev_balloons}\n\nこの文脈は文を正しく解釈するためだけに使ってください。説明は、私が尋ねた構文に集中したままにしてください。\n\n次の項目立てに沿って導いてください。トーンはプロフェッショナルでありながら協力的に、経験豊富な同僚のように:率直で自然に、芝居がかった表現や呼びかけ(「親愛なる生徒さん」の類)や詩的な比喩は使わないでください。価値を生むのは、文法書が決して教えてくれない具体的な観察です。\n\nこの項目立てはメニューであって、埋めるべき書式ではありません。この構文について本当に述べる価値がある項目だけを展開し、そうでない項目は言い訳をせずに丸ごと飛ばしてください。無理に埋めた節よりも、節が一つ少ない方がましです。\n\n1. **何を表すか** — この構文が伝える考えと、より単純な言い方ではなくこれを選ぶのはどんなときか。\n2. **どう組み立てるか** — 構成要素、それらの組み合わさり方、何に接続するか(動詞、名詞、形容詞)。語域や形の変種があればそれも。\n3. **この文の中でのこの構文** — ここでどう機能しているかを一つずつ、そして文全体の意味を自然な日本語の言い換えとともに。\n4. **ほかの例文** — 漢字・仮名のみで書いた例文を2-3文、わかりやすい日本語の説明を添えて。「{selection}」という構文をそのまま含むもの(変種や似た構文は不可)を、この場面とは違う文脈で見せてください。\n5. **関連する構文** — 本当に混同しやすい構文(意味が近い、訳語が重なる)がある場合のみ。混同を避けるためのコツも添えてください。\n\n説明が私に合うように、いくつかの注意点:\n- ローマ字は使わないでください。私は漢字と仮名が読めるので、日本語はその表記だけで書いてください。日本語の文法用語に言及する場合も、漢字か仮名で(例: 連用形、五段動詞、むの活用)書いてください — ラテン文字は決して使わないでください。\n- 言葉の横に括弧で読みや発音を付けないでください — 例文でも、表でも、ほかのどこでも。私が使っているアプリはふりがなを自動で表示するので、あなたが付ける読みはただのノイズです。\n- ある事柄(語形、語源、用法)に自信がない場合は、率直にそう言ってください。作り話よりも正直な迷いの方がいいです。\n- 社交辞令は不要です。前置きで始めず、締めの挨拶(「お役に立てば幸いです」「いつでも聞いてください」の類)で終わらないでください。回答は最後の有益な内容で終わります。\n- 洗練された日本語で書いてください。</string>
+
+    <!-- Chat -->
+    <string name="chat_input_hint">この文について質問…</string>
+    <string name="send_message">送信</string>
+    <string name="jump_to_source">ページへ移動</string>
+    <string name="more_options">その他のオプション</string>
+    <string name="chat_error_generic">問題が発生しました</string>
+    <string name="chat_error_network">ネットワークエラー — 接続を確認してください</string>
+    <string name="chat_error_http">リクエストに失敗しました（HTTP %1$d）</string>
+    <string name="chat_truncated">応答は長さ制限により途中で切れました</string>
+    <string name="assistant_thinking">アシスタントの応答を待っています…</string>
+    <string name="conversations">会話</string>
+    <string name="no_conversations">会話はまだありません</string>
+    <string name="search_conversations">会話を検索</string>
+    <string name="no_search_results">結果が見つかりません</string>
+    <string name="delete_conversation_confirm">この会話を削除しますか？</string>
+    <string name="no_page_balloons">このページに他の吹き出しはありません</string>
+    <string name="no_previous_balloons">前のページに吹き出しはありません</string>
 </resources>
