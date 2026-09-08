@@ -45,6 +45,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.highliuk.manai.ui.home.DeleteMangaDialog
@@ -84,6 +85,8 @@ fun ManAiNavHost(
     val navController = rememberNavController()
     val isFromIntent = remember { hasIntentPdf }
     val startDestination = if (isFromIntent) "intent-loading" else "home"
+
+    ExitImmersiveModeOffReaderRoutes(navController)
 
     LaunchedEffect(navigateToReader) {
         navigateToReader.collect { mangaId ->
@@ -495,6 +498,26 @@ fun ManAiNavHost(
                     )
                 }
             }
+        }
+    }
+}
+
+/**
+ * Immersive mode is owned by the current destination, not by whoever
+ * toggled it last: the reader's imperative hide/show calls race the
+ * navigation transitions (shared elements keep the outgoing screen
+ * composed), so any non-reader destination could inherit a hidden status
+ * bar. Re-asserting the invariant on every route change makes that whole
+ * class of leaks impossible.
+ */
+@Composable
+private fun ExitImmersiveModeOffReaderRoutes(navController: NavHostController) {
+    val rootView = LocalView.current
+    val currentEntry by navController.currentBackStackEntryAsState()
+    LaunchedEffect(currentEntry) {
+        val window = (rootView.context as? Activity)?.window ?: return@LaunchedEffect
+        if (shouldExitImmersiveMode(currentEntry?.destination?.route)) {
+            applyImmersiveMode(WindowCompat.getInsetsController(window, rootView), false)
         }
     }
 }
